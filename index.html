@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a2e44">
+<title>Genkii CRM — Nhập khách hàng</title>
+<style>
+  /* ─── TOKENS ─── */
+  :root {
+    --navy:    #1a2e44;
+    --teal:    #2a8a7e;
+    --teal-lt: #e6f4f2;
+    --gold:    #c8922a;
+    --gold-lt: #fdf3e3;
+    --red:     #c0392b;
+    --red-lt:  #fdecea;
+    --green:   #1e7e5a;
+    --green-lt:#e6f5ef;
+    --grey-1:  #f4f5f7;
+    --grey-2:  #e8eaed;
+    --grey-3:  #9aa3af;
+    --grey-4:  #5a6473;
+    --text:    #1c2b3a;
+    --white:   #ffffff;
+    --radius:  12px;
+    --shadow:  0 2px 12px rgba(26,46,68,.10);
+  }
+
+  /* ─── RESET ─── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text);
+    background: var(--grey-1);
+    min-height: 100dvh;
+  }
+
+  /* ─── HEADER ─── */
+  .app-header {
+    background: var(--navy);
+    padding: 16px 20px 14px;
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .app-header .logo {
+    width: 32px; height: 32px;
+    background: var(--teal);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-weight: 800; color: #fff; font-size: 14px; letter-spacing: -.5px;
+  }
+  .app-header h1 {
+    font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -.2px;
+  }
+  .app-header span {
+    font-size: 12px; color: rgba(255,255,255,.55);
+    display: block; margin-top: 1px;
+  }
+
+  /* ─── LOOKUP BANNER ─── */
+  #lookup-banner {
+    display: none;
+    margin: 16px 16px 0;
+    background: var(--teal-lt);
+    border: 1.5px solid var(--teal);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  #lookup-banner.found  { background: var(--green-lt); border-color: var(--green); }
+  #lookup-banner.new    { background: var(--gold-lt);  border-color: var(--gold); }
+  #lookup-banner .banner-icon { font-size: 20px; margin-right: 8px; vertical-align: middle; }
+  #lookup-banner strong { font-weight: 700; }
+  #lookup-banner .banner-body { font-size: 13.5px; line-height: 1.5; }
+  #lookup-banner .last-log {
+    margin-top: 8px; padding: 8px 10px;
+    background: rgba(255,255,255,.65); border-radius: 8px;
+    font-size: 12.5px; color: var(--grey-4);
+    font-style: italic;
+  }
+
+  /* ─── FORM CARD ─── */
+  .form-card {
+    background: var(--white);
+    margin: 16px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .section-label {
+    padding: 12px 16px 10px;
+    font-size: 11px; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase; color: var(--grey-3);
+    background: var(--grey-1);
+    border-bottom: 1px solid var(--grey-2);
+  }
+  .section-label span { color: var(--teal); }
+
+  /* ─── FIELD ─── */
+  .field { padding: 14px 16px; border-bottom: 1px solid var(--grey-2); }
+  .field:last-child { border-bottom: none; }
+  .field label {
+    display: block;
+    font-size: 12.5px; font-weight: 600; color: var(--grey-4);
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .field label .req { color: var(--red); font-size: 14px; line-height: 1; }
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    font-size: 15px; color: var(--text);
+    background: var(--grey-1);
+    border: 1.5px solid var(--grey-2);
+    border-radius: 8px;
+    padding: 11px 13px;
+    outline: none;
+    transition: border-color .15s, background .15s;
+    -webkit-appearance: none;
+    appearance: none;
+    font-family: inherit;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--teal);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(42,138,126,.12);
+  }
+  .field textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+  .field input[type="date"] { color-scheme: light; }
+  .field input.filled { background: var(--teal-lt); border-color: var(--teal); color: var(--navy); }
+  .field .hint { font-size: 11.5px; color: var(--grey-3); margin-top: 5px; }
+  .field.error input,
+  .field.error select,
+  .field.error textarea { border-color: var(--red); background: var(--red-lt); }
+  .field .err-msg { font-size: 12px; color: var(--red); margin-top: 4px; display: none; }
+  .field.error .err-msg { display: block; }
+
+  /* DROPDOWN arrow */
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute; right: 13px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--grey-3); pointer-events: none; font-size: 13px;
+  }
+  .select-wrap select { padding-right: 32px; }
+
+  /* ─── NHIET DO TOGGLE ─── */
+  .temp-group {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+  }
+  .temp-btn {
+    padding: 10px 6px;
+    border-radius: 8px; border: 1.5px solid var(--grey-2);
+    background: var(--grey-1);
+    font-size: 13px; font-weight: 600; color: var(--grey-4);
+    cursor: pointer; text-align: center;
+    transition: all .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .temp-btn.hot  { border-color: var(--red);   background: var(--red-lt);   color: var(--red); }
+  .temp-btn.warm { border-color: var(--gold);  background: var(--gold-lt);  color: var(--gold); }
+  .temp-btn.cool { border-color: var(--teal);  background: var(--teal-lt);  color: var(--teal); }
+  .temp-btn:active { transform: scale(.97); }
+
+  /* ─── SUBMIT ─── */
+  .submit-area { padding: 16px; }
+  .btn-submit {
+    width: 100%; padding: 16px;
+    background: var(--teal);
+    color: #fff; font-size: 16px; font-weight: 700;
+    border: none; border-radius: var(--radius);
+    cursor: pointer; letter-spacing: -.1px;
+    transition: background .15s, transform .1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-submit:active { transform: scale(.98); }
+  .btn-submit:disabled { background: var(--grey-3); cursor: not-allowed; }
+  .btn-submit .sub-label { font-size: 12px; font-weight: 400; opacity: .85; display: block; margin-top: 2px; }
+
+  /* ─── TOAST ─── */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--navy); color: #fff;
+    padding: 12px 20px; border-radius: 32px;
+    font-size: 14px; font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s, bottom .3s;
+    white-space: nowrap; z-index: 999;
+    max-width: calc(100vw - 32px);
+  }
+  #toast.show { opacity: 1; bottom: 32px; }
+  #toast.success { background: var(--green); }
+  #toast.error-t  { background: var(--red); }
+
+  /* ─── LOADING OVERLAY ─── */
+  #loading {
+    display: none; position: fixed; inset: 0;
+    background: rgba(26,46,68,.45); z-index: 100;
+    place-items: center;
+  }
+  #loading.show { display: grid; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── RESPONSIVE ─── */
+  @media (min-width: 480px) {
+    .form-card { max-width: 520px; margin: 20px auto; }
+    .app-header { justify-content: center; }
+    #lookup-banner { max-width: 520px; margin: 16px auto 0; }
+    .submit-area { max-width: 520px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo">G</div>
+  <div>
+    <h1>Genkii CRM</h1>
+    <span>Cập nhật khách hàng nhanh</span>
+  </div>
+</header>
+
+<div id="lookup-banner"></div>
+
+<form id="crm-form" novalidate>
+
+  <!-- ── PHẦN 1: NHẬN DIỆN KHÁCH ── -->
+  <div class="form-card">
+    <div class="section-label">1 — Nhận diện khách <span>/ tự động tìm nếu đã có</span></div>
+
+    <div class="field" id="f-sales">
+      <label>Sales phụ trách <span class="req">*</span></label>
+      <div class="select-wrap">
+        <select id="sales" required>
+          <option value="">— Chọn Sales —</option>
+          <option>Ngô Vũ</option>
+          <option>Nguyễn Thị Thùy Linh</option>
+          <option>Khác</option>
+        </select>
+      </div>
+      <div class="err-msg">Vui lòng chọn Sales phụ trách</div>
+    </div>
+
+    <div class="field" id="f-phone">
+      <label>Số điện thoại <span class="req">*</span></label>
+      <input type="tel" id="phone" placeholder="09xx xxx xxx"
+             inputmode="numeric" autocomplete="tel" required>
+      <div class="hint">Nhập SĐT → hệ thống tự kiểm tra trùng lặp</div>
+      <div class="err-msg">Vui lòng nhập số điện thoại hợp lệ (9–11 số)</div>
+    </div>
+
+    <div class="field" id="f-name">
+      <label>Họ tên khách</label>
+      <input type="text" id="name" placeholder="Ví dụ: Nguyễn Thị Lan"
+             autocomplete="name">
+      <div class="hint">Nếu đã có trong hệ thống, tên cũ sẽ được bảo lưu + tên mới ghi chú thêm</div>
+    </div>
+
+    <div class="field" id="f-location">
+      <label>Cơ sở / Địa chỉ</label>
+      <input type="text" id="location" placeholder="Ví dụ: Spa Hoa Lan – Q.3, HCM">
+    </div>
+
+  </div>
+
+  <!-- ── PHẦN 2: THÔNG TIN BAN ĐẦU (chỉ hiện khi là khách MỚI) ── -->
+  <div class="form-card" id="section-new" style="display:none">
+    <div class="section-label">2 — Thông tin ban đầu <span>/ chỉ nhập 1 lần</span></div>
+
+    <div class="field" id="f-source">
+      <label>Nguồn lead <span class="req">*</span></label>
+      <div class="select-wrap">
+        <select id="source">
+          <option value="">— Chọn nguồn —</option>
+          <option>Facebook Ads</option>
+          <option>TikTok</option>
+          <option>Referral – Khách cũ giới thiệu</option>
+          <option>Zalo OA</option>
+          <option>Website</option>
+          <option>Sự kiện</option>
+          <option>Khác</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" id="f-product">
+      <label>Sản phẩm quan tâm <span class="req">*</span></label>
+      <div class="select-wrap">
+        <select id="product">
+          <option value="">— Chọn sản phẩm —</option>
+          <option>Genkii BES</option>
+          <option>Genkii ZEN+</option>
+          <option>Bamboo Aura</option>
+          <option>Genkii Hub (BES + ZEN+ + Bamboo)</option>
+          <option>BES + ZEN+</option>
+          <option>Chưa rõ</option>
+        </select>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── PHẦN 3: CẬP NHẬT LẦN NÀY ── -->
+  <div class="form-card" id="section-update">
+    <div class="section-label" id="section-update-label">2 — Cập nhật lần này</div>
+
+    <div class="field" id="f-stage">
+      <label>Giai đoạn hiện tại <span class="req">*</span></label>
+      <div class="select-wrap">
+        <select id="stage" required>
+          <option value="">— Chọn giai đoạn —</option>
+          <option>Inbox – Chưa có SĐT</option>
+          <option>SĐT – Chưa add Zalo</option>
+          <option>Đã add Zalo – Đang tư vấn</option>
+          <option>Hẹn lịch trải nghiệm</option>
+          <option>Đã trải nghiệm – Chờ quyết định</option>
+          <option>Đặt cọc</option>
+          <option>Chốt – Đã mua</option>
+          <option>Không tiềm năng</option>
+          <option>Khách cũ – Nuture tái mua</option>
+        </select>
+      </div>
+      <div class="err-msg">Vui lòng chọn giai đoạn</div>
+    </div>
+
+    <div class="field" id="f-temp">
+      <label>Nhiệt độ lead</label>
+      <div class="temp-group">
+        <button type="button" class="temp-btn" data-val="Nóng" onclick="selectTemp(this)">🔴 Nóng</button>
+        <button type="button" class="temp-btn" data-val="Ấm"   onclick="selectTemp(this)">🟡 Ấm</button>
+        <button type="button" class="temp-btn" data-val="Mát"  onclick="selectTemp(this)">🟢 Mát</button>
+      </div>
+      <input type="hidden" id="temp" value="">
+    </div>
+
+    <div class="field" id="f-content">
+      <label>Nội dung liên hệ lần này <span class="req">*</span></label>
+      <textarea id="content" rows="3"
+        placeholder="VD: Gọi lần 2. Khách hỏi về hoàn vốn, hiện có 2 KTV lương 8tr/người. Quan tâm nhưng chờ chồng đồng ý."
+        required></textarea>
+      <div class="hint">Ghi: Đã làm gì · Khách phản hồi gì · Vướng mắc nếu có</div>
+      <div class="err-msg">Vui lòng nhập nội dung liên hệ</div>
+    </div>
+
+    <div class="field" id="f-nextstep">
+      <label>Next Step cụ thể <span class="req">*</span></label>
+      <input type="text" id="nextstep"
+        placeholder="VD: Gọi lại thứ 4 (25/6), hỏi quyết định & gửi bảng hoàn vốn"
+        required>
+      <div class="hint">Phải trả lời: Làm gì? + Khi nào? + Như thế nào?</div>
+      <div class="err-msg">Vui lòng nhập Next Step cụ thể</div>
+    </div>
+
+    <div class="field" id="f-deadline">
+      <label>Deadline Next Step <span class="req">*</span></label>
+      <input type="date" id="deadline" required>
+      <div class="err-msg">Vui lòng chọn ngày deadline</div>
+    </div>
+
+    <div class="field" id="f-note">
+      <label>Ghi chú thêm</label>
+      <input type="text" id="note"
+        placeholder="VD: Zalo chặn người lạ, liên hệ qua FB · Có 2 cơ sở...">
+    </div>
+
+  </div>
+
+  <div class="submit-area">
+    <button type="submit" class="btn-submit" id="btn-submit">
+      Lưu vào CRM
+      <span class="sub-label" id="btn-label">Điền số điện thoại để tiếp tục</span>
+    </button>
+  </div>
+
+</form>
+
+<div id="toast"></div>
+<div id="loading"><div class="spinner"></div></div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — thay bằng URL Apps Script sau khi deploy
+// ══════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0QyVqJwC9cwMdSnzRvUmNxnfhk0M4_JYXFxGWe07gcEQYiNOB2qO-G3NzRmotuMn7/exec';
+
+// ──────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────
+let lookupResult = null; // null | { found: bool, rowIndex, currentData }
+let phoneTimer   = null;
+let tempSelected = '';
+
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Set default deadline = ngày mai
+  const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
+  document.getElementById('deadline').value = tmr.toISOString().split('T')[0];
+
+  // Phone lookup on change
+  document.getElementById('phone').addEventListener('input', onPhoneInput);
+  document.getElementById('phone').addEventListener('blur',  doLookup);
+
+  // Form submit
+  document.getElementById('crm-form').addEventListener('submit', onSubmit);
+});
+
+// ──────────────────────────────────────────────
+// PHONE LOOKUP
+// ──────────────────────────────────────────────
+function onPhoneInput(e) {
+  clearTimeout(phoneTimer);
+  const val = e.target.value.replace(/\D/g,'');
+  e.target.value = val;
+  hideBanner();
+  lookupResult = null;
+  updateSubmitBtn();
+  if (val.length >= 9) phoneTimer = setTimeout(doLookup, 600);
+}
+
+function doLookup() {
+  const phone = document.getElementById('phone').value.replace(/\D/g,'');
+  if (phone.length < 9) return;
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    // Demo mode
+    simulateLookup(phone);
+    return;
+  }
+  showLoading(true);
+  fetch(`${APPS_SCRIPT_URL}?action=lookup&phone=${encodeURIComponent(phone)}`)
+    .then(r => r.json())
+    .then(data => { showLoading(false); handleLookup(data); })
+    .catch(() => { showLoading(false); showToast('Lỗi kết nối. Thử lại.','error-t'); });
+}
+
+function simulateLookup(phone) {
+  // Giả lập: nếu số kết thúc bằng số chẵn → tìm thấy (demo)
+  const lastDigit = parseInt(phone.slice(-1));
+  if (lastDigit % 2 === 0) {
+    handleLookup({
+      found: true,
+      rowIndex: 5,
+      name: 'Nguyễn Thị Loan Phượng',
+      location: 'Vĩnh Yên – Vĩnh Phúc',
+      source: 'Facebook Ads',
+      product: 'Genkii BES',
+      stage: 'Đã add Zalo – Đang tư vấn',
+      lastLog: '11/05/2026 — Hẹn TN chỗ chị Thơm – Việt Trì',
+      entryDate: '04/05/2026',
+    });
+  } else {
+    handleLookup({ found: false });
+  }
+}
+
+function handleLookup(data) {
+  lookupResult = data;
+  const banner  = document.getElementById('lookup-banner');
+  const secNew  = document.getElementById('section-new');
+  const secUpd  = document.getElementById('section-update');
+  const updLbl  = document.getElementById('section-update-label');
+
+  if (data.found) {
+    // Điền sẵn thông tin cũ (read-only cảm giác)
+    setField('name',     data.name,     true);
+    setField('location', data.location, true);
+
+    secNew.style.display = 'none';
+    updLbl.textContent = '2 — Cập nhật lần này (khách đã có trong CRM)';
+
+    banner.className = 'found';
+    banner.innerHTML = `
+      <div class="banner-body">
+        <span class="banner-icon">✅</span>
+        <strong>Tìm thấy khách hàng!</strong><br>
+        <b>${data.name}</b> — ${data.location || 'Chưa có địa chỉ'}<br>
+        Sản phẩm: ${data.product || '—'} · Vào phễu: ${data.entryDate || '—'}
+        <div class="last-log">📝 Lần LH cuối: ${data.lastLog || 'Chưa có'}</div>
+      </div>`;
+    banner.style.display = 'block';
+
+    // Pre-fill stage
+    setSelect('stage', data.stage);
+
+  } else {
+    // Khách mới
+    clearField('name');
+    clearField('location');
+    secNew.style.display = 'block';
+    updLbl.textContent = '3 — Cập nhật lần này';
+
+    banner.className = 'new';
+    banner.innerHTML = `
+      <div class="banner-body">
+        <span class="banner-icon">🆕</span>
+        <strong>Khách hàng mới</strong> — Chưa có trong CRM<br>
+        Điền đầy đủ thông tin bên dưới để tạo hồ sơ mới.
+      </div>`;
+    banner.style.display = 'block';
+  }
+  updateSubmitBtn();
+}
+
+function hideBanner() {
+  const b = document.getElementById('lookup-banner');
+  b.style.display = 'none'; b.className = '';
+  document.getElementById('section-new').style.display = 'none';
+  document.getElementById('section-update-label').textContent = '2 — Cập nhật lần này';
+}
+
+// ──────────────────────────────────────────────
+// NHIỆT ĐỘ TOGGLE
+// ──────────────────────────────────────────────
+function selectTemp(btn) {
+  document.querySelectorAll('.temp-btn').forEach(b => {
+    b.classList.remove('hot','warm','cool');
+  });
+  const val = btn.dataset.val;
+  if (val === 'Nóng') btn.classList.add('hot');
+  if (val === 'Ấm')   btn.classList.add('warm');
+  if (val === 'Mát')  btn.classList.add('cool');
+  tempSelected = val;
+  document.getElementById('temp').value = val;
+}
+
+// ──────────────────────────────────────────────
+// SUBMIT
+// ──────────────────────────────────────────────
+function onSubmit(e) {
+  e.preventDefault();
+  if (!validate()) return;
+
+  const payload = {
+    action:    lookupResult?.found ? 'update' : 'create',
+    rowIndex:  lookupResult?.rowIndex ?? null,
+    sales:     v('sales'),
+    phone:     v('phone'),
+    name:      v('name'),
+    location:  v('location'),
+    source:    v('source'),
+    product:   v('product'),
+    stage:     v('stage'),
+    temp:      tempSelected,
+    content:   v('content'),
+    nextstep:  v('nextstep'),
+    deadline:  v('deadline'),
+    note:      v('note'),
+    timestamp: new Date().toLocaleString('vi-VN'),
+  };
+
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    // Demo mode
+    console.log('📤 Payload (demo):', payload);
+    showLoading(true);
+    setTimeout(() => {
+      showLoading(false);
+      showToast(payload.action === 'update'
+        ? '✅ Đã cập nhật khách hàng!'
+        : '✅ Đã thêm khách hàng mới!', 'success');
+      resetForm();
+    }, 1200);
+    return;
+  }
+
+  showLoading(true);
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  .then(r => r.json())
+  .then(res => {
+    showLoading(false);
+    if (res.success) {
+      showToast(res.message || '✅ Đã lưu thành công!', 'success');
+      resetForm();
+    } else {
+      showToast('❌ ' + (res.error || 'Lỗi không xác định'), 'error-t');
+    }
+  })
+  .catch(() => {
+    showLoading(false);
+    showToast('❌ Lỗi kết nối. Kiểm tra mạng và thử lại.', 'error-t');
+  });
+}
+
+// ──────────────────────────────────────────────
+// VALIDATE
+// ──────────────────────────────────────────────
+function validate() {
+  let ok = true;
+  const required = ['sales', 'phone', 'stage', 'content', 'nextstep', 'deadline'];
+  required.forEach(id => {
+    const field = document.getElementById('f-' + id);
+    const el    = document.getElementById(id);
+    if (!el || !field) return;
+    if (!el.value.trim()) {
+      field.classList.add('error'); ok = false;
+    } else {
+      field.classList.remove('error');
+    }
+  });
+  const phone = v('phone').replace(/\D/g,'');
+  if (phone.length < 9 || phone.length > 11) {
+    document.getElementById('f-phone').classList.add('error'); ok = false;
+  }
+  if (!ok) showToast('⚠️ Vui lòng điền đầy đủ thông tin bắt buộc', 'error-t');
+  return ok;
+}
+
+// ──────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────
+const v    = id => document.getElementById(id)?.value?.trim() ?? '';
+
+function setField(id, val, filled = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = val || '';
+  if (filled) el.classList.add('filled');
+}
+function clearField(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = ''; el.classList.remove('filled');
+}
+function setSelect(id, val) {
+  const el = document.getElementById(id);
+  if (!el || !val) return;
+  for (let opt of el.options) {
+    if (opt.value === val || opt.text === val) { el.value = opt.value; break; }
+  }
+}
+
+function updateSubmitBtn() {
+  const btn   = document.getElementById('btn-submit');
+  const label = document.getElementById('btn-label');
+  const phone = v('phone');
+  if (!phone) {
+    btn.disabled = false;
+    label.textContent = 'Điền số điện thoại để tiếp tục';
+    return;
+  }
+  if (!lookupResult) {
+    label.textContent = 'Đang kiểm tra hệ thống...';
+    return;
+  }
+  btn.disabled = false;
+  label.textContent = lookupResult.found
+    ? '→ Cập nhật hồ sơ khách đã có'
+    : '→ Tạo hồ sơ khách mới';
+}
+
+function resetForm() {
+  document.getElementById('crm-form').reset();
+  document.querySelectorAll('.temp-btn').forEach(b => b.classList.remove('hot','warm','cool'));
+  document.querySelectorAll('.field').forEach(f => f.classList.remove('error'));
+  document.querySelectorAll('input.filled, select.filled').forEach(el => el.classList.remove('filled'));
+  tempSelected = '';
+  lookupResult = null;
+  hideBanner();
+  const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
+  document.getElementById('deadline').value = tmr.toISOString().split('T')[0];
+  updateSubmitBtn();
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type ? `show ${type}` : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = type || ''; }, 3000);
+}
+
+function showLoading(on) {
+  document.getElementById('loading').classList.toggle('show', on);
+}
+</script>
+</body>
+</html>
