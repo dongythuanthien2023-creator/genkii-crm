@@ -400,7 +400,8 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0QyVqJwC9cwMd
 // ──────────────────────────────────────────────
 // STATE
 // ──────────────────────────────────────────────
-let lookupResult     = null;   // kết quả lookup theo Tên (đã merge logic so SĐT)
+let lookupResult     = null;   // kết quả lookup CUỐI CÙNG (đã merge logic so SĐT) — dùng khi submit
+let rawNameLookup     = null;  // kết quả THÔ từ server theo Tên — KHÔNG bị ghi đè, dùng để so khớp lại mỗi khi SĐT thay đổi
 let lookupInProgress = false;  // true trong lúc đang chờ kết quả lookup
 let lookupDoneName   = null;   // Tên đã lookup xong gần nhất (null = chưa lookup lần nào)
 let nameTimer    = null;
@@ -427,8 +428,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // LOOKUP THEO TÊN (bước dò đầu tiên — đúng quy trình mới)
 // ──────────────────────────────────────────────
 function onNameInput() {
-  // Tên đang được sửa lại → kết quả lookup cũ không còn đáng tin, reset
+  // Tên đang được sửa lại → kết quả lookup cũ không còn đáng tin, reset toàn bộ
   lookupResult   = null;
+  rawNameLookup  = null;
   lookupDoneName = null;
   hideBanner();
   updateSubmitBtn();
@@ -460,6 +462,7 @@ function jsonpLookupByName(name) {
     showLoading(false);
     lookupInProgress = false;
     lookupDoneName   = name;
+    rawNameLookup    = data; // LƯU NGUYÊN BẢN — không bị mất khi SĐT thay đổi sau này
     resolveLookupByNameResult(data);
     delete window._jsonpCB;
     const s = document.getElementById('jsonp-script');
@@ -482,8 +485,9 @@ function simulateLookupByName(name) {
   lookupInProgress = false;
   lookupDoneName   = name;
   // Demo: tên chứa chữ "test" (không phân biệt hoa thường) → giả lập tìm thấy trùng
+  let data;
   if (name.toLowerCase().includes('test')) {
-    resolveLookupByNameResult({
+    data = {
       found: true, byName: true,
       allRows: [394, 396, 397],
       name: name,
@@ -494,10 +498,12 @@ function simulateLookupByName(name) {
       lastLog: 'Đã gọi điện trao đổi cụ thể, hẹn lịch trải nghiệm',
       existingPhones: ['0364499691'],
       duplicateCount: 3,
-    });
+    };
   } else {
-    resolveLookupByNameResult({ found: false });
+    data = { found: false };
   }
+  rawNameLookup = data; // LƯU NGUYÊN BẢN
+  resolveLookupByNameResult(data);
 }
 
 /**
@@ -584,13 +590,19 @@ function applyAsNewCustomer(sameNameDifferentPhone) {
   updateSubmitBtn();
 }
 
-// Khi Sales nhập/sửa SĐT SAU khi đã lookup theo Tên xong và tìm thấy trùng tên,
-// cần đánh giá lại xem SĐT mới gõ có khớp existingPhones không
+// Khi Sales nhập/sửa SĐT SAU khi đã lookup theo Tên xong,
+// cần đánh giá lại xem SĐT mới gõ có khớp existingPhones không.
+// QUAN TRỌNG: dùng rawNameLookup (dữ liệu THÔ, không đổi) chứ không dùng
+// lookupResult (đã bị ghi đè thành {found:false} nếu lần trước xử lý là khách mới)
+let phoneRecheckTimer = null;
 function onPhoneInputAfterNameFound(e) {
   e.target.value = e.target.value.replace(/\D/g,'');
-  if (lookupResult && lookupResult.byName !== undefined) {
-    // Đã có kết quả lookup theo tên trước đó → đánh giá lại theo SĐT mới
-    resolveLookupByNameResult(lookupResult.found ? lookupResult : { found: false });
+  clearTimeout(phoneRecheckTimer);
+  if (rawNameLookup !== null) {
+    // Debounce nhẹ để không đánh giá lại liên tục khi đang gõ từng số
+    phoneRecheckTimer = setTimeout(() => {
+      resolveLookupByNameResult(rawNameLookup);
+    }, 400);
   }
 }
 
@@ -772,8 +784,10 @@ function resetForm() {
   document.querySelectorAll('.temp-btn').forEach(b => b.classList.remove('hot','warm','cool'));
   document.querySelectorAll('.field').forEach(f => f.classList.remove('error'));
   document.querySelectorAll('input.filled, select.filled').forEach(el => el.classList.remove('filled'));
-  tempSelected = '';
-  lookupResult = null;
+  tempSelected   = '';
+  lookupResult   = null;
+  rawNameLookup  = null;
+  lookupDoneName = null;
   hideBanner();
   const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
   document.getElementById('deadline').value = tmr.toISOString().split('T')[0];
