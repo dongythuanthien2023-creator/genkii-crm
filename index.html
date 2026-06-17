@@ -324,15 +324,13 @@
       <div class="select-wrap">
         <select id="stage" required>
           <option value="">— Chọn giai đoạn —</option>
-          <option>Inbox – Chưa có SĐT</option>
-          <option>SĐT – Chưa add Zalo</option>
-          <option>Đã add Zalo – Đang tư vấn</option>
-          <option>Hẹn lịch trải nghiệm</option>
-          <option>Đã trải nghiệm – Chờ quyết định</option>
-          <option>Đặt cọc</option>
-          <option>Chốt – Đã mua</option>
+          <option>Inbox</option>
+          <option>SĐT - Chưa add Zalo</option>
+          <option>Đã add Zalo - Tư vấn</option>
+          <option>Chốt</option>
           <option>Không tiềm năng</option>
-          <option>Khách cũ – Nuture tái mua</option>
+          <option>Khách cũ</option>
+          <option>Khách yêu cầu đặc biệt</option>
         </select>
       </div>
       <div class="err-msg">Vui lòng chọn giai đoạn</div>
@@ -401,7 +399,9 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0QyVqJwC9cwMd
 // ──────────────────────────────────────────────
 // STATE
 // ──────────────────────────────────────────────
-let lookupResult = null; // null | { found: bool, rowIndex, currentData }
+let lookupResult = null;       // null | { found: bool, rowIndex, currentData }
+let lookupInProgress = false;  // true trong lúc đang chờ kết quả lookup
+let lookupDonePhone = '';      // SĐT đã lookup xong gần nhất — để biết lookup có khớp SĐT hiện tại không
 let phoneTimer   = null;
 let tempSelected = '';
 
@@ -430,13 +430,16 @@ function onPhoneInput(e) {
   e.target.value = val;
   hideBanner();
   lookupResult = null;
+  lookupDonePhone = '';
   updateSubmitBtn();
-  if (val.length >= 9) phoneTimer = setTimeout(doLookup, 600);
+  if (val.length >= 9) phoneTimer = setTimeout(doLookup, 500);
 }
 
 function doLookup() {
   const phone = document.getElementById('phone').value.replace(/\D/g,'');
   if (phone.length < 9) return;
+  lookupInProgress = true;
+  updateSubmitBtn();
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
     simulateLookup(phone);
     return;
@@ -454,6 +457,8 @@ function jsonpLookup(phone) {
   // Callback toàn cục
   window._jsonpCB = function(data) {
     showLoading(false);
+    lookupInProgress = false;
+    lookupDonePhone = phone;
     handleLookup(data);
     delete window._jsonpCB;
     const s = document.getElementById('jsonp-script');
@@ -465,12 +470,16 @@ function jsonpLookup(phone) {
   script.src = `${APPS_SCRIPT_URL}?action=lookup&phone=${encodeURIComponent(phone)}&callback=_jsonpCB`;
   script.onerror = () => {
     showLoading(false);
-    showToast('❌ Lỗi kết nối lookup. Thử lại.', 'error-t');
+    lookupInProgress = false;
+    showToast('❌ Lỗi kết nối lookup. Bấm ra ngoài ô SĐT để thử lại.', 'error-t');
+    updateSubmitBtn();
   };
   document.head.appendChild(script);
 }
 
 function simulateLookup(phone) {
+  lookupInProgress = false;
+  lookupDonePhone = phone;
   // Giả lập: nếu số kết thúc bằng số chẵn → tìm thấy (demo)
   const lastDigit = parseInt(phone.slice(-1));
   if (lastDigit % 2 === 0) {
@@ -639,7 +648,25 @@ function validate() {
   if (phone.length < 9 || phone.length > 11) {
     document.getElementById('f-phone').classList.add('error'); ok = false;
   }
-  if (!ok) showToast('⚠️ Vui lòng điền đầy đủ thông tin bắt buộc', 'error-t');
+
+  // CHẶN QUAN TRỌNG: không cho submit nếu lookup đang chạy
+  // hoặc lookup chưa từng chạy cho đúng SĐT hiện tại trên form
+  // → tránh tạo trùng khách hàng do gửi trước khi biết kết quả lookup
+  if (phone.length >= 9) {
+    if (lookupInProgress) {
+      showToast('⏳ Đang kiểm tra số điện thoại, vui lòng đợi 1-2 giây rồi bấm lại', 'error-t');
+      ok = false;
+    } else if (lookupDonePhone !== phone) {
+      showToast('⚠️ Hệ thống chưa kiểm tra xong SĐT này. Bấm ra ngoài ô SĐT rồi thử lại', 'error-t');
+      document.getElementById('f-phone').classList.add('error');
+      doLookup(); // tự động kích hoạt lookup lại
+      ok = false;
+    }
+  }
+
+  if (!ok && phone.length >= 9 && !lookupInProgress && lookupDonePhone === phone) {
+    showToast('⚠️ Vui lòng điền đầy đủ thông tin bắt buộc', 'error-t');
+  }
   return ok;
 }
 
@@ -670,18 +697,20 @@ function setSelect(id, val) {
 function updateSubmitBtn() {
   const btn   = document.getElementById('btn-submit');
   const label = document.getElementById('btn-label');
-  const phone = v('phone');
-  if (!phone) {
+  const phone = v('phone').replace(/\D/g,'');
+
+  if (phone.length < 9) {
     btn.disabled = false;
     label.textContent = 'Điền số điện thoại để tiếp tục';
     return;
   }
-  if (!lookupResult) {
-    label.textContent = 'Đang kiểm tra hệ thống...';
+  if (lookupInProgress || lookupDonePhone !== phone) {
+    btn.disabled = false; // vẫn cho bấm nhưng validate() sẽ chặn + tự lookup lại
+    label.textContent = '⏳ Đang kiểm tra số điện thoại...';
     return;
   }
   btn.disabled = false;
-  label.textContent = lookupResult.found
+  label.textContent = lookupResult && lookupResult.found
     ? '→ Cập nhật hồ sơ khách đã có'
     : '→ Tạo hồ sơ khách mới';
 }
