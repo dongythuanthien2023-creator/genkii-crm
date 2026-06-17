@@ -256,19 +256,20 @@
       <div class="err-msg">Vui lòng chọn Sales phụ trách</div>
     </div>
 
-    <div class="field" id="f-phone">
-      <label>Số điện thoại <span class="req">*</span></label>
-      <input type="tel" id="phone" placeholder="09xx xxx xxx"
-             inputmode="numeric" autocomplete="tel" required>
-      <div class="hint">Nhập SĐT → hệ thống tự kiểm tra trùng lặp</div>
-      <div class="err-msg">Vui lòng nhập số điện thoại hợp lệ (9–11 số)</div>
+    <div class="field" id="f-name">
+      <label>Họ tên khách <span class="req">*</span></label>
+      <input type="text" id="name" placeholder="Ví dụ: Nguyễn Thị Lan"
+             autocomplete="name" required>
+      <div class="hint">Nhập xong → bấm ra ngoài, hệ thống tự kiểm tra trùng</div>
+      <div class="err-msg">Vui lòng nhập họ tên khách</div>
     </div>
 
-    <div class="field" id="f-name">
-      <label>Họ tên khách</label>
-      <input type="text" id="name" placeholder="Ví dụ: Nguyễn Thị Lan"
-             autocomplete="name">
-      <div class="hint">Nếu đã có trong hệ thống, tên cũ sẽ được bảo lưu + tên mới ghi chú thêm</div>
+    <div class="field" id="f-phone">
+      <label>Số điện thoại</label>
+      <input type="tel" id="phone" placeholder="09xx xxx xxx (có thể bỏ trống nếu chưa có)"
+             inputmode="numeric" autocomplete="tel">
+      <div class="hint">Chưa có SĐT (khách mới Inbox) vẫn lưu được bình thường</div>
+      <div class="err-msg">Số điện thoại không hợp lệ (cần 9–11 số)</div>
     </div>
 
     <div class="field" id="f-location">
@@ -399,142 +400,178 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0QyVqJwC9cwMd
 // ──────────────────────────────────────────────
 // STATE
 // ──────────────────────────────────────────────
-let lookupResult = null;       // null | { found: bool, rowIndex, currentData }
+let lookupResult     = null;   // kết quả lookup theo Tên (đã merge logic so SĐT)
 let lookupInProgress = false;  // true trong lúc đang chờ kết quả lookup
-let lookupDonePhone = '';      // SĐT đã lookup xong gần nhất — để biết lookup có khớp SĐT hiện tại không
-let phoneTimer   = null;
+let lookupDoneName   = null;   // Tên đã lookup xong gần nhất (null = chưa lookup lần nào)
+let nameTimer    = null;
 let tempSelected = '';
 
 // ──────────────────────────────────────────────
 // INIT
 // ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Set default deadline = ngày mai
   const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
   document.getElementById('deadline').value = tmr.toISOString().split('T')[0];
 
-  // Phone lookup on change
-  document.getElementById('phone').addEventListener('input', onPhoneInput);
-  document.getElementById('phone').addEventListener('blur',  doLookup);
+  // Lookup kích hoạt khi rời khỏi ô TÊN (không phải SĐT nữa)
+  document.getElementById('name').addEventListener('blur', onNameBlur);
+  // Gõ lại tên → hủy kết quả lookup cũ, chờ lookup lại
+  document.getElementById('name').addEventListener('input', onNameInput);
+  // SĐT không kích hoạt lookup — chỉ dùng để SO KHỚP với SĐT đã có khi đã tìm thấy trùng tên
+  document.getElementById('phone').addEventListener('input', onPhoneInputAfterNameFound);
 
-  // Form submit
   document.getElementById('crm-form').addEventListener('submit', onSubmit);
 });
 
 // ──────────────────────────────────────────────
-// PHONE LOOKUP
+// LOOKUP THEO TÊN (bước dò đầu tiên — đúng quy trình mới)
 // ──────────────────────────────────────────────
-function onPhoneInput(e) {
-  clearTimeout(phoneTimer);
-  const val = e.target.value.replace(/\D/g,'');
-  e.target.value = val;
+function onNameInput() {
+  // Tên đang được sửa lại → kết quả lookup cũ không còn đáng tin, reset
+  lookupResult   = null;
+  lookupDoneName = null;
   hideBanner();
-  lookupResult = null;
-  lookupDonePhone = '';
   updateSubmitBtn();
-  if (val.length >= 9) phoneTimer = setTimeout(doLookup, 500);
 }
 
-function doLookup() {
-  const phone = document.getElementById('phone').value.replace(/\D/g,'');
-  if (phone.length < 9) return;
+function onNameBlur() {
+  const name = v('name');
+  if (!name) { updateSubmitBtn(); return; }
+  doLookupByName(name);
+}
+
+function doLookupByName(name) {
   lookupInProgress = true;
   updateSubmitBtn();
+
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
-    simulateLookup(phone);
+    simulateLookupByName(name);
     return;
   }
   showLoading(true);
-  jsonpLookup(phone);
+  jsonpLookupByName(name);
 }
 
-
-function jsonpLookup(phone) {
-  // Xóa script JSONP cũ nếu có
+function jsonpLookupByName(name) {
   const old = document.getElementById('jsonp-script');
   if (old) old.remove();
-  
-  // Callback toàn cục
+
   window._jsonpCB = function(data) {
     showLoading(false);
     lookupInProgress = false;
-    lookupDonePhone = phone;
-    handleLookup(data);
+    lookupDoneName   = name;
+    resolveLookupByNameResult(data);
     delete window._jsonpCB;
     const s = document.getElementById('jsonp-script');
     if (s) s.remove();
   };
-  
+
   const script = document.createElement('script');
   script.id = 'jsonp-script';
-  script.src = `${APPS_SCRIPT_URL}?action=lookup&phone=${encodeURIComponent(phone)}&callback=_jsonpCB`;
+  script.src = `${APPS_SCRIPT_URL}?action=lookupByName&name=${encodeURIComponent(name)}&callback=_jsonpCB`;
   script.onerror = () => {
     showLoading(false);
     lookupInProgress = false;
-    showToast('❌ Lỗi kết nối lookup. Bấm ra ngoài ô SĐT để thử lại.', 'error-t');
+    showToast('❌ Lỗi kết nối kiểm tra. Bấm ra ngoài ô Tên để thử lại.', 'error-t');
     updateSubmitBtn();
   };
   document.head.appendChild(script);
 }
 
-function simulateLookup(phone) {
+function simulateLookupByName(name) {
   lookupInProgress = false;
-  lookupDonePhone = phone;
-  // Giả lập: nếu số kết thúc bằng số chẵn → tìm thấy (demo)
-  const lastDigit = parseInt(phone.slice(-1));
-  if (lastDigit % 2 === 0) {
-    handleLookup({
-      found: true,
-      rowIndex: 5,
-      name: 'Nguyễn Thị Loan Phượng',
-      location: 'Vĩnh Yên – Vĩnh Phúc',
-      source: 'Facebook Ads',
-      product: 'Genkii BES',
-      stage: 'Đã add Zalo – Đang tư vấn',
-      lastLog: '11/05/2026 — Hẹn TN chỗ chị Thơm – Việt Trì',
-      entryDate: '04/05/2026',
+  lookupDoneName   = name;
+  // Demo: tên chứa chữ "test" (không phân biệt hoa thường) → giả lập tìm thấy trùng
+  if (name.toLowerCase().includes('test')) {
+    resolveLookupByNameResult({
+      found: true, byName: true,
+      allRows: [394, 396, 397],
+      name: name,
+      location: 'Genkii 214 Nguyễn Xiển',
+      source: 'Facebook Ads', product: 'Genkii BES',
+      stage: 'Đã add Zalo - Tư vấn',
+      entryDate: '17/06/2026',
+      lastLog: 'Đã gọi điện trao đổi cụ thể, hẹn lịch trải nghiệm',
+      existingPhones: ['0364499691'],
+      duplicateCount: 3,
     });
   } else {
-    handleLookup({ found: false });
+    resolveLookupByNameResult({ found: false });
   }
 }
 
-function handleLookup(data) {
+/**
+ * Xử lý kết quả lookupByName theo đúng quy tắc:
+ *  - Không tìm thấy tên trùng                → khách mới
+ *  - Tên trùng + SĐT hiện tại khớp 1 trong existingPhones → khách cũ, gộp
+ *  - Tên trùng + SĐT hiện tại khác hết        → khách mới (trùng tên ngẫu nhiên)
+ *  - Tên trùng + SĐT hiện tại đang để trống   → khách mới (chưa đủ căn cứ)
+ */
+function resolveLookupByNameResult(data) {
+  if (!data.found) {
+    applyAsNewCustomer();
+    return;
+  }
+
+  const phoneNow = v('phone').replace(/\D/g,'');
+  const existingPhones = data.existingPhones || [];
+
+  if (phoneNow && existingPhones.includes(phoneNow)) {
+    // Trùng tên + trùng SĐT → chắc chắn khách cũ
+    applyAsExistingCustomer(data);
+  } else {
+    // Trùng tên nhưng khác SĐT, hoặc chưa nhập SĐT → khách mới
+    applyAsNewCustomer(data.found ? data : null);
+  }
+}
+
+function applyAsExistingCustomer(data) {
   lookupResult = data;
-  const banner  = document.getElementById('lookup-banner');
-  const secNew  = document.getElementById('section-new');
-  const secUpd  = document.getElementById('section-update');
-  const updLbl  = document.getElementById('section-update-label');
+  const banner = document.getElementById('lookup-banner');
+  const secNew = document.getElementById('section-new');
+  const updLbl = document.getElementById('section-update-label');
 
-  if (data.found) {
-    // Điền sẵn thông tin cũ (read-only cảm giác)
-    setField('name',     data.name,     true);
-    setField('location', data.location, true);
+  setField('location', data.location, true);
+  secNew.style.display = 'none';
+  updLbl.textContent = '2 — Cập nhật lần này (khách đã có trong CRM)';
 
-    secNew.style.display = 'none';
-    updLbl.textContent = '2 — Cập nhật lần này (khách đã có trong CRM)';
+  banner.className = 'found';
+  banner.innerHTML = `
+    <div class="banner-body">
+      <span class="banner-icon">✅</span>
+      <strong>Tìm thấy khách hàng trùng Tên + SĐT!</strong><br>
+      <b>${data.name}</b> — ${data.location || 'Chưa có địa chỉ'}<br>
+      Sản phẩm: ${data.product || '—'} · Vào phễu: ${data.entryDate || '—'}
+      ${data.duplicateCount > 1 ? `<br>Sẽ gộp ${data.duplicateCount} dòng trùng thành 1` : ''}
+      <div class="last-log">📝 Lần LH cuối: ${data.lastLog || 'Chưa có'}</div>
+    </div>`;
+  banner.style.display = 'block';
+  setSelect('stage', data.stage);
+  updateSubmitBtn();
+}
 
-    banner.className = 'found';
+function applyAsNewCustomer(sameNameDifferentPhone) {
+  lookupResult = { found: false };
+  const banner = document.getElementById('lookup-banner');
+  const secNew = document.getElementById('section-new');
+  const updLbl = document.getElementById('section-update-label');
+
+  clearField('location');
+  secNew.style.display = 'block';
+  updLbl.textContent = '3 — Cập nhật lần này';
+
+  if (sameNameDifferentPhone) {
+    // Trùng tên nhưng khác SĐT — cảnh báo nhẹ để Sales tự kiểm tra cho chắc,
+    // nhưng vẫn xử lý là khách MỚI theo đúng quy tắc đã thống nhất
+    banner.className = 'new';
     banner.innerHTML = `
       <div class="banner-body">
-        <span class="banner-icon">✅</span>
-        <strong>Tìm thấy khách hàng!</strong><br>
-        <b>${data.name}</b> — ${data.location || 'Chưa có địa chỉ'}<br>
-        Sản phẩm: ${data.product || '—'} · Vào phễu: ${data.entryDate || '—'}
-        <div class="last-log">📝 Lần LH cuối: ${data.lastLog || 'Chưa có'}</div>
+        <span class="banner-icon">⚠️</span>
+        <strong>Trùng tên nhưng khác SĐT</strong> — xử lý như khách mới<br>
+        Đã có ${sameNameDifferentPhone.duplicateCount} hồ sơ tên "${sameNameDifferentPhone.name}" với SĐT khác.
+        Nếu đây thực sự là cùng 1 khách, hãy kiểm tra lại SĐT trước khi lưu.
       </div>`;
-    banner.style.display = 'block';
-
-    // Pre-fill stage
-    setSelect('stage', data.stage);
-
   } else {
-    // Khách mới
-    clearField('name');
-    clearField('location');
-    secNew.style.display = 'block';
-    updLbl.textContent = '3 — Cập nhật lần này';
-
     banner.className = 'new';
     banner.innerHTML = `
       <div class="banner-body">
@@ -542,9 +579,19 @@ function handleLookup(data) {
         <strong>Khách hàng mới</strong> — Chưa có trong CRM<br>
         Điền đầy đủ thông tin bên dưới để tạo hồ sơ mới.
       </div>`;
-    banner.style.display = 'block';
   }
+  banner.style.display = 'block';
   updateSubmitBtn();
+}
+
+// Khi Sales nhập/sửa SĐT SAU khi đã lookup theo Tên xong và tìm thấy trùng tên,
+// cần đánh giá lại xem SĐT mới gõ có khớp existingPhones không
+function onPhoneInputAfterNameFound(e) {
+  e.target.value = e.target.value.replace(/\D/g,'');
+  if (lookupResult && lookupResult.byName !== undefined) {
+    // Đã có kết quả lookup theo tên trước đó → đánh giá lại theo SĐT mới
+    resolveLookupByNameResult(lookupResult.found ? lookupResult : { found: false });
+  }
 }
 
 function hideBanner() {
@@ -576,9 +623,12 @@ function onSubmit(e) {
   e.preventDefault();
   if (!validate()) return;
 
+  const isUpdate = lookupResult && lookupResult.found;
+
   const payload = {
-    action:    lookupResult?.found ? 'update' : 'create',
-    rowIndex:  lookupResult?.rowIndex ?? null,
+    action:    isUpdate ? 'update' : 'create',
+    allRows:   isUpdate ? lookupResult.allRows : null,
+    rowIndex:  isUpdate ? lookupResult.rowIndex : null,
     sales:     v('sales'),
     phone:     v('phone'),
     name:      v('name'),
@@ -595,7 +645,6 @@ function onSubmit(e) {
   };
 
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
-    // Demo mode
     console.log('📤 Payload (demo):', payload);
     showLoading(true);
     setTimeout(() => {
@@ -609,8 +658,6 @@ function onSubmit(e) {
   }
 
   showLoading(true);
-  // Dùng no-cors fetch để tránh CORS block — Apps Script nhận được data
-  // Không đọc được response nên giả định thành công sau 2 giây
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
     mode: 'no-cors',
@@ -633,7 +680,8 @@ function onSubmit(e) {
 // ──────────────────────────────────────────────
 function validate() {
   let ok = true;
-  const required = ['sales', 'phone', 'stage', 'content', 'nextstep', 'deadline'];
+  // SĐT KHÔNG còn bắt buộc — bỏ khỏi danh sách required
+  const required = ['sales', 'name', 'stage', 'content', 'nextstep', 'deadline'];
   required.forEach(id => {
     const field = document.getElementById('f-' + id);
     const el    = document.getElementById(id);
@@ -644,27 +692,31 @@ function validate() {
       field.classList.remove('error');
     }
   });
+
+  // SĐT: nếu CÓ nhập thì phải hợp lệ, nếu để trống thì bỏ qua (không bắt buộc)
   const phone = v('phone').replace(/\D/g,'');
-  if (phone.length < 9 || phone.length > 11) {
+  if (phone && (phone.length < 9 || phone.length > 11)) {
     document.getElementById('f-phone').classList.add('error'); ok = false;
+  } else {
+    document.getElementById('f-phone').classList.remove('error');
   }
 
-  // CHẶN QUAN TRỌNG: không cho submit nếu lookup đang chạy
-  // hoặc lookup chưa từng chạy cho đúng SĐT hiện tại trên form
-  // → tránh tạo trùng khách hàng do gửi trước khi biết kết quả lookup
-  if (phone.length >= 9) {
+  // CHẶN QUAN TRỌNG: không cho submit nếu lookup theo Tên đang chạy
+  // hoặc chưa từng lookup cho đúng Tên hiện tại trên form
+  const name = v('name');
+  if (name) {
     if (lookupInProgress) {
-      showToast('⏳ Đang kiểm tra số điện thoại, vui lòng đợi 1-2 giây rồi bấm lại', 'error-t');
+      showToast('⏳ Đang kiểm tra tên khách, vui lòng đợi 1-2 giây rồi bấm lại', 'error-t');
       ok = false;
-    } else if (lookupDonePhone !== phone) {
-      showToast('⚠️ Hệ thống chưa kiểm tra xong SĐT này. Bấm ra ngoài ô SĐT rồi thử lại', 'error-t');
-      document.getElementById('f-phone').classList.add('error');
-      doLookup(); // tự động kích hoạt lookup lại
+    } else if (lookupDoneName !== name) {
+      showToast('⚠️ Hệ thống chưa kiểm tra xong tên này. Bấm ra ngoài ô Tên rồi thử lại', 'error-t');
+      document.getElementById('f-name').classList.add('error');
+      doLookupByName(name);
       ok = false;
     }
   }
 
-  if (!ok && phone.length >= 9 && !lookupInProgress && lookupDonePhone === phone) {
+  if (!ok && name && !lookupInProgress && lookupDoneName === name) {
     showToast('⚠️ Vui lòng điền đầy đủ thông tin bắt buộc', 'error-t');
   }
   return ok;
@@ -697,16 +749,16 @@ function setSelect(id, val) {
 function updateSubmitBtn() {
   const btn   = document.getElementById('btn-submit');
   const label = document.getElementById('btn-label');
-  const phone = v('phone').replace(/\D/g,'');
+  const name  = v('name');
 
-  if (phone.length < 9) {
+  if (!name) {
     btn.disabled = false;
-    label.textContent = 'Điền số điện thoại để tiếp tục';
+    label.textContent = 'Điền họ tên khách để tiếp tục';
     return;
   }
-  if (lookupInProgress || lookupDonePhone !== phone) {
+  if (lookupInProgress || lookupDoneName !== name) {
     btn.disabled = false; // vẫn cho bấm nhưng validate() sẽ chặn + tự lookup lại
-    label.textContent = '⏳ Đang kiểm tra số điện thoại...';
+    label.textContent = '⏳ Đang kiểm tra tên khách...';
     return;
   }
   btn.disabled = false;
