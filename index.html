@@ -146,9 +146,6 @@
     background: var(--grey-2); color: var(--grey-3);
     cursor: not-allowed; border-color: var(--grey-2);
   }
-  .temp-group.locked .temp-btn {
-    pointer-events: none; opacity: .55; background: var(--grey-2); color: var(--grey-3); border-color: var(--grey-2);
-  }
 
   /* DROPDOWN arrow */
   .select-wrap { position: relative; }
@@ -357,7 +354,6 @@
         <button type="button" class="temp-btn" data-val="Mát"  onclick="selectTemp(this)">🟢 Mát</button>
       </div>
       <input type="hidden" id="temp" value="">
-      <div class="hint" id="temp-lock-hint" style="display:none">🔒 Đang khóa — khách chưa hoàn thành vòng Chốt trước đó</div>
     </div>
 
     <div class="field" id="f-content">
@@ -575,26 +571,25 @@ function applyAsExistingCustomer(data) {
 }
 
 /**
- * Khóa/mở 3 ô Nguồn lead, Sản phẩm, Nhiệt độ theo đúng yêu cầu nghiệp vụ:
- * chỉ mở khóa khi khách đã hoàn thành 1 vòng Chốt ở lần nhập TRƯỚC (isUnlocked
- * do backend tính toán và trả về qua lookupByName/lookupByPhone).
+ * Khóa/mở Nguồn lead và Sản phẩm theo đúng yêu cầu nghiệp vụ: chỉ mở khóa khi
+ * khách đã hoàn thành 1 vòng Chốt ở lần nhập TRƯỚC (isUnlocked do backend tính
+ * toán và trả về qua lookupByName/lookupByPhone).
+ * LƯU Ý: Nhiệt độ KHÔNG nằm trong nhóm bị khóa — đây là chỉ số thay đổi liên tục
+ * trong quá trình tư vấn (có thể giảm dần dù khách chưa Chốt), Sales luôn được
+ * cập nhật tự do ở mọi giai đoạn.
  */
 function applyLockState(isUnlocked) {
   const sourceEl   = document.getElementById('source');
   const productEl  = document.getElementById('product');
-  const tempGroup  = document.querySelector('.temp-group');
   const sourceHint = document.getElementById('source-lock-hint');
   const productHint= document.getElementById('product-lock-hint');
-  const tempHint   = document.getElementById('temp-lock-hint');
   const sectionLbl = document.getElementById('section-source-label');
 
   sourceEl.disabled  = !isUnlocked;
   productEl.disabled = !isUnlocked;
-  tempGroup.classList.toggle('locked', !isUnlocked);
 
   sourceHint.style.display  = isUnlocked ? 'none' : 'block';
   productHint.style.display = isUnlocked ? 'none' : 'block';
-  tempHint.style.display    = isUnlocked ? 'none' : 'block';
 
   sectionLbl.innerHTML = isUnlocked
     ? '2 — Nguồn lead & Sản phẩm <span style="color:var(--green)">/ Đã mở khóa — khách vừa hoàn thành 1 vòng Chốt</span>'
