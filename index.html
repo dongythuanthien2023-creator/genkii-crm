@@ -222,12 +222,68 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ─── TABS ─── */
+  .tab-bar {
+    display: flex; gap: 6px;
+    padding: 10px 16px 0;
+    background: var(--navy);
+  }
+  .tab-btn {
+    flex: 1; padding: 11px 8px;
+    background: rgba(255,255,255,.08);
+    border: none; border-radius: 10px 10px 0 0;
+    color: rgba(255,255,255,.65);
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; text-align: center;
+    transition: all .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-btn.active { background: var(--grey-1); color: var(--navy); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ─── COMPLETE ORDER PANEL ─── */
+  .order-info-card {
+    display: none;
+    background: var(--white);
+    margin: 16px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+  }
+  .order-info-card.show { display: block; }
+  .order-info-card .oi-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--grey-2); font-size: 13.5px; }
+  .order-info-card .oi-row:last-child { border-bottom: none; }
+  .order-info-card .oi-label { color: var(--grey-4); font-weight: 600; }
+  .order-info-card .oi-value { color: var(--text); font-weight: 600; text-align: right; max-width: 60%; }
+  .order-info-card .oi-log { margin-top: 10px; padding: 10px 12px; background: var(--grey-1); border-radius: 8px; font-size: 12.5px; color: var(--grey-4); font-style: italic; white-space: pre-line; }
+
+  .purchase-history-card {
+    background: var(--white);
+    margin: 16px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .ph-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--grey-2);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13.5px;
+  }
+  .ph-item:last-child { border-bottom: none; }
+  .ph-date { color: var(--navy); font-weight: 700; }
+  .ph-content { color: var(--grey-4); font-size: 12.5px; max-width: 65%; text-align: right; }
+
   /* ─── RESPONSIVE ─── */
   @media (min-width: 480px) {
     .form-card { max-width: 520px; margin: 20px auto; }
     .app-header { justify-content: center; }
     #lookup-banner { max-width: 520px; margin: 16px auto 0; }
     .submit-area { max-width: 520px; margin: 0 auto; }
+    .tab-bar { max-width: 552px; margin: 0 auto; padding-top: 12px; }
+    .order-info-card { max-width: 520px; margin: 16px auto; }
+    .purchase-history-card { max-width: 520px; margin: 16px auto; }
   }
 </style>
 </head>
@@ -240,6 +296,14 @@
     <span>Cập nhật khách hàng nhanh</span>
   </div>
 </header>
+
+<div class="tab-bar">
+  <button type="button" class="tab-btn active" id="tab-btn-update" onclick="switchTab('update')">Nhập / Cập nhật</button>
+  <button type="button" class="tab-btn" id="tab-btn-complete" onclick="switchTab('complete')">Hoàn thành đơn hàng</button>
+</div>
+
+<!-- ══════════════ TAB 1: NHẬP / CẬP NHẬT (nội dung cũ, không đổi logic) ══════════════ -->
+<div class="tab-panel active" id="tab-panel-update">
 
 <div id="lookup-banner"></div>
 
@@ -397,6 +461,51 @@
 
 </form>
 
+<!-- Yêu cầu 7: lịch sử mua hàng — chỉ hiện khi khách đã từng Chốt ít nhất 1 lần -->
+<div class="purchase-history-card" id="purchase-history-card" style="display:none">
+  <div class="section-label">📦 Lịch sử mua hàng</div>
+  <div id="purchase-history-list"></div>
+</div>
+
+</div> <!-- /tab-panel-update -->
+
+<!-- ══════════════ TAB 2: HOÀN THÀNH ĐƠN HÀNG (yêu cầu 5, 6) ══════════════ -->
+<div class="tab-panel" id="tab-panel-complete">
+
+  <div class="form-card">
+    <div class="section-label">1 — Xác nhận khách hàng <span>/ phải khớp đúng Tên + SĐT</span></div>
+
+    <div class="field" id="f-co-name">
+      <label>Họ tên khách <span class="req">*</span></label>
+      <input type="text" id="co-name" placeholder="Nhập đúng họ tên đã lưu trong CRM" autocomplete="name">
+      <div class="err-msg">Vui lòng nhập họ tên khách</div>
+    </div>
+
+    <div class="field" id="f-co-phone">
+      <label>Số điện thoại <span class="req">*</span></label>
+      <input type="tel" id="co-phone" placeholder="Nhập đúng SĐT đã lưu trong CRM" inputmode="numeric" autocomplete="tel">
+      <div class="hint">Nhập đủ cả Tên và SĐT → bấm ra ngoài để kiểm tra</div>
+      <div class="err-msg">Vui lòng nhập số điện thoại</div>
+    </div>
+
+  </div>
+
+  <div class="order-info-card" id="order-info-card">
+    <div class="oi-row"><span class="oi-label">Khách hàng</span><span class="oi-value" id="oi-name">—</span></div>
+    <div class="oi-row"><span class="oi-label">Giai đoạn hiện tại</span><span class="oi-value" id="oi-stage">—</span></div>
+    <div class="oi-row"><span class="oi-label">Sản phẩm quan tâm</span><span class="oi-value" id="oi-product">—</span></div>
+    <div class="oi-log" id="oi-lastlog">—</div>
+  </div>
+
+  <div class="submit-area">
+    <button type="button" class="btn-submit" id="btn-complete" disabled style="background:var(--grey-3)">
+      Hoàn thành đơn hàng
+      <span class="sub-label" id="btn-complete-label">Nhập đủ Tên + SĐT khớp đúng khách đang ở giai đoạn Chốt</span>
+    </button>
+  </div>
+
+</div> <!-- /tab-panel-complete -->
+
 <div id="toast"></div>
 <div id="loading"><div class="spinner"></div></div>
 
@@ -548,6 +657,17 @@ function applyAsExistingCustomer(data) {
   setField('location', data.location, true);
   updLbl.textContent = '3 — Cập nhật lần này (khách đã có trong CRM)';
 
+  // Yêu cầu 7: nếu khách đã từng mua hàng thành công ít nhất 1 lần, thêm dòng
+  // cảnh báo riêng ngay trong banner để Sales biết ngay đây là khách đã từng Chốt.
+  const lastPurchase = (data.purchaseHistory && data.purchaseHistory.length > 0)
+    ? data.purchaseHistory[data.purchaseHistory.length - 1]
+    : null;
+  const purchaseAlert = data.hasCompletedDeal && lastPurchase
+    ? `<div class="last-log" style="background:var(--green-lt);color:var(--green);font-style:normal;font-weight:600;">
+         🎉 Khách hàng đã từng mua hàng thành công gần nhất vào ngày ${lastPurchase.date}
+       </div>`
+    : '';
+
   banner.className = 'found';
   banner.innerHTML = `
     <div class="banner-body">
@@ -557,6 +677,7 @@ function applyAsExistingCustomer(data) {
       Sản phẩm: ${data.product || '—'} · Vào phễu: ${data.entryDate || '—'}
       ${data.duplicateCount > 1 ? `<br>Sẽ gộp ${data.duplicateCount} dòng trùng thành 1` : ''}
       <div class="last-log">📝 Lần LH cuối: ${data.lastLog || 'Chưa có'}</div>
+      ${purchaseAlert}
     </div>`;
   banner.style.display = 'block';
   setSelect('stage', data.stage);
@@ -566,6 +687,7 @@ function applyAsExistingCustomer(data) {
   setSelect('source', data.source);
   setSelect('product', data.product);
 
+  renderPurchaseHistory(data.purchaseHistory || []);
   applyLockState(!!data.isUnlocked);
   updateSubmitBtn();
 }
@@ -578,6 +700,27 @@ function applyAsExistingCustomer(data) {
  * trong quá trình tư vấn (có thể giảm dần dù khách chưa Chốt), Sales luôn được
  * cập nhật tự do ở mọi giai đoạn.
  */
+/**
+ * Yêu cầu 7: hiển thị bảng lịch sử mua hàng ở dưới cùng form chính.
+ * Chỉ hiện khi khách có ít nhất 1 đơn hàng đã hoàn thành thật (qua nút
+ * "Hoàn thành đơn hàng"), mỗi dòng chỉ cần ngày + sản phẩm theo đúng yêu cầu.
+ */
+function renderPurchaseHistory(history) {
+  const card = document.getElementById('purchase-history-card');
+  const list = document.getElementById('purchase-history-list');
+  if (!history || history.length === 0) {
+    card.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = history.map(h => `
+    <div class="ph-item">
+      <span class="ph-date">📅 ${h.date}</span>
+      <span class="ph-content">${h.product || 'Chưa rõ sản phẩm'}</span>
+    </div>`).join('');
+  card.style.display = 'block';
+}
+
 function applyLockState(isUnlocked) {
   const sourceEl   = document.getElementById('source');
   const productEl  = document.getElementById('product');
@@ -606,6 +749,7 @@ function applyAsNewCustomer(sameNameDifferentPhone) {
   document.getElementById('source').value  = '';
   document.getElementById('product').value = '';
   applyLockState(true);
+  renderPurchaseHistory([]); // khách mới chưa có lịch sử mua hàng nào
   updLbl.textContent = '3 — Cập nhật lần này';
 
   if (sameNameDifferentPhone) {
@@ -653,6 +797,7 @@ function hideBanner() {
   b.style.display = 'none'; b.className = '';
   document.getElementById('section-update-label').textContent = '3 — Cập nhật lần này';
   applyLockState(false); // mặc định khóa lại cho đến khi có kết quả lookup mới
+  renderPurchaseHistory([]); // ẩn lịch sử mua hàng cho đến khi có kết quả lookup mới
 }
 
 // ──────────────────────────────────────────────
@@ -846,6 +991,195 @@ function showToast(msg, type = '') {
 
 function showLoading(on) {
   document.getElementById('loading').classList.toggle('show', on);
+}
+
+// ══════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════
+function switchTab(tab) {
+  document.getElementById('tab-panel-update').classList.toggle('active', tab === 'update');
+  document.getElementById('tab-panel-complete').classList.toggle('active', tab === 'complete');
+  document.getElementById('tab-btn-update').classList.toggle('active', tab === 'update');
+  document.getElementById('tab-btn-complete').classList.toggle('active', tab === 'complete');
+}
+
+// ══════════════════════════════════════════════
+// TAB 2: HOÀN THÀNH ĐƠN HÀNG (yêu cầu 5, 6)
+// ══════════════════════════════════════════════
+let coLookupResult  = null; // kết quả lookupForComplete gần nhất
+let coLookupTimer   = null;
+let coLookupInProgress = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const nameEl  = document.getElementById('co-name');
+  const phoneEl = document.getElementById('co-phone');
+  if (nameEl && phoneEl) {
+    nameEl.addEventListener('input', scheduleCoLookup);
+    phoneEl.addEventListener('input', e => {
+      e.target.value = e.target.value.replace(/\D/g, '');
+      scheduleCoLookup();
+    });
+  }
+  const btnComplete = document.getElementById('btn-complete');
+  if (btnComplete) btnComplete.addEventListener('click', onCompleteOrder);
+});
+
+function scheduleCoLookup() {
+  clearTimeout(coLookupTimer);
+  resetCoUI();
+  const name  = v('co-name');
+  const phone = v('co-phone').replace(/\D/g, '');
+  if (!name || phone.length < 9) return;
+  coLookupInProgress = true;
+  updateCompleteBtn();
+  coLookupTimer = setTimeout(() => doLookupForComplete(name, phone), 500);
+}
+
+function resetCoUI() {
+  coLookupResult = null;
+  document.getElementById('order-info-card').classList.remove('show');
+  updateCompleteBtn();
+}
+
+function doLookupForComplete(name, phone) {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    simulateLookupForComplete(name, phone);
+    return;
+  }
+  showLoading(true);
+  const old = document.getElementById('jsonp-script-co');
+  if (old) old.remove();
+
+  window._jsonpCBComplete = function(data) {
+    showLoading(false);
+    coLookupInProgress = false;
+    handleCoLookupResult(data);
+    delete window._jsonpCBComplete;
+    const s = document.getElementById('jsonp-script-co');
+    if (s) s.remove();
+  };
+
+  const script = document.createElement('script');
+  script.id = 'jsonp-script-co';
+  script.src = `${APPS_SCRIPT_URL}?action=lookupForComplete&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&callback=_jsonpCBComplete`;
+  script.onerror = () => {
+    showLoading(false);
+    coLookupInProgress = false;
+    showToast('❌ Lỗi kết nối kiểm tra. Thử lại.', 'error-t');
+    updateCompleteBtn();
+  };
+  document.head.appendChild(script);
+}
+
+function simulateLookupForComplete(name, phone) {
+  coLookupInProgress = false;
+  // Demo: tên chứa "chot" (không phân biệt hoa thường) → giả lập khách đang ở Chốt
+  if (name.toLowerCase().includes('chot')) {
+    handleCoLookupResult({
+      found: true, eligible: true,
+      allRows: [400], name: name, phone: phone,
+      product: 'Genkii BES', stage: 'Chốt',
+      lastLog: 'Đã đặt cọc, hẹn giao máy thứ 5 tuần này',
+    });
+  } else if (name.toLowerCase().includes('test')) {
+    handleCoLookupResult({
+      found: true, eligible: false, stage: 'Đã add Zalo - Tư vấn',
+      error: 'Khách hàng đang ở giai đoạn "Đã add Zalo - Tư vấn", chưa ở giai đoạn Chốt.',
+    });
+  } else {
+    handleCoLookupResult({ found: false, error: 'Không tìm thấy khách hàng khớp đúng cả Họ Tên và SĐT trong CRM' });
+  }
+}
+
+function handleCoLookupResult(data) {
+  coLookupResult = data;
+  const card = document.getElementById('order-info-card');
+
+  if (!data.found || !data.eligible) {
+    card.classList.remove('show');
+    if (data.error) showToast('⚠️ ' + data.error, 'error-t');
+    updateCompleteBtn();
+    return;
+  }
+
+  document.getElementById('oi-name').textContent    = data.name || '—';
+  document.getElementById('oi-stage').textContent    = data.stage || '—';
+  document.getElementById('oi-product').textContent  = data.product || '—';
+  document.getElementById('oi-lastlog').textContent  = '📝 ' + (data.lastLog || 'Chưa có lịch sử liên hệ');
+  card.classList.add('show');
+  updateCompleteBtn();
+}
+
+function updateCompleteBtn() {
+  const btn   = document.getElementById('btn-complete');
+  const label = document.getElementById('btn-complete-label');
+  const name  = v('co-name');
+  const phone = v('co-phone').replace(/\D/g, '');
+
+  if (!name || phone.length < 9) {
+    btn.disabled = true; btn.style.background = 'var(--grey-3)';
+    label.textContent = 'Nhập đủ Tên + SĐT khớp đúng khách đang ở giai đoạn Chốt';
+    return;
+  }
+  if (coLookupInProgress) {
+    btn.disabled = true; btn.style.background = 'var(--grey-3)';
+    label.textContent = '⏳ Đang kiểm tra...';
+    return;
+  }
+  if (coLookupResult && coLookupResult.found && coLookupResult.eligible) {
+    btn.disabled = false; btn.style.background = 'var(--green)';
+    label.textContent = '→ Xác nhận hoàn thành đơn hàng cho khách này';
+  } else {
+    btn.disabled = true; btn.style.background = 'var(--grey-3)';
+    label.textContent = coLookupResult?.error || 'Chưa xác định được khách hàng hợp lệ';
+  }
+}
+
+function onCompleteOrder() {
+  if (!coLookupResult || !coLookupResult.found || !coLookupResult.eligible) {
+    showToast('⚠️ Chưa xác nhận được khách hàng hợp lệ', 'error-t');
+    return;
+  }
+
+  const payload = {
+    action:  'completeOrder',
+    allRows: coLookupResult.allRows,
+    phone:   coLookupResult.phone || v('co-phone').replace(/\D/g, ''),
+    sales:   '', // Sales hiện tại chưa có đăng nhập (Giai đoạn 3) — để trống, bổ sung sau
+  };
+
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    showLoading(true);
+    setTimeout(() => {
+      showLoading(false);
+      showToast('✅ (Demo) Đã hoàn thành đơn hàng — khách chuyển sang CSKH', 'success');
+      resetCoForm();
+    }, 1000);
+    return;
+  }
+
+  showLoading(true);
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+  })
+  .then(() => {
+    showLoading(false);
+    showToast('✅ Đã hoàn thành đơn hàng — khách chuyển sang CSKH', 'success');
+    resetCoForm();
+  })
+  .catch(() => {
+    showLoading(false);
+    showToast('❌ Lỗi kết nối. Kiểm tra mạng và thử lại.', 'error-t');
+  });
+}
+
+function resetCoForm() {
+  document.getElementById('co-name').value = '';
+  document.getElementById('co-phone').value = '';
+  resetCoUI();
 }
 </script>
 </body>
