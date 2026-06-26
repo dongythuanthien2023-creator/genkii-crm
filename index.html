@@ -1143,6 +1143,13 @@ function resetForm() {
   hideBanner();
   const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
   document.getElementById('deadline').value = tmr.toISOString().split('T')[0];
+
+  // form.reset() xóa luôn ô Sales (đang bị disabled sau khi đăng nhập) — cần điền
+  // lại ngay theo đúng người đang đăng nhập, không bắt Sales phải tải lại trang.
+  if (currentSalesName) {
+    setSelect('sales', currentSalesName);
+  }
+
   updateSubmitBtn();
 }
 
