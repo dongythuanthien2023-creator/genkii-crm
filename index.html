@@ -337,11 +337,14 @@
     border-left: 4px solid var(--teal);
   }
   .task-card.overdue { border-left-color: var(--red); }
+  .task-card.done { border-left-color: var(--green); opacity: .75; }
   .task-card .tc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
   .task-card .tc-name { font-weight: 700; color: var(--navy); font-size: 14.5px; }
   .task-card .tc-deadline { font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--teal-lt); color: var(--teal); white-space: nowrap; }
   .task-card.overdue .tc-deadline { background: var(--red-lt); color: var(--red); }
+  .task-card .tc-deadline.done-badge { background: var(--green-lt); color: var(--green); }
   .task-card .tc-content { font-size: 13px; color: var(--grey-4); margin-bottom: 10px; }
+  .task-card.done .tc-content { margin-bottom: 0; text-decoration: line-through; }
   .task-card .tc-actions { display: flex; gap: 8px; }
   .tc-btn {
     flex: 1; padding: 9px; border-radius: 8px; border: 1.5px solid var(--grey-2);
@@ -1483,6 +1486,20 @@ function renderTodayTasks(data) {
 
 function taskCardHtml(t, taskType) {
   const escId = `${taskType}-${t.phone}-${t.rowIndex || ''}`.replace(/[^a-zA-Z0-9-]/g, '');
+
+  // Nhiệm vụ đã hoàn thành (hôm nay) — hiển thị nguyên thẻ kèm nhãn "Đã hoàn thành",
+  // KHÔNG ẩn các nút hành động (để Sales vẫn có thể bấm lại Dời lịch nếu tick nhầm).
+  if (t.done) {
+    return `
+      <div class="task-card done" id="card-${escId}">
+        <div class="tc-top">
+          <span class="tc-name">${t.name || t.phone}</span>
+          <span class="tc-deadline done-badge">✅ Đã hoàn thành</span>
+        </div>
+        <div class="tc-content">${t.content}</div>
+      </div>`;
+  }
+
   const deadlineLabel = t.overdue ? `⚠️ Quá hạn ${t.deadline}` : `📅 Hạn ${t.deadline}`;
   return `
     <div class="task-card ${t.overdue ? 'overdue' : ''}" id="card-${escId}">
@@ -1499,10 +1516,9 @@ function taskCardHtml(t, taskType) {
 }
 
 function markTaskDone(t, taskType) {
-  if (taskType === 'next_step') {
-    showToast('ℹ️ Next Step "Hoàn thành" → vui lòng qua tab Nhập/Cập nhật để ghi bước tiếp theo cho khách này', 'error-t');
-    return;
-  }
+  // Next Step giờ cũng được lưu thành dòng thật trong sheet Nhiệm vụ Sales
+  // (có rowIndex) — tick Hoàn thành áp dụng được như nhiệm vụ CSKH, không cần
+  // bắt Sales phải qua tab Nhập/Cập nhật nữa.
   submitTaskUpdate({ taskType, rowIndex: t.rowIndex, phone: t.phone, status: 'done' }, () => {
     showToast('✅ Đã đánh dấu hoàn thành', 'success');
     loadTodayTasks();
@@ -1532,9 +1548,16 @@ function confirmPostpone() {
     return;
   }
 
-  const payload = postponeTarget.taskType === 'cskh'
-    ? { taskType: 'cskh', rowIndex: postponeTarget.rowIndex, status: 'pending', reason, newDeadline }
-    : { taskType: 'next_step', phone: postponeTarget.phone, status: 'postpone', reason, newDeadline };
+  // Cả "next_step" và "cskh" giờ đều có dòng thật trong sheet Nhiệm vụ Sales
+  // (đều có rowIndex) — gửi đủ rowIndex cho cả 2 loại. Next Step gửi thêm phone
+  // để backend đồng bộ Deadline mới về đúng dòng khách trong CRM Tổng.
+  const payload = {
+    taskType: postponeTarget.taskType,
+    rowIndex: postponeTarget.rowIndex,
+    phone: postponeTarget.phone,
+    status: 'pending',
+    reason, newDeadline,
+  };
 
   submitTaskUpdate(payload, () => {
     showToast('✅ Đã dời lịch', 'success');
