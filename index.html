@@ -141,6 +141,15 @@
   .field .err-msg { font-size: 12px; color: var(--red); margin-top: 4px; display: none; }
   .field.error .err-msg { display: block; }
 
+  /* TRẠNG THÁI KHÓA — Nguồn lead / Sản phẩm / Nhiệt độ khi chưa đủ điều kiện mở khóa */
+  .field select:disabled {
+    background: var(--grey-2); color: var(--grey-3);
+    cursor: not-allowed; border-color: var(--grey-2);
+  }
+  .temp-group.locked .temp-btn {
+    pointer-events: none; opacity: .55; background: var(--grey-2); color: var(--grey-3); border-color: var(--grey-2);
+  }
+
   /* DROPDOWN arrow */
   .select-wrap { position: relative; }
   .select-wrap::after {
@@ -279,9 +288,9 @@
 
   </div>
 
-  <!-- ── PHẦN 2: THÔNG TIN BAN ĐẦU (chỉ hiện khi là khách MỚI) ── -->
-  <div class="form-card" id="section-new" style="display:none">
-    <div class="section-label">2 — Thông tin ban đầu <span>/ chỉ nhập 1 lần</span></div>
+  <!-- ── PHẦN 2: NGUỒN LEAD & SẢN PHẨM (luôn hiện, khóa/mở theo isUnlocked) ── -->
+  <div class="form-card" id="section-source-product">
+    <div class="section-label" id="section-source-label">2 — Nguồn lead & Sản phẩm <span>/ chỉ sửa được sau khi khách đã Chốt 1 vòng</span></div>
 
     <div class="field" id="f-source">
       <label>Nguồn lead <span class="req">*</span></label>
@@ -294,9 +303,11 @@
           <option>Zalo OA</option>
           <option>Website</option>
           <option>Sự kiện</option>
+          <option>Khách cũ</option>
           <option>Khác</option>
         </select>
       </div>
+      <div class="hint" id="source-lock-hint" style="display:none">🔒 Đang khóa — khách chưa hoàn thành vòng Chốt trước đó nên giữ nguyên nguồn gốc</div>
     </div>
 
     <div class="field" id="f-product">
@@ -312,6 +323,7 @@
           <option>Chưa rõ</option>
         </select>
       </div>
+      <div class="hint" id="product-lock-hint" style="display:none">🔒 Đang khóa — giữ nguyên sản phẩm của vòng hiện tại</div>
     </div>
 
   </div>
@@ -345,6 +357,7 @@
         <button type="button" class="temp-btn" data-val="Mát"  onclick="selectTemp(this)">🟢 Mát</button>
       </div>
       <input type="hidden" id="temp" value="">
+      <div class="hint" id="temp-lock-hint" style="display:none">🔒 Đang khóa — khách chưa hoàn thành vòng Chốt trước đó</div>
     </div>
 
     <div class="field" id="f-content">
@@ -534,12 +547,10 @@ function resolveLookupByNameResult(data) {
 function applyAsExistingCustomer(data) {
   lookupResult = data;
   const banner = document.getElementById('lookup-banner');
-  const secNew = document.getElementById('section-new');
   const updLbl = document.getElementById('section-update-label');
 
   setField('location', data.location, true);
-  secNew.style.display = 'none';
-  updLbl.textContent = '2 — Cập nhật lần này (khách đã có trong CRM)';
+  updLbl.textContent = '3 — Cập nhật lần này (khách đã có trong CRM)';
 
   banner.className = 'found';
   banner.innerHTML = `
@@ -553,17 +564,53 @@ function applyAsExistingCustomer(data) {
     </div>`;
   banner.style.display = 'block';
   setSelect('stage', data.stage);
+
+  // Điền sẵn giá trị hiện tại của Nguồn lead/Sản phẩm để Sales nhìn thấy,
+  // dù có thể đang bị khóa không sửa được (xem applyLockState)
+  setSelect('source', data.source);
+  setSelect('product', data.product);
+
+  applyLockState(!!data.isUnlocked);
   updateSubmitBtn();
+}
+
+/**
+ * Khóa/mở 3 ô Nguồn lead, Sản phẩm, Nhiệt độ theo đúng yêu cầu nghiệp vụ:
+ * chỉ mở khóa khi khách đã hoàn thành 1 vòng Chốt ở lần nhập TRƯỚC (isUnlocked
+ * do backend tính toán và trả về qua lookupByName/lookupByPhone).
+ */
+function applyLockState(isUnlocked) {
+  const sourceEl   = document.getElementById('source');
+  const productEl  = document.getElementById('product');
+  const tempGroup  = document.querySelector('.temp-group');
+  const sourceHint = document.getElementById('source-lock-hint');
+  const productHint= document.getElementById('product-lock-hint');
+  const tempHint   = document.getElementById('temp-lock-hint');
+  const sectionLbl = document.getElementById('section-source-label');
+
+  sourceEl.disabled  = !isUnlocked;
+  productEl.disabled = !isUnlocked;
+  tempGroup.classList.toggle('locked', !isUnlocked);
+
+  sourceHint.style.display  = isUnlocked ? 'none' : 'block';
+  productHint.style.display = isUnlocked ? 'none' : 'block';
+  tempHint.style.display    = isUnlocked ? 'none' : 'block';
+
+  sectionLbl.innerHTML = isUnlocked
+    ? '2 — Nguồn lead & Sản phẩm <span style="color:var(--green)">/ Đã mở khóa — khách vừa hoàn thành 1 vòng Chốt</span>'
+    : '2 — Nguồn lead & Sản phẩm <span>/ chỉ sửa được sau khi khách đã Chốt 1 vòng</span>';
 }
 
 function applyAsNewCustomer(sameNameDifferentPhone) {
   lookupResult = { found: false };
   const banner = document.getElementById('lookup-banner');
-  const secNew = document.getElementById('section-new');
   const updLbl = document.getElementById('section-update-label');
 
   clearField('location');
-  secNew.style.display = 'block';
+  // Khách hoàn toàn mới (hoặc trùng tên khác SĐT) → luôn được nhập đầy đủ Nguồn/Sản phẩm/Nhiệt độ
+  document.getElementById('source').value  = '';
+  document.getElementById('product').value = '';
+  applyLockState(true);
   updLbl.textContent = '3 — Cập nhật lần này';
 
   if (sameNameDifferentPhone) {
@@ -609,8 +656,8 @@ function onPhoneInputAfterNameFound(e) {
 function hideBanner() {
   const b = document.getElementById('lookup-banner');
   b.style.display = 'none'; b.className = '';
-  document.getElementById('section-new').style.display = 'none';
-  document.getElementById('section-update-label').textContent = '2 — Cập nhật lần này';
+  document.getElementById('section-update-label').textContent = '3 — Cập nhật lần này';
+  applyLockState(false); // mặc định khóa lại cho đến khi có kết quả lookup mới
 }
 
 // ──────────────────────────────────────────────
