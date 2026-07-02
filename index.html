@@ -345,6 +345,7 @@
   .task-card .tc-deadline.done-badge { background: var(--green-lt); color: var(--green); }
   .task-card .tc-content { font-size: 13px; color: var(--grey-4); margin-bottom: 10px; }
   .task-card.done .tc-content { margin-bottom: 0; text-decoration: line-through; }
+  .task-card .tc-meta { font-size: 12px; color: var(--grey-3); margin-bottom: 8px; }
   .task-card .tc-actions { display: flex; gap: 8px; }
   .tc-btn {
     flex: 1; padding: 9px; border-radius: 8px; border: 1.5px solid var(--grey-2);
@@ -1413,13 +1414,14 @@ function applyLoggedInState() {
   document.getElementById('login-screen').classList.add('hide');
   document.getElementById('logged-in-name').textContent = currentSalesName;
 
-  // Tự điền và khóa luôn ô "Sales phụ trách" ở tab Nhập/Cập nhật theo đúng người đã đăng nhập —
-  // tránh trường hợp nhập nhầm dưới tên Sales khác sau khi đã đăng nhập đúng.
   const salesSelect = document.getElementById('sales');
   if (salesSelect) {
     setSelect('sales', currentSalesName);
     salesSelect.disabled = true;
   }
+
+  // Khởi động auto-refresh tab Nhiệm vụ mỗi 2 phút để đồng bộ với Sales kia
+  startAutoRefresh();
 }
 
 // ══════════════════════════════════════════════
@@ -1487,20 +1489,23 @@ function renderTodayTasks(data) {
 function taskCardHtml(t, taskType) {
   const escId = `${taskType}-${t.phone}-${t.rowIndex || ''}`.replace(/[^a-zA-Z0-9-]/g, '');
 
-  // Nhiệm vụ đã hoàn thành (hôm nay) — hiển thị nguyên thẻ kèm nhãn "Đã hoàn thành",
-  // KHÔNG ẩn các nút hành động (để Sales vẫn có thể bấm lại Dời lịch nếu tick nhầm).
   if (t.done) {
+    const doneByStr = t.doneBy ? ` bởi ${t.doneBy}` : '';
     return `
       <div class="task-card done" id="card-${escId}">
         <div class="tc-top">
           <span class="tc-name">${t.name || t.phone}</span>
-          <span class="tc-deadline done-badge">✅ Đã hoàn thành</span>
+          <span class="tc-deadline done-badge">✅ Đã hoàn thành${doneByStr}</span>
         </div>
         <div class="tc-content">${t.content}</div>
       </div>`;
   }
 
   const deadlineLabel = t.overdue ? `⚠️ Quá hạn ${t.deadline}` : `📅 Hạn ${t.deadline}`;
+  // "Người nhập cuối - Hẹn lịch làm việc: ..." theo yêu cầu mới
+  const lastUpdateStr = t.lastUpdateSales
+    ? `<div class="tc-meta">👤 Người nhập cuối: <b>${t.lastUpdateSales}</b></div>`
+    : '';
   return `
     <div class="task-card ${t.overdue ? 'overdue' : ''}" id="card-${escId}">
       <div class="tc-top">
@@ -1508,6 +1513,7 @@ function taskCardHtml(t, taskType) {
         <span class="tc-deadline">${deadlineLabel}</span>
       </div>
       <div class="tc-content">${t.content}</div>
+      ${lastUpdateStr}
       <div class="tc-actions">
         <button class="tc-btn done" onclick='markTaskDone(${JSON.stringify(t)}, "${taskType}")'>✅ Hoàn thành</button>
         <button class="tc-btn postpone" onclick='openPostponeModal(${JSON.stringify(t)}, "${taskType}")'>⏳ Dời lịch</button>
@@ -1516,14 +1522,28 @@ function taskCardHtml(t, taskType) {
 }
 
 function markTaskDone(t, taskType) {
-  // Next Step giờ cũng được lưu thành dòng thật trong sheet Nhiệm vụ Sales
-  // (có rowIndex) — tick Hoàn thành áp dụng được như nhiệm vụ CSKH, không cần
-  // bắt Sales phải qua tab Nhập/Cập nhật nữa.
-  submitTaskUpdate({ taskType, rowIndex: t.rowIndex, phone: t.phone, status: 'done' }, () => {
+  submitTaskUpdate({
+    taskType, rowIndex: t.rowIndex, phone: t.phone,
+    status: 'done',
+    salesName: currentSalesName || '', // ai tick Hoàn thành — ghi vào cột DONE_BY
+  }, () => {
     showToast('✅ Đã đánh dấu hoàn thành', 'success');
     loadTodayTasks();
   });
 }
+
+// ── Auto-refresh tab Nhiệm vụ mỗi 2 phút để đồng bộ khi Sales kia tick xong ──
+let autoRefreshInterval = null;
+function startAutoRefresh() {
+  if (autoRefreshInterval) return;
+  autoRefreshInterval = setInterval(() => {
+    const tasksTab = document.getElementById('tab-panel-tasks');
+    if (tasksTab && tasksTab.classList.contains('active')) {
+      loadTodayTasks();
+    }
+  }, 2 * 60 * 1000); // 2 phút
+}
+// Khởi động auto-refresh sau khi đăng nhập thành công (gọi trong applyLoggedInState)
 
 let postponeTarget = null;
 function openPostponeModal(t, taskType) {
