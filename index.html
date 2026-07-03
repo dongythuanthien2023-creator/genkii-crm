@@ -258,6 +258,24 @@
   .order-info-card .oi-value { color: var(--text); font-weight: 600; text-align: right; max-width: 60%; }
   .order-info-card .oi-log { margin-top: 10px; padding: 10px 12px; background: var(--grey-1); border-radius: 8px; font-size: 12.5px; color: var(--grey-4); font-style: italic; white-space: pre-line; }
 
+  /* ── v2.1: Khách click lại quảng cáo — chỉ hiện khi đang cập nhật khách cũ ── */
+  .clickqc-box {
+    display: none; /* mặc định ẩn — JS bật lên khi lookup ra khách cũ */
+    align-items: flex-start; gap: 10px;
+    padding: 12px 14px; margin-bottom: 14px;
+    background: #FFF7ED; border: 1.5px dashed #F59E0B; border-radius: 10px;
+    cursor: pointer; user-select: none;
+  }
+  .clickqc-box.visible { display: flex; }
+  .clickqc-box input[type="checkbox"] {
+    width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0;
+    accent-color: #F59E0B; cursor: pointer;
+  }
+  .clickqc-box .clickqc-text { font-size: 13.5px; line-height: 1.45; }
+  .clickqc-box .clickqc-text b { color: #B45309; }
+  .clickqc-box .clickqc-sub { display: block; color: var(--grey-4); font-size: 12px; margin-top: 2px; }
+  .clickqc-box.checked { background: #FEF3C7; border-style: solid; }
+
   .purchase-history-card {
     background: var(--white);
     margin: 16px;
@@ -540,6 +558,17 @@
   <!-- ── PHẦN 3: CẬP NHẬT LẦN NÀY ── -->
   <div class="form-card" id="section-update">
     <div class="section-label" id="section-update-label">2 — Cập nhật lần này</div>
+
+    <!-- v2.1: chỉ hiện khi lookup ra KHÁCH CŨ. Tick = khách vừa nhắn lại qua quảng cáo
+         → backend ghi 'update_click_qc' và tính 1 lượt nhập mới trong ngày.
+         Mỗi lần tick + lưu = 1 lượt riêng (khách click 2 lần/ngày = 2 lượt). -->
+    <label class="clickqc-box" id="clickqc-box">
+      <input type="checkbox" id="clickqc" onchange="onClickQCChange(this)">
+      <span class="clickqc-text">
+        🔁 <b>Khách click lại quảng cáo</b> — tin nhắn lần này phát sinh từ quảng cáo
+        <span class="clickqc-sub">Chỉ tick khi khách CŨ vừa nhắn lại qua ads. Sẽ tính là 1 lượt mới trong thống kê ngày. Cập nhật trao đổi thường thì KHÔNG tick.</span>
+      </span>
+    </label>
 
     <div class="field" id="f-stage">
       <label>Giai đoạn hiện tại <span class="req">*</span></label>
@@ -858,7 +887,27 @@ function applyAsExistingCustomer(data) {
 
   renderPurchaseHistory(data.purchaseHistory || []);
   applyLockState(!!data.isUnlocked);
+  setClickQCVisible(true); // khách cũ → cho phép đánh dấu "click lại quảng cáo"
   updateSubmitBtn();
+}
+
+/**
+ * v2.1: bật/tắt khối "Khách click lại quảng cáo".
+ * Chỉ hiện khi form đang ở chế độ CẬP NHẬT KHÁCH CŨ (khách mới mặc định đã
+ * được tính 1 lượt qua hành động create, không cần checkbox).
+ * Mỗi lần ẩn/hiện đều bỏ tick — tránh Sales quên tick cũ gây đếm nhầm lượt.
+ */
+function setClickQCVisible(visible) {
+  const box = document.getElementById('clickqc-box');
+  const cb  = document.getElementById('clickqc');
+  if (!box || !cb) return;
+  cb.checked = false;
+  box.classList.remove('checked');
+  box.classList.toggle('visible', !!visible);
+}
+
+function onClickQCChange(cb) {
+  document.getElementById('clickqc-box').classList.toggle('checked', cb.checked);
 }
 
 /**
@@ -919,6 +968,7 @@ function applyAsNewCustomer(sameNameDifferentPhone) {
   document.getElementById('product').value = '';
   applyLockState(true);
   renderPurchaseHistory([]); // khách mới chưa có lịch sử mua hàng nào
+  setClickQCVisible(false); // khách mới → không cần checkbox, create đã tự tính 1 lượt
   updLbl.textContent = '3 — Cập nhật lần này';
 
   if (sameNameDifferentPhone) {
@@ -967,6 +1017,7 @@ function hideBanner() {
   document.getElementById('section-update-label').textContent = '3 — Cập nhật lần này';
   applyLockState(false); // mặc định khóa lại cho đến khi có kết quả lookup mới
   renderPurchaseHistory([]); // ẩn lịch sử mua hàng cho đến khi có kết quả lookup mới
+  setClickQCVisible(false); // ẩn + bỏ tick checkbox click QC cho đến khi lookup ra khách cũ
 }
 
 // ──────────────────────────────────────────────
@@ -993,8 +1044,13 @@ function onSubmit(e) {
 
   const isUpdate = lookupResult && lookupResult.found;
 
+  // v2.1: cờ "Khách click lại quảng cáo" — chỉ có ý nghĩa khi đang UPDATE khách cũ.
+  // Backend sẽ ghi hành động 'update_click_qc' và tính 1 lượt nhập mới trong ngày.
+  const clickLaiQC = isUpdate && !!document.getElementById('clickqc')?.checked;
+
   const payload = {
     action:    isUpdate ? 'update' : 'create',
+    clickLaiQC: clickLaiQC,
     allRows:   isUpdate ? lookupResult.allRows : null,
     rowIndex:  isUpdate ? lookupResult.rowIndex : null,
     sales:     v('sales'),
