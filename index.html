@@ -225,20 +225,20 @@
   /* ─── TABS ─── */
   .tab-bar {
     display: flex; gap: 6px;
-    padding: 10px 16px 0;
+    flex-wrap: wrap;                  /* v2.3.1: 5 tab tự xuống dòng — LUÔN hiện đủ,
+                                         không dùng cuộn ngang vì thanh cuộn ẩn khiến
+                                         tab cuối "biến mất" ngoài mép màn hình */
+    padding: 10px 16px 10px;
     background: var(--navy);
-    overflow-x: auto;                 /* v2.3: 5 tab → cuộn ngang trên mobile */
-    scrollbar-width: none;            /* ẩn thanh cuộn (Firefox) */
-    -webkit-overflow-scrolling: touch;
+    row-gap: 6px;
   }
-  .tab-bar::-webkit-scrollbar { display: none; } /* ẩn thanh cuộn (Chrome/Safari) */
   .tab-btn {
-    flex: 1 0 auto; padding: 11px 12px;
-    white-space: nowrap;              /* nhãn tab không xuống dòng */
+    flex: 1 1 auto; padding: 10px 10px;
+    white-space: nowrap;              /* nhãn tab không vỡ chữ giữa chừng */
     background: rgba(255,255,255,.08);
-    border: none; border-radius: 10px 10px 0 0;
+    border: none; border-radius: 10px;
     color: rgba(255,255,255,.65);
-    font-size: 13px; font-weight: 700;
+    font-size: 12.5px; font-weight: 700;
     cursor: pointer; text-align: center;
     transition: all .15s;
     -webkit-tap-highlight-color: transparent;
@@ -580,11 +580,11 @@
 </div>
 
 <div class="tab-bar">
-  <button type="button" class="tab-btn active" id="tab-btn-update" onclick="switchTab('update')">Nhập / Cập nhật</button>
-  <button type="button" class="tab-btn" id="tab-btn-complete" onclick="switchTab('complete')">Hoàn thành đơn hàng</button>
-  <button type="button" class="tab-btn" id="tab-btn-tasks" onclick="switchTab('tasks')">Nhiệm vụ hôm nay</button>
+  <button type="button" class="tab-btn active" id="tab-btn-update" onclick="switchTab('update')">✍️ Nhập / Cập nhật</button>
+  <button type="button" class="tab-btn" id="tab-btn-complete" onclick="switchTab('complete')">✅ Hoàn thành đơn</button>
+  <button type="button" class="tab-btn" id="tab-btn-tasks" onclick="switchTab('tasks')">🔔 Nhiệm vụ</button>
   <button type="button" class="tab-btn" id="tab-btn-cust" onclick="switchTab('cust')">👥 Khách hàng</button>
-  <button type="button" class="tab-btn" id="tab-btn-dash" onclick="switchTab('dash')">📊 Dashboard</button>
+  <button type="button" class="tab-btn" id="tab-btn-dash" onclick="switchTab('dash')">📊 Thống kê</button>
 </div>
 
 <!-- ══════════════ TAB 1: NHẬP / CẬP NHẬT (nội dung cũ, không đổi logic) ══════════════ -->
