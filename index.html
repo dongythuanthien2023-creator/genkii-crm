@@ -386,6 +386,21 @@
     padding: 14px; margin-bottom: 16px;
   }
   .dash-card .dash-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+  /* v2.5: hàng chọn khoảng ngày cho biểu đồ */
+  .dash-range { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .dash-range input[type="date"] {
+    flex: 1; min-width: 118px; padding: 6px 8px; font-size: 12px;
+    border: 1.5px solid var(--grey-2); border-radius: 8px; background: var(--grey-1);
+    color: var(--text); outline: none; font-family: inherit;
+  }
+  .dash-range input[type="date"]:focus { border-color: var(--teal); }
+  .dash-range .dr-arrow { color: var(--grey-3); font-size: 12px; }
+  .dash-range button {
+    padding: 7px 12px; font-size: 12px; font-weight: 700;
+    border: none; border-radius: 8px; cursor: pointer;
+    background: var(--teal); color: #fff;
+  }
+  .dash-range button.ghost { background: var(--grey-1); color: var(--grey-4); border: 1.5px solid var(--grey-2); }
   .dash-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11.5px; color: var(--grey-4); margin-bottom: 8px; }
   .dash-legend span { display: inline-flex; align-items: center; gap: 5px; }
   .dash-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
@@ -925,7 +940,14 @@
     </div>
 
     <div class="dash-card">
-      <div class="dash-title">Lượt nhập 14 ngày gần nhất</div>
+      <div class="dash-title" id="luot-title">Lượt nhập 14 ngày gần nhất</div>
+      <div class="dash-range">
+        <input type="date" id="luot-from" aria-label="Từ ngày">
+        <span class="dr-arrow">→</span>
+        <input type="date" id="luot-to" aria-label="Đến ngày">
+        <button type="button" onclick="applyLuotRange()">Xem</button>
+        <button type="button" class="ghost" onclick="resetLuotRange()">14 ngày</button>
+      </div>
       <div class="dash-legend">
         <span><i style="background:#2a8a7e"></i>Khách mới</span>
         <span><i style="background:#c8922a"></i>Click lại quảng cáo</span>
@@ -940,6 +962,13 @@
 
     <div class="dash-card">
       <div class="dash-title" id="src-title">Nguồn lead tháng này</div>
+      <div class="dash-range">
+        <input type="date" id="src-from" aria-label="Từ ngày">
+        <span class="dr-arrow">→</span>
+        <input type="date" id="src-to" aria-label="Đến ngày">
+        <button type="button" onclick="applySrcRange()">Xem</button>
+        <button type="button" class="ghost" onclick="resetSrcRange()">Tháng này</button>
+      </div>
       <div class="dash-legend" id="src-legend"></div>
       <div class="chart-box" style="height:190px;"><canvas id="chart-src"></canvas></div>
     </div>
@@ -2078,26 +2107,8 @@ function renderDashboard(d) {
   else if (delta < 0) { deltaEl.textContent = '▼ ' + delta + ' so với hôm qua';  deltaEl.className = 'kpi-sub down'; }
   else                { deltaEl.textContent = 'bằng hôm qua';                    deltaEl.className = 'kpi-sub'; }
 
-  // ── Biểu đồ 14 ngày (cột chồng) ──
-  const daily = d.daily || [];
-  drawChart('daily', 'chart-daily', {
-    type: 'bar',
-    data: {
-      labels: daily.map(x => x.label),
-      datasets: [
-        { label: 'Khách mới',    data: daily.map(x => x.khachMoi), backgroundColor: '#2a8a7e', stack: 's', borderRadius: { topLeft: 3, topRight: 3 } },
-        { label: 'Click lại QC', data: daily.map(x => x.clickQC),  backgroundColor: '#c8922a', stack: 's' },
-      ],
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9.5 }, color: '#9aa3af', autoSkip: false, maxRotation: 60 } },
-        y: { stacked: true, grid: { color: '#eef0f3' }, ticks: { precision: 0, font: { size: 10 }, color: '#9aa3af' } },
-      },
-    },
-  });
+  // ── Biểu đồ 14 ngày (cột chồng) — mặc định; đổi khoảng ngày qua applyLuotRange ──
+  drawLuotChart(d.daily || [], 'Lượt nhập 14 ngày gần nhất');
 
   // ── Phễu giai đoạn (thanh ngang) ──
   const funnel = d.funnel || [];
@@ -2119,20 +2130,10 @@ function renderDashboard(d) {
     },
   });
 
-  // ── Nguồn lead (doughnut) ──
+  // ── Nguồn lead (doughnut) — mặc định theo tháng; đổi khoảng ngày qua applySrcRange ──
   const src = (d.sources && d.sources.items) || [];
-  document.getElementById('src-title').textContent =
-    d.sources && d.sources.scope === 'all' ? 'Nguồn lead — toàn bộ (tháng này chưa có khách mới)' : 'Nguồn lead tháng này';
-  const SRC_COLORS = ['#2a8a7e', '#1a2e44', '#c8922a', '#5a92d6', '#c0392b', '#7bbfb5', '#9aa3af', '#d6a2ad'];
-  const srcTotal = src.reduce((s, x) => s + x.count, 0) || 1;
-  document.getElementById('src-legend').innerHTML = src.map((x, i) =>
-    `<span><i style="background:${SRC_COLORS[i % SRC_COLORS.length]}"></i>${escapeHtml(x.name)} ${Math.round(x.count * 100 / srcTotal)}%</span>`
-  ).join('');
-  drawChart('src', 'chart-src', {
-    type: 'doughnut',
-    data: { labels: src.map(x => x.name), datasets: [{ data: src.map(x => x.count), backgroundColor: src.map((x, i) => SRC_COLORS[i % SRC_COLORS.length]), borderWidth: 2, borderColor: '#ffffff' }] },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false } } },
-  });
+  drawSrcChart(src,
+    d.sources && d.sources.scope === 'all' ? 'Nguồn lead — toàn bộ (tháng này chưa có khách mới)' : 'Nguồn lead tháng này');
 
   // ── Bảng Sales ──
   const tbody = document.querySelector('#sales-table tbody');
@@ -2153,6 +2154,111 @@ function drawChart(key, canvasId, config) {
   if (typeof Chart === 'undefined') return; // CDN chưa tải xong/bị chặn — bỏ qua, số liệu KPI vẫn hiện
   if (dashCharts[key]) { dashCharts[key].destroy(); }
   dashCharts[key] = new Chart(document.getElementById(canvasId), config);
+}
+
+// ── v2.5: HÀM VẼ TÁI DÙNG cho cả chế độ mặc định lẫn chế độ khoảng ngày ──
+function drawLuotChart(daily, titleText) {
+  document.getElementById('luot-title').textContent = titleText;
+  // Khoảng dài (>16 cột) → bật autoSkip cho trục X khỏi dồn chữ chồng nhau
+  const manyBars = daily.length > 16;
+  drawChart('daily', 'chart-daily', {
+    type: 'bar',
+    data: {
+      labels: daily.map(x => x.label),
+      datasets: [
+        { label: 'Khách mới',    data: daily.map(x => x.khachMoi), backgroundColor: '#2a8a7e', stack: 's', borderRadius: { topLeft: 3, topRight: 3 } },
+        { label: 'Click lại QC', data: daily.map(x => x.clickQC),  backgroundColor: '#c8922a', stack: 's' },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9.5 }, color: '#9aa3af', autoSkip: manyBars, maxTicksLimit: manyBars ? 15 : undefined, maxRotation: 60 } },
+        y: { stacked: true, grid: { color: '#eef0f3' }, ticks: { precision: 0, font: { size: 10 }, color: '#9aa3af' } },
+      },
+    },
+  });
+}
+
+const SRC_COLORS = ['#2a8a7e', '#1a2e44', '#c8922a', '#5a92d6', '#c0392b', '#7bbfb5', '#9aa3af', '#d6a2ad'];
+function drawSrcChart(items, titleText) {
+  document.getElementById('src-title').textContent = titleText;
+  const srcTotal = items.reduce((s, x) => s + x.count, 0) || 1;
+  document.getElementById('src-legend').innerHTML = items.length === 0
+    ? '<span style="color:var(--grey-3)">Không có khách nào vào phễu trong khoảng này</span>'
+    : items.map((x, i) =>
+        `<span><i style="background:${SRC_COLORS[i % SRC_COLORS.length]}"></i>${escapeHtml(x.name)} ${Math.round(x.count * 100 / srcTotal)}% (${x.count})</span>`
+      ).join('');
+  drawChart('src', 'chart-src', {
+    type: 'doughnut',
+    data: { labels: items.map(x => x.name), datasets: [{ data: items.map(x => x.count), backgroundColor: items.map((x, i) => SRC_COLORS[i % SRC_COLORS.length]), borderWidth: 2, borderColor: '#ffffff' }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false } } },
+  });
+}
+
+// ── v2.5: CHỌN KHOẢNG NGÀY cho 2 biểu đồ ──
+// Kiểm tra chung phía client trước khi gọi server — báo lỗi ngay, đỡ chờ mạng
+function readRangeInputs(fromId, toId) {
+  const from = document.getElementById(fromId).value;
+  const to   = document.getElementById(toId).value;
+  if (!from || !to) { showToast('⚠️ Chọn đủ ngày bắt đầu và kết thúc', 'error-t'); return null; }
+  if (from > to)    { showToast('⚠️ Ngày bắt đầu phải trước ngày kết thúc', 'error-t'); return null; }
+  const days = Math.round((new Date(to) - new Date(from)) / 86400000) + 1;
+  if (days > 92)    { showToast('⚠️ Khoảng tối đa 92 ngày (~3 tháng)', 'error-t'); return null; }
+  return { from, to };
+}
+
+// JSONP dùng chung cho 2 truy vấn khoảng ngày (callback đánh số, không giẫm nhau)
+let rangeCbSeq = 0;
+function jsonpRange(action, range, onData) {
+  const cbName = '_jsonpCBRange' + (++rangeCbSeq);
+  window[cbName] = function(data) {
+    onData(data);
+    delete window[cbName];
+    const s = document.getElementById('jsonp-' + cbName);
+    if (s) s.remove();
+  };
+  const script = document.createElement('script');
+  script.id = 'jsonp-' + cbName;
+  script.src = `${APPS_SCRIPT_URL}?action=${action}&from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}&callback=${cbName}`;
+  script.onerror = () => showToast('❌ Lỗi tải dữ liệu khoảng ngày. Thử lại.', 'error-t');
+  document.head.appendChild(script);
+}
+
+function applyLuotRange() {
+  const range = readRangeInputs('luot-from', 'luot-to');
+  if (!range) return;
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode — chưa cấu hình URL', 'error-t'); return; }
+  document.getElementById('luot-title').textContent = 'Đang tải...';
+  jsonpRange('getLuotRange', range, (data) => {
+    if (data && data.error) { showToast('⚠️ ' + data.error, 'error-t'); document.getElementById('luot-title').textContent = 'Lượt nhập'; return; }
+    drawLuotChart(data.daily || [],
+      `Lượt nhập ${data.from} → ${data.to} · Tổng ${data.totalLuot} (${data.totalKhachMoi} mới + ${data.totalClickQC} QC)`);
+  });
+}
+
+function resetLuotRange() {
+  document.getElementById('luot-from').value = '';
+  document.getElementById('luot-to').value = '';
+  loadDashboard(true); // vẽ lại toàn bộ theo mặc định 14 ngày với số liệu tươi
+}
+
+function applySrcRange() {
+  const range = readRangeInputs('src-from', 'src-to');
+  if (!range) return;
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode — chưa cấu hình URL', 'error-t'); return; }
+  document.getElementById('src-title').textContent = 'Đang tải...';
+  jsonpRange('getSourceRange', range, (data) => {
+    if (data && data.error) { showToast('⚠️ ' + data.error, 'error-t'); document.getElementById('src-title').textContent = 'Nguồn lead'; return; }
+    drawSrcChart(data.items || [], `Nguồn lead ${data.from} → ${data.to} · ${data.total} khách vào phễu`);
+  });
+}
+
+function resetSrcRange() {
+  document.getElementById('src-from').value = '';
+  document.getElementById('src-to').value = '';
+  loadDashboard(true);
 }
 
 function escapeHtml(s) {
