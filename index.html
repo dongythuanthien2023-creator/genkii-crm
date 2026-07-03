@@ -227,9 +227,14 @@
     display: flex; gap: 6px;
     padding: 10px 16px 0;
     background: var(--navy);
+    overflow-x: auto;                 /* v2.3: 5 tab → cuộn ngang trên mobile */
+    scrollbar-width: none;            /* ẩn thanh cuộn (Firefox) */
+    -webkit-overflow-scrolling: touch;
   }
+  .tab-bar::-webkit-scrollbar { display: none; } /* ẩn thanh cuộn (Chrome/Safari) */
   .tab-btn {
-    flex: 1; padding: 11px 8px;
+    flex: 1 0 auto; padding: 11px 12px;
+    white-space: nowrap;              /* nhãn tab không xuống dòng */
     background: rgba(255,255,255,.08);
     border: none; border-radius: 10px 10px 0 0;
     color: rgba(255,255,255,.65);
@@ -257,6 +262,84 @@
   .order-info-card .oi-label { color: var(--grey-4); font-weight: 600; }
   .order-info-card .oi-value { color: var(--text); font-weight: 600; text-align: right; max-width: 60%; }
   .order-info-card .oi-log { margin-top: 10px; padding: 10px 12px; background: var(--grey-1); border-radius: 8px; font-size: 12.5px; color: var(--grey-4); font-style: italic; white-space: pre-line; }
+
+  /* ── v2.3: KHÁCH HÀNG (danh sách + chi tiết) ── */
+  .cust-wrap { padding: 14px 16px 28px; max-width: 560px; margin: 0 auto; }
+  .cust-toolbar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .cust-toolbar input[type="search"] {
+    width: 100%; padding: 10px 14px; font-size: 14px;
+    border: 1.5px solid var(--grey-2); border-radius: 10px; background: var(--white);
+    outline: none;
+  }
+  .cust-toolbar input[type="search"]:focus { border-color: var(--teal); }
+  .cust-filters { display: flex; gap: 8px; }
+  .cust-filters select {
+    flex: 1; padding: 8px 10px; font-size: 12.5px; font-weight: 600;
+    border: 1.5px solid var(--grey-2); border-radius: 10px; background: var(--white);
+    color: var(--grey-4); outline: none;
+  }
+  .cust-count { font-size: 12px; color: var(--grey-3); display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cust-count button { background: none; border: none; color: var(--teal); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .cust-card {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 12px 14px; margin-bottom: 10px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cust-card:active { transform: scale(.99); }
+  .cust-card .cc-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .cust-card .cc-name { font-size: 14.5px; font-weight: 700; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cust-card .cc-temp { flex-shrink: 0; font-size: 12px; }
+  .stage-badge {
+    display: inline-block; font-size: 10.5px; font-weight: 700;
+    padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+    background: var(--grey-1); color: var(--grey-4);
+  }
+  .stage-badge.st-inbox   { background: #e8f0fb; color: #2f6bb5; }
+  .stage-badge.st-sdt     { background: #e8f0fb; color: #2f6bb5; }
+  .stage-badge.st-tuvan   { background: var(--gold-lt); color: var(--gold); }
+  .stage-badge.st-chot    { background: var(--navy); color: #fff; }
+  .stage-badge.st-cskh    { background: var(--teal-lt); color: var(--teal); }
+  .stage-badge.st-khachcu { background: var(--green-lt); color: var(--green); }
+  .stage-badge.st-ktn     { background: var(--grey-2); color: var(--grey-3); }
+  .cust-card .cc-mid { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--grey-4); margin-bottom: 6px; flex-wrap: wrap; }
+  .cust-card .cc-next { font-size: 12px; color: var(--grey-4); background: var(--grey-1); border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; gap: 8px; }
+  .cust-card .cc-next .cc-dl { flex-shrink: 0; font-weight: 700; color: var(--grey-4); }
+  .cust-card .cc-next .cc-dl.overdue { color: var(--red); }
+  .cust-card .cc-next .cc-ns { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Panel chi tiết */
+  .cd-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .cd-header .cd-back { background: var(--white); border: 1.5px solid var(--grey-2); border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 700; color: var(--grey-4); cursor: pointer; }
+  .cd-header .cd-name { font-size: 16px; font-weight: 800; color: var(--navy); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cd-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+  .cd-actions button { flex: 1; padding: 10px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; }
+  .cd-actions .cd-edit { background: var(--teal); color: #fff; }
+  .cd-subtabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .cd-subtab { flex: 1; padding: 9px; font-size: 12.5px; font-weight: 700; text-align: center; border: none; border-radius: 10px; background: var(--white); color: var(--grey-4); cursor: pointer; box-shadow: var(--shadow); }
+  .cd-subtab.active { background: var(--navy); color: #fff; }
+  .cd-section { display: none; }
+  .cd-section.active { display: block; }
+  .cd-info-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 4px 14px; }
+  .cd-info-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--grey-2); font-size: 13px; }
+  .cd-info-row:last-child { border-bottom: none; }
+  .cd-info-row .ci-label { color: var(--grey-3); font-weight: 600; flex-shrink: 0; }
+  .cd-info-row .ci-value { color: var(--text); font-weight: 600; text-align: right; word-break: break-word; }
+  .hist-item { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 14px; margin-bottom: 10px; }
+  .hist-item .hi-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .hist-item .hi-date { font-size: 12px; font-weight: 700; color: var(--navy); }
+  .hi-action { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--grey-1); color: var(--grey-4); }
+  .hi-action.a-create { background: var(--green-lt); color: var(--green); }
+  .hi-action.a-qc     { background: var(--gold-lt); color: var(--gold); }
+  .hi-action.a-don    { background: var(--navy); color: #fff; }
+  .hist-item .hi-content { font-size: 12.5px; color: var(--text); white-space: pre-line; }
+  .hist-item .hi-meta { font-size: 11px; color: var(--grey-3); margin-top: 6px; }
+  .cd-task { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 11px 14px; margin-bottom: 9px; display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; }
+  .cd-task .ct-main { flex: 1; }
+  .cd-task .ct-dl { font-size: 11.5px; color: var(--grey-3); margin-top: 2px; }
+  .cd-task .ct-status { flex-shrink: 0; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; height: fit-content; }
+  .cd-task .ct-status.done { background: var(--green-lt); color: var(--green); }
+  .cd-task .ct-status.open { background: var(--gold-lt); color: var(--gold); }
+  .cd-task.is-done { opacity: .6; }
 
   /* ── v2.2: DASHBOARD ── */
   .dash-wrap { padding: 14px 16px 28px; max-width: 560px; margin: 0 auto; }
@@ -500,6 +583,7 @@
   <button type="button" class="tab-btn active" id="tab-btn-update" onclick="switchTab('update')">Nhập / Cập nhật</button>
   <button type="button" class="tab-btn" id="tab-btn-complete" onclick="switchTab('complete')">Hoàn thành đơn hàng</button>
   <button type="button" class="tab-btn" id="tab-btn-tasks" onclick="switchTab('tasks')">Nhiệm vụ hôm nay</button>
+  <button type="button" class="tab-btn" id="tab-btn-cust" onclick="switchTab('cust')">👥 Khách hàng</button>
   <button type="button" class="tab-btn" id="tab-btn-dash" onclick="switchTab('dash')">📊 Dashboard</button>
 </div>
 
@@ -739,7 +823,53 @@
 
 </div> <!-- /tab-panel-tasks -->
 
-<!-- ── TAB 4: DASHBOARD (v2.2) ── -->
+<!-- ── TAB 4: KHÁCH HÀNG (v2.3) ── -->
+<div class="tab-panel" id="tab-panel-cust">
+  <div class="cust-wrap">
+
+    <!-- Màn 1: DANH SÁCH -->
+    <div id="cust-list-view">
+      <div class="cust-toolbar">
+        <input type="search" id="cust-search" placeholder="🔍 Tìm theo tên hoặc SĐT..." oninput="renderCustomerList()">
+        <div class="cust-filters">
+          <select id="cust-filter-stage" onchange="renderCustomerList()">
+            <option value="">Tất cả giai đoạn</option>
+          </select>
+          <select id="cust-filter-sales" onchange="renderCustomerList()">
+            <option value="">Tất cả Sales</option>
+          </select>
+        </div>
+      </div>
+      <div class="cust-count">
+        <span id="cust-count-label">Đang tải...</span>
+        <button type="button" onclick="loadCustomerList(true)">🔄 Làm mới</button>
+      </div>
+      <div id="cust-list"></div>
+    </div>
+
+    <!-- Màn 2: CHI TIẾT 1 KHÁCH -->
+    <div id="cust-detail-view" style="display:none">
+      <div class="cd-header">
+        <button type="button" class="cd-back" onclick="backToCustomerList()">← Danh sách</button>
+        <div class="cd-name" id="cd-name">—</div>
+      </div>
+      <div class="cd-actions">
+        <button type="button" class="cd-edit" onclick="gotoUpdateFromDetail()">✏️ Cập nhật khách này</button>
+      </div>
+      <div class="cd-subtabs">
+        <button type="button" class="cd-subtab active" id="cd-tab-info"    onclick="switchDetailTab('info')">Thông tin</button>
+        <button type="button" class="cd-subtab" id="cd-tab-history" onclick="switchDetailTab('history')">Lịch sử</button>
+        <button type="button" class="cd-subtab" id="cd-tab-tasks"   onclick="switchDetailTab('tasks')">Nhiệm vụ</button>
+      </div>
+      <div class="cd-section active" id="cd-sec-info"><div class="dash-empty">Đang tải...</div></div>
+      <div class="cd-section" id="cd-sec-history"></div>
+      <div class="cd-section" id="cd-sec-tasks"></div>
+    </div>
+
+  </div>
+</div> <!-- /tab-panel-cust -->
+
+<!-- ── TAB 5: DASHBOARD (v2.2) ── -->
 <div class="tab-panel" id="tab-panel-dash">
   <div class="dash-wrap">
 
@@ -1329,12 +1459,13 @@ function showLoading(on) {
 // TAB SWITCHING
 // ══════════════════════════════════════════════
 function switchTab(tab) {
-  ['update', 'complete', 'tasks', 'dash'].forEach(t => {
+  ['update', 'complete', 'tasks', 'cust', 'dash'].forEach(t => {
     document.getElementById('tab-panel-' + t).classList.toggle('active', tab === t);
     document.getElementById('tab-btn-' + t).classList.toggle('active', tab === t);
   });
   if (tab === 'tasks') loadTodayTasks();
   if (tab === 'dash')  loadDashboard(false);
+  if (tab === 'cust')  loadCustomerList(false);
 }
 
 // ══════════════════════════════════════════════
@@ -1912,6 +2043,275 @@ function simulateDashboardData() {
     sources: { scope: 'month', items: [{ name: 'Facebook Ads', count: 32 }, { name: 'TikTok', count: 14 }, { name: 'Website', count: 8 }, { name: 'Khách cũ', count: 6 }] },
     sales: [{ name: 'Nguyễn Thị Thùy Linh', luot: 41, khachMoi: 35, don: 4, quaHan: 1 }, { name: 'Ngô Vũ', luot: 12, khachMoi: 9, don: 2, quaHan: 0 }],
     totalOverdue: 3,
+  };
+}
+
+// ══════════════════════════════════════════════
+// TAB: KHÁCH HÀNG (v2.3) — danh sách + chi tiết
+// ══════════════════════════════════════════════
+let custData = null;        // {customers:[...]} — dữ liệu list gần nhất
+let custLastLoaded = 0;
+let custCurrentDetail = null; // {name, phone} khách đang mở chi tiết
+
+const STAGE_BADGE_CLASS = {
+  'Inbox': 'st-inbox',
+  'SĐT - Chưa add Zalo': 'st-sdt',
+  'Đã add Zalo - Tư vấn': 'st-tuvan',
+  'Chốt': 'st-chot',
+  'CSKH': 'st-cskh',
+  'Khách cũ': 'st-khachcu',
+  'Không tiềm năng': 'st-ktn',
+};
+const TEMP_ICON = { 'Nóng': '🔴', 'Ấm': '🟡', 'Mát': '🟢' };
+
+function loadCustomerList(force) {
+  if (!currentSalesName) return;
+  if (!force && custData && Date.now() - custLastLoaded < 60000) { renderCustomerList(); return; }
+
+  document.getElementById('cust-count-label').textContent = 'Đang tải...';
+
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    custData = simulateCustomerList();
+    custLastLoaded = Date.now();
+    buildCustomerFilters(); renderCustomerList();
+    return;
+  }
+
+  const old = document.getElementById('jsonp-script-cust');
+  if (old) old.remove();
+  window._jsonpCBCust = function(data) {
+    custData = data;
+    custLastLoaded = Date.now();
+    buildCustomerFilters();
+    renderCustomerList();
+    delete window._jsonpCBCust;
+    const s = document.getElementById('jsonp-script-cust');
+    if (s) s.remove();
+  };
+  const script = document.createElement('script');
+  script.id = 'jsonp-script-cust';
+  script.src = `${APPS_SCRIPT_URL}?action=getCustomerList&callback=_jsonpCBCust`;
+  script.onerror = () => {
+    document.getElementById('cust-count-label').textContent = 'Lỗi tải dữ liệu';
+    showToast('❌ Lỗi tải danh sách. Bấm Làm mới để thử lại.', 'error-t');
+  };
+  document.head.appendChild(script);
+}
+
+// Dựng option cho 2 bộ lọc từ chính dữ liệu (giai đoạn/Sales nào có mặt mới hiện)
+function buildCustomerFilters() {
+  const customers = (custData && custData.customers) || [];
+  const stages = {}, salesSet = {};
+  customers.forEach(c => { if (c.stage) stages[c.stage] = 1; if (c.sales) salesSet[c.sales] = 1; });
+
+  const fillSelect = (id, values, allLabel) => {
+    const el = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = `<option value="">${allLabel}</option>` +
+      Object.keys(values).sort().map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');
+    if (cur && values[cur]) el.value = cur; // giữ lựa chọn cũ nếu vẫn hợp lệ
+  };
+  fillSelect('cust-filter-stage', stages, 'Tất cả giai đoạn');
+  fillSelect('cust-filter-sales', salesSet, 'Tất cả Sales');
+}
+
+function renderCustomerList() {
+  const listEl = document.getElementById('cust-list');
+  const customers = (custData && custData.customers) || [];
+
+  const q = (document.getElementById('cust-search').value || '').trim().toLowerCase();
+  const fStage = document.getElementById('cust-filter-stage').value;
+  const fSales = document.getElementById('cust-filter-sales').value;
+
+  const filtered = customers.filter(c => {
+    if (fStage && c.stage !== fStage) return false;
+    if (fSales && c.sales !== fSales) return false;
+    if (q) {
+      const hay = (c.name + ' ' + c.phone).toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+
+  const overdueCount = filtered.filter(c => c.overdue).length;
+  document.getElementById('cust-count-label').textContent =
+    `${filtered.length}/${customers.length} khách` + (overdueCount ? ` · ${overdueCount} quá hạn` : '');
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div class="dash-empty">Không có khách nào khớp bộ lọc</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(c => {
+    const badgeCls = STAGE_BADGE_CLASS[c.stage] || '';
+    const temp = TEMP_ICON[c.temp] || '';
+    const next = c.nextstep
+      ? `<div class="cc-next">
+           <span class="cc-ns">➜ ${escapeHtml(c.nextstep)}</span>
+           <span class="cc-dl ${c.overdue ? 'overdue' : ''}">${c.overdue ? '⚠ ' : ''}${escapeHtml(c.deadline || '')}</span>
+         </div>`
+      : '';
+    return `
+      <div class="cust-card" onclick="openCustomerDetail('${escapeHtml(c.phone)}','${escapeHtml(c.name).replace(/'/g, '&#39;')}')">
+        <div class="cc-top">
+          <div class="cc-name">${escapeHtml(c.name) || '(chưa có tên)'}</div>
+          <span class="cc-temp">${temp}</span>
+          <span class="stage-badge ${badgeCls}">${escapeHtml(c.stage) || '—'}</span>
+        </div>
+        <div class="cc-mid">
+          <span>📞 ${escapeHtml(c.phone) || 'chưa có SĐT'}</span>
+          ${c.sales ? `<span>· 👤 ${escapeHtml(c.sales)}</span>` : ''}
+        </div>
+        ${next}
+      </div>`;
+  }).join('');
+}
+
+// ── CHI TIẾT 1 KHÁCH ──
+function openCustomerDetail(phone, name) {
+  custCurrentDetail = { phone: phone || '', name: name || '' };
+  document.getElementById('cust-list-view').style.display = 'none';
+  document.getElementById('cust-detail-view').style.display = 'block';
+  document.getElementById('cd-name').textContent = name || phone || '—';
+  switchDetailTab('info');
+  document.getElementById('cd-sec-info').innerHTML = '<div class="dash-empty">Đang tải...</div>';
+  document.getElementById('cd-sec-history').innerHTML = '';
+  document.getElementById('cd-sec-tasks').innerHTML = '';
+
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    renderCustomerDetail(simulateCustomerDetail(name, phone));
+    return;
+  }
+
+  const old = document.getElementById('jsonp-script-custd');
+  if (old) old.remove();
+  window._jsonpCBCustD = function(data) {
+    renderCustomerDetail(data);
+    delete window._jsonpCBCustD;
+    const s = document.getElementById('jsonp-script-custd');
+    if (s) s.remove();
+  };
+  const script = document.createElement('script');
+  script.id = 'jsonp-script-custd';
+  script.src = `${APPS_SCRIPT_URL}?action=getCustomerDetail&phone=${encodeURIComponent(phone)}&name=${encodeURIComponent(name)}&callback=_jsonpCBCustD`;
+  script.onerror = () => showToast('❌ Lỗi tải chi tiết khách. Thử lại.', 'error-t');
+  document.head.appendChild(script);
+}
+
+function backToCustomerList() {
+  custCurrentDetail = null;
+  document.getElementById('cust-detail-view').style.display = 'none';
+  document.getElementById('cust-list-view').style.display = 'block';
+}
+
+function switchDetailTab(sub) {
+  ['info', 'history', 'tasks'].forEach(t => {
+    document.getElementById('cd-tab-' + t).classList.toggle('active', sub === t);
+    document.getElementById('cd-sec-' + t).classList.toggle('active', sub === t);
+  });
+}
+
+const ACTION_LABEL = {
+  'create':              { text: 'Tạo mới',        cls: 'a-create' },
+  'update':              { text: 'Cập nhật',       cls: '' },
+  'update_click_qc':     { text: 'Click lại QC',   cls: 'a-qc' },
+  'hoan_thanh_don_hang': { text: 'Hoàn thành đơn', cls: 'a-don' },
+};
+
+function renderCustomerDetail(d) {
+  if (!d || !d.found) {
+    document.getElementById('cd-sec-info').innerHTML =
+      `<div class="dash-empty">${escapeHtml((d && d.error) || 'Không tìm thấy khách hàng')}</div>`;
+    return;
+  }
+  const info = d.info || {};
+  document.getElementById('cd-name').textContent = info.name || custCurrentDetail.name || '—';
+
+  // Tab Thông tin
+  const rows = [
+    ['📞 SĐT', info.phone], ['📍 Cơ sở/Địa chỉ', info.location],
+    ['🎯 Nguồn lead', info.source], ['📦 Sản phẩm', info.product],
+    ['🚩 Giai đoạn', info.stage], ['🌡 Nhiệt độ', info.temp ? (TEMP_ICON[info.temp] || '') + ' ' + info.temp : ''],
+    ['📅 Vào phễu', info.entryDate], ['👤 Sales phụ trách', info.sales],
+  ];
+  let infoHtml = '<div class="cd-info-card">' + rows.map(([l, v]) =>
+    `<div class="cd-info-row"><span class="ci-label">${l}</span><span class="ci-value">${escapeHtml(v) || '—'}</span></div>`
+  ).join('') + '</div>';
+  if (info.hasCompletedDeal && info.purchaseHistory && info.purchaseHistory.length) {
+    infoHtml += '<div class="cd-info-card" style="margin-top:10px;">' +
+      `<div class="cd-info-row"><span class="ci-label">🎉 Đã mua hàng</span><span class="ci-value">${info.purchaseHistory.length} lần</span></div>` +
+      info.purchaseHistory.map(p =>
+        `<div class="cd-info-row"><span class="ci-label">${escapeHtml(String(p.date || ''))}</span><span class="ci-value">${escapeHtml(p.product) || 'Chưa rõ sản phẩm'}</span></div>`
+      ).join('') + '</div>';
+  }
+  document.getElementById('cd-sec-info').innerHTML = infoHtml;
+
+  // Tab Lịch sử — timeline mới nhất trên cùng
+  const history = d.history || [];
+  document.getElementById('cd-sec-history').innerHTML = history.length === 0
+    ? '<div class="dash-empty">Chưa có lịch sử liên hệ</div>'
+    : history.map(h => {
+        const a = ACTION_LABEL[h.action] || { text: h.action || '—', cls: '' };
+        return `
+        <div class="hist-item">
+          <div class="hi-top">
+            <span class="hi-date">🕐 ${escapeHtml(h.date)}</span>
+            <span class="hi-action ${a.cls}">${a.text}</span>
+          </div>
+          <div class="hi-content">${escapeHtml(h.content) || '(không có nội dung)'}</div>
+          <div class="hi-meta">
+            ${h.stage ? 'Giai đoạn: ' + escapeHtml(h.stage) : ''}
+            ${h.nextstep ? ' · Next: ' + escapeHtml(h.nextstep) : ''}
+            ${h.sales ? ' · ' + escapeHtml(h.sales) : ''}
+          </div>
+        </div>`;
+      }).join('');
+
+  // Tab Nhiệm vụ
+  const tasks = d.tasks || [];
+  document.getElementById('cd-sec-tasks').innerHTML = tasks.length === 0
+    ? '<div class="dash-empty">Chưa có nhiệm vụ nào cho khách này</div>'
+    : tasks.map(t => `
+      <div class="cd-task ${t.done ? 'is-done' : ''}">
+        <div class="ct-main">
+          <div>${escapeHtml(t.content) || '(không có nội dung)'}</div>
+          <div class="ct-dl">⏰ ${escapeHtml(t.deadline) || '—'}${t.done && t.doneBy ? ' · ✔ ' + escapeHtml(t.doneBy) : ''}</div>
+        </div>
+        <span class="ct-status ${t.done ? 'done' : 'open'}">${t.done ? 'Hoàn thành' : 'Đang mở'}</span>
+      </div>`).join('');
+}
+
+// Bấm "Cập nhật khách này" → nhảy sang tab Nhập/Cập nhật, điền sẵn Tên + SĐT
+// và kích hoạt đúng luồng lookup chuẩn (đảm bảo mọi quy tắc khóa trường vẫn chạy)
+function gotoUpdateFromDetail() {
+  if (!custCurrentDetail) return;
+  switchTab('update');
+  const nameEl = document.getElementById('name');
+  const phoneEl = document.getElementById('phone');
+  nameEl.value = custCurrentDetail.name || '';
+  nameEl.classList.add('filled');
+  phoneEl.value = custCurrentDetail.phone || '';
+  if (custCurrentDetail.phone) phoneEl.classList.add('filled');
+  onNameInput();                      // reset kết quả lookup cũ
+  if (nameEl.value) doLookupByName(nameEl.value); // chạy lookup như khi Sales tự gõ
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── DEMO DATA (chỉ dùng khi chưa cấu hình URL) ──
+function simulateCustomerList() {
+  return { customers: [
+    { name: 'Nguyễn Thị Lan', phone: '0901234567', stage: 'Đã add Zalo - Tư vấn', temp: 'Nóng', nextstep: 'Gửi bảng hoàn vốn BES', deadline: '01/07/2026', overdue: true, sales: 'Nguyễn Thị Thùy Linh', source: 'Facebook Ads', product: 'Genkii BES', entryDate: '20/06/2026', lastContact: '02/07/2026' },
+    { name: 'Trần Văn Minh', phone: '0912345678', stage: 'CSKH', temp: 'Ấm', nextstep: '', deadline: '', overdue: false, sales: 'Ngô Vũ', source: 'TikTok', product: 'ZEN+', entryDate: '15/06/2026', lastContact: '01/07/2026' },
+  ], generatedAt: new Date().toLocaleString('vi-VN') };
+}
+function simulateCustomerDetail(name, phone) {
+  return { found: true,
+    info: { name: name, phone: phone, location: 'Hà Nội', source: 'Facebook Ads', product: 'Genkii BES', stage: 'Đã add Zalo - Tư vấn', temp: 'Nóng', entryDate: '20/06/2026', sales: 'Nguyễn Thị Thùy Linh', hasCompletedDeal: false, purchaseHistory: [] },
+    history: [
+      { date: '02/07/2026 14:30', action: 'update', stage: 'Đã add Zalo - Tư vấn', content: 'Khách hỏi kỹ về hoàn vốn, hẹn tuần sau quyết định', nextstep: 'Gửi bảng hoàn vốn', sales: 'Nguyễn Thị Thùy Linh', product: 'Genkii BES' },
+      { date: '20/06/2026 09:15', action: 'create', stage: 'Inbox', content: 'Khách inbox từ quảng cáo Reel 0604', nextstep: 'Xin SĐT add Zalo', sales: 'Nguyễn Thị Thùy Linh', product: 'Genkii BES' },
+    ],
+    tasks: [ { loai: 'next_step', content: 'Gửi bảng hoàn vốn BES', deadline: '01/07/2026', done: false, doneDate: '', doneBy: '' } ],
   };
 }
 </script>
