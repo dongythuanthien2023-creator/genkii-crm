@@ -258,6 +258,40 @@
   .order-info-card .oi-value { color: var(--text); font-weight: 600; text-align: right; max-width: 60%; }
   .order-info-card .oi-log { margin-top: 10px; padding: 10px 12px; background: var(--grey-1); border-radius: 8px; font-size: 12.5px; color: var(--grey-4); font-style: italic; white-space: pre-line; }
 
+  /* ── v2.2: DASHBOARD ── */
+  .dash-wrap { padding: 14px 16px 28px; max-width: 560px; margin: 0 auto; }
+  .dash-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .dash-meta .dash-time { font-size: 12px; color: var(--grey-3); }
+  .dash-meta button { background: none; border: none; color: var(--teal); font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .kpi-card {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 12px 14px;
+  }
+  .kpi-card .kpi-label { font-size: 12px; color: var(--grey-4); font-weight: 600; }
+  .kpi-card .kpi-value { font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1.25; }
+  .kpi-card .kpi-sub   { font-size: 11.5px; color: var(--grey-3); }
+  .kpi-card .kpi-sub.up   { color: var(--green); font-weight: 700; }
+  .kpi-card .kpi-sub.down { color: var(--red); font-weight: 700; }
+  .kpi-card.danger .kpi-value { color: var(--red); }
+  .kpi-card.tappable { cursor: pointer; }
+  .dash-card {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 14px; margin-bottom: 16px;
+  }
+  .dash-card .dash-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+  .dash-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11.5px; color: var(--grey-4); margin-bottom: 8px; }
+  .dash-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .dash-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .chart-box { position: relative; width: 100%; }
+  .dash-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .dash-table th { text-align: right; color: var(--grey-3); font-weight: 600; padding: 6px 0; border-bottom: 1px solid var(--grey-2); }
+  .dash-table th:first-child, .dash-table td:first-child { text-align: left; }
+  .dash-table td { text-align: right; padding: 8px 0; border-bottom: 1px solid var(--grey-2); font-weight: 600; color: var(--text); }
+  .dash-table tr:last-child td { border-bottom: none; }
+  .dash-table td.oh { color: var(--red); }
+  .dash-empty { text-align: center; color: var(--grey-3); font-size: 13px; padding: 24px 0; }
+
   /* ── v2.1: Khách click lại quảng cáo — chỉ hiện khi đang cập nhật khách cũ ── */
   .clickqc-box {
     display: none; /* mặc định ẩn — JS bật lên khi lookup ra khách cũ */
@@ -466,6 +500,7 @@
   <button type="button" class="tab-btn active" id="tab-btn-update" onclick="switchTab('update')">Nhập / Cập nhật</button>
   <button type="button" class="tab-btn" id="tab-btn-complete" onclick="switchTab('complete')">Hoàn thành đơn hàng</button>
   <button type="button" class="tab-btn" id="tab-btn-tasks" onclick="switchTab('tasks')">Nhiệm vụ hôm nay</button>
+  <button type="button" class="tab-btn" id="tab-btn-dash" onclick="switchTab('dash')">📊 Dashboard</button>
 </div>
 
 <!-- ══════════════ TAB 1: NHẬP / CẬP NHẬT (nội dung cũ, không đổi logic) ══════════════ -->
@@ -703,6 +738,71 @@
   <div id="list-cskh"><div class="task-empty">Đang tải...</div></div>
 
 </div> <!-- /tab-panel-tasks -->
+
+<!-- ── TAB 4: DASHBOARD (v2.2) ── -->
+<div class="tab-panel" id="tab-panel-dash">
+  <div class="dash-wrap">
+
+    <div class="dash-meta">
+      <span class="dash-time" id="dash-time">Chưa tải dữ liệu</span>
+      <button type="button" onclick="loadDashboard(true)">🔄 Làm mới</button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Tổng lượt hôm nay</div>
+        <div class="kpi-value" id="kpi-tong">–</div>
+        <div class="kpi-sub" id="kpi-delta">so với hôm qua</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Khách mới</div>
+        <div class="kpi-value" id="kpi-moi">–</div>
+        <div class="kpi-sub">tạo lần đầu hôm nay</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Click lại quảng cáo</div>
+        <div class="kpi-value" id="kpi-qc">–</div>
+        <div class="kpi-sub" id="kpi-qc-uniq">– khách unique</div>
+      </div>
+      <div class="kpi-card danger tappable" onclick="switchTab('tasks')" title="Bấm để mở tab Nhiệm vụ">
+        <div class="kpi-label">Nhiệm vụ quá hạn</div>
+        <div class="kpi-value" id="kpi-overdue">–</div>
+        <div class="kpi-sub">bấm để xem chi tiết →</div>
+      </div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-title">Lượt nhập 14 ngày gần nhất</div>
+      <div class="dash-legend">
+        <span><i style="background:#2a8a7e"></i>Khách mới</span>
+        <span><i style="background:#c8922a"></i>Click lại quảng cáo</span>
+      </div>
+      <div class="chart-box" style="height:210px;"><canvas id="chart-daily"></canvas></div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-title">Phễu giai đoạn — toàn bộ khách hiện tại</div>
+      <div class="chart-box" id="chart-funnel-box" style="height:230px;"><canvas id="chart-funnel"></canvas></div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-title" id="src-title">Nguồn lead tháng này</div>
+      <div class="dash-legend" id="src-legend"></div>
+      <div class="chart-box" style="height:190px;"><canvas id="chart-src"></canvas></div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-title">Hoạt động theo Sales — tháng này</div>
+      <table class="dash-table" id="sales-table">
+        <thead><tr><th>Sales</th><th>Lượt</th><th>Khách mới</th><th>Đơn</th><th>Quá hạn</th></tr></thead>
+        <tbody><tr><td colspan="5" class="dash-empty">Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+</div> <!-- /tab-panel-dash -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
 <div id="toast"></div>
 <div id="loading"><div class="spinner"></div></div>
@@ -1229,13 +1329,12 @@ function showLoading(on) {
 // TAB SWITCHING
 // ══════════════════════════════════════════════
 function switchTab(tab) {
-  document.getElementById('tab-panel-update').classList.toggle('active', tab === 'update');
-  document.getElementById('tab-panel-complete').classList.toggle('active', tab === 'complete');
-  document.getElementById('tab-panel-tasks').classList.toggle('active', tab === 'tasks');
-  document.getElementById('tab-btn-update').classList.toggle('active', tab === 'update');
-  document.getElementById('tab-btn-complete').classList.toggle('active', tab === 'complete');
-  document.getElementById('tab-btn-tasks').classList.toggle('active', tab === 'tasks');
+  ['update', 'complete', 'tasks', 'dash'].forEach(t => {
+    document.getElementById('tab-panel-' + t).classList.toggle('active', tab === t);
+    document.getElementById('tab-btn-' + t).classList.toggle('active', tab === t);
+  });
   if (tab === 'tasks') loadTodayTasks();
+  if (tab === 'dash')  loadDashboard(false);
 }
 
 // ══════════════════════════════════════════════
@@ -1659,6 +1758,161 @@ function submitTaskUpdate(payload, onSuccess) {
   })
   .then(() => { showLoading(false); onSuccess(); })
   .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
+}
+
+// ══════════════════════════════════════════════
+// TAB 4: DASHBOARD (v2.2)
+// ══════════════════════════════════════════════
+let dashCharts = {};        // giữ instance Chart.js để destroy trước khi vẽ lại
+let dashLastLoaded = 0;     // timestamp lần tải gần nhất — tránh gọi lại liên tục khi bấm qua lại tab
+
+function loadDashboard(force) {
+  if (!currentSalesName) return;
+  // Backend đã cache 5 phút; phía client chỉ chặn gọi lại trong 60s khi
+  // chuyển qua lại tab. Bấm "Làm mới" (force=true) thì luôn gọi.
+  if (!force && Date.now() - dashLastLoaded < 60000) return;
+
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    renderDashboard(simulateDashboardData());
+    return;
+  }
+
+  document.getElementById('dash-time').textContent = 'Đang tải...';
+  const old = document.getElementById('jsonp-script-dash');
+  if (old) old.remove();
+  window._jsonpCBDash = function(data) {
+    renderDashboard(data);
+    dashLastLoaded = Date.now();
+    delete window._jsonpCBDash;
+    const s = document.getElementById('jsonp-script-dash');
+    if (s) s.remove();
+  };
+  const script = document.createElement('script');
+  script.id = 'jsonp-script-dash';
+  script.src = `${APPS_SCRIPT_URL}?action=getDashboardData&callback=_jsonpCBDash`;
+  script.onerror = () => {
+    document.getElementById('dash-time').textContent = 'Lỗi tải dữ liệu';
+    showToast('❌ Lỗi tải Dashboard. Bấm Làm mới để thử lại.', 'error-t');
+  };
+  document.head.appendChild(script);
+}
+
+function renderDashboard(d) {
+  if (!d || d.error) {
+    document.getElementById('dash-time').textContent = 'Lỗi: ' + (d && d.error ? d.error : 'không rõ');
+    return;
+  }
+  document.getElementById('dash-time').textContent = 'Cập nhật lúc ' + (d.generatedAt || '');
+
+  // ── KPI ──
+  const t = d.today || {};
+  document.getElementById('kpi-tong').textContent = t.tongLuot ?? 0;
+  document.getElementById('kpi-moi').textContent  = t.khachMoi ?? 0;
+  document.getElementById('kpi-qc').textContent   = t.clickQC ?? 0;
+  document.getElementById('kpi-qc-uniq').textContent = (t.uniqueQC ?? 0) + ' khách unique';
+  document.getElementById('kpi-overdue').textContent = d.totalOverdue ?? 0;
+  const deltaEl = document.getElementById('kpi-delta');
+  const delta = t.delta ?? 0;
+  if (delta > 0)      { deltaEl.textContent = '▲ +' + delta + ' so với hôm qua'; deltaEl.className = 'kpi-sub up'; }
+  else if (delta < 0) { deltaEl.textContent = '▼ ' + delta + ' so với hôm qua';  deltaEl.className = 'kpi-sub down'; }
+  else                { deltaEl.textContent = 'bằng hôm qua';                    deltaEl.className = 'kpi-sub'; }
+
+  // ── Biểu đồ 14 ngày (cột chồng) ──
+  const daily = d.daily || [];
+  drawChart('daily', 'chart-daily', {
+    type: 'bar',
+    data: {
+      labels: daily.map(x => x.label),
+      datasets: [
+        { label: 'Khách mới',    data: daily.map(x => x.khachMoi), backgroundColor: '#2a8a7e', stack: 's', borderRadius: { topLeft: 3, topRight: 3 } },
+        { label: 'Click lại QC', data: daily.map(x => x.clickQC),  backgroundColor: '#c8922a', stack: 's' },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9.5 }, color: '#9aa3af', autoSkip: false, maxRotation: 60 } },
+        y: { stacked: true, grid: { color: '#eef0f3' }, ticks: { precision: 0, font: { size: 10 }, color: '#9aa3af' } },
+      },
+    },
+  });
+
+  // ── Phễu giai đoạn (thanh ngang) ──
+  const funnel = d.funnel || [];
+  document.getElementById('chart-funnel-box').style.height = Math.max(150, funnel.length * 34 + 40) + 'px';
+  const FUNNEL_COLORS = { 'Inbox': '#8fb8e8', 'SĐT - Chưa add Zalo': '#5a92d6', 'Đã add Zalo - Tư vấn': '#2f6bb5', 'Chốt': '#1a2e44', 'CSKH': '#2a8a7e', 'Khách cũ': '#7bbfb5', 'Khách yêu cầu đặc biệt': '#c8922a', 'Không tiềm năng': '#c9ced6' };
+  drawChart('funnel', 'chart-funnel', {
+    type: 'bar',
+    data: {
+      labels: funnel.map(x => x.stage),
+      datasets: [{ data: funnel.map(x => x.count), backgroundColor: funnel.map(x => FUNNEL_COLORS[x.stage] || '#9aa3af'), borderRadius: { topRight: 3, bottomRight: 3 } }],
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#eef0f3' }, ticks: { precision: 0, font: { size: 10 }, color: '#9aa3af' } },
+        y: { grid: { display: false }, ticks: { font: { size: 10.5 }, color: '#5a6473' } },
+      },
+    },
+  });
+
+  // ── Nguồn lead (doughnut) ──
+  const src = (d.sources && d.sources.items) || [];
+  document.getElementById('src-title').textContent =
+    d.sources && d.sources.scope === 'all' ? 'Nguồn lead — toàn bộ (tháng này chưa có khách mới)' : 'Nguồn lead tháng này';
+  const SRC_COLORS = ['#2a8a7e', '#1a2e44', '#c8922a', '#5a92d6', '#c0392b', '#7bbfb5', '#9aa3af', '#d6a2ad'];
+  const srcTotal = src.reduce((s, x) => s + x.count, 0) || 1;
+  document.getElementById('src-legend').innerHTML = src.map((x, i) =>
+    `<span><i style="background:${SRC_COLORS[i % SRC_COLORS.length]}"></i>${escapeHtml(x.name)} ${Math.round(x.count * 100 / srcTotal)}%</span>`
+  ).join('');
+  drawChart('src', 'chart-src', {
+    type: 'doughnut',
+    data: { labels: src.map(x => x.name), datasets: [{ data: src.map(x => x.count), backgroundColor: src.map((x, i) => SRC_COLORS[i % SRC_COLORS.length]), borderWidth: 2, borderColor: '#ffffff' }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false } } },
+  });
+
+  // ── Bảng Sales ──
+  const tbody = document.querySelector('#sales-table tbody');
+  const sales = d.sales || [];
+  tbody.innerHTML = sales.length === 0
+    ? '<tr><td colspan="5" class="dash-empty">Chưa có hoạt động nào trong tháng</td></tr>'
+    : sales.map(s => `
+      <tr>
+        <td>${escapeHtml(s.name)}</td>
+        <td>${s.luot}</td>
+        <td>${s.khachMoi}</td>
+        <td>${s.don}</td>
+        <td class="${s.quaHan > 0 ? 'oh' : ''}">${s.quaHan}</td>
+      </tr>`).join('');
+}
+
+function drawChart(key, canvasId, config) {
+  if (typeof Chart === 'undefined') return; // CDN chưa tải xong/bị chặn — bỏ qua, số liệu KPI vẫn hiện
+  if (dashCharts[key]) { dashCharts[key].destroy(); }
+  dashCharts[key] = new Chart(document.getElementById(canvasId), config);
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function simulateDashboardData() {
+  const daily = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    daily.push({ label: String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'), khachMoi: 5 + Math.floor(Math.random() * 10), clickQC: Math.floor(Math.random() * 5) });
+  }
+  return {
+    generatedAt: new Date().toLocaleString('vi-VN'),
+    today: { khachMoi: 8, clickQC: 3, tongLuot: 11, uniqueQC: 2, delta: 2 },
+    daily: daily,
+    funnel: [{ stage: 'Inbox', count: 24 }, { stage: 'Đã add Zalo - Tư vấn', count: 31 }, { stage: 'Chốt', count: 7 }, { stage: 'CSKH', count: 15 }],
+    sources: { scope: 'month', items: [{ name: 'Facebook Ads', count: 32 }, { name: 'TikTok', count: 14 }, { name: 'Website', count: 8 }, { name: 'Khách cũ', count: 6 }] },
+    sales: [{ name: 'Nguyễn Thị Thùy Linh', luot: 41, khachMoi: 35, don: 4, quaHan: 1 }, { name: 'Ngô Vũ', luot: 12, khachMoi: 9, don: 2, quaHan: 0 }],
+    totalOverdue: 3,
+  };
 }
 </script>
 </body>
