@@ -1920,7 +1920,7 @@ function loadDashboard(force) {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-script-dash';
-  script.src = `${APPS_SCRIPT_URL}?action=getDashboardData&callback=_jsonpCBDash`;
+  script.src = `${APPS_SCRIPT_URL}?action=getDashboardData${force ? '&fresh=1' : ''}&callback=_jsonpCBDash`;
   script.onerror = () => {
     document.getElementById('dash-time').textContent = 'Lỗi tải dữ liệu';
     showToast('❌ Lỗi tải Dashboard. Bấm Làm mới để thử lại.', 'error-t');
@@ -2090,9 +2090,10 @@ function loadCustomerList(force) {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-script-cust';
-  script.src = `${APPS_SCRIPT_URL}?action=getCustomerList&callback=_jsonpCBCust`;
+  script.src = `${APPS_SCRIPT_URL}?action=getCustomerList${force ? '&fresh=1' : ''}&callback=_jsonpCBCust`;
   script.onerror = () => {
-    document.getElementById('cust-count-label').textContent = 'Lỗi tải dữ liệu';
+    if (!custData) document.getElementById('cust-count-label').textContent = 'Lỗi tải dữ liệu';
+    else renderCustomerList(); // vẫn còn dữ liệu cũ → hiện lại nhãn đếm bình thường
     showToast('❌ Lỗi tải danh sách. Bấm Làm mới để thử lại.', 'error-t');
   };
   document.head.appendChild(script);
