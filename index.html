@@ -364,6 +364,73 @@
   .tci-hint { font-size: 10.5px; color: var(--grey-3); text-align: center; padding: 6px 0 2px; }
   .tci-loading { text-align: center; color: var(--grey-3); font-size: 12px; padding: 12px 0; }
 
+  /* ── v2.7: NHẬP BỔ SUNG ── */
+  .bs-card { padding: 12px 14px !important; }
+  .bs-toggle { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .bs-toggle input[type="checkbox"] { width: 20px; height: 20px; margin-top: 1px; flex-shrink: 0; accent-color: var(--navy); cursor: pointer; }
+  .bs-toggle .bs-text { font-size: 13.5px; line-height: 1.45; }
+  .bs-toggle .bs-text b { color: var(--navy); }
+  .bs-toggle .bs-sub { display: block; color: var(--grey-4); font-size: 12px; margin-top: 2px; }
+  .bs-date-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1.5px dashed var(--grey-2); }
+  .bs-date-row.visible { display: block; }
+  .bs-date-row label { display: block; font-size: 12px; font-weight: 700; color: var(--grey-4); margin-bottom: 5px; }
+  .bs-date-row input[type="date"] { width: 100%; padding: 10px 12px; font-size: 14px; border: 1.5px solid var(--navy); border-radius: 10px; background: #F4F7FB; outline: none; font-family: inherit; }
+  .bs-card.active { border: 2px solid var(--navy); background: #F4F7FB; }
+  .clickqc-box.disabled { opacity: .45; pointer-events: none; }
+
+  /* ── v2.7: SỰ KIỆN GENKII ── */
+  .ev-wrap { padding: 14px 16px 28px; max-width: 720px; margin: 0 auto; }
+  .ev-subnav { display: flex; gap: 6px; margin-bottom: 14px; }
+  .ev-subtab { flex: 1; padding: 9px 6px; font-size: 12px; font-weight: 700; text-align: center; border: none; border-radius: 10px; background: var(--white); color: var(--grey-4); cursor: pointer; box-shadow: var(--shadow); white-space: nowrap; }
+  .ev-subtab.active { background: var(--navy); color: #fff; }
+  .ev-form-card, .ev-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; margin-bottom: 12px; }
+  .ev-form-card .field { margin-bottom: 12px; }
+  .ev-form-card label { display: block; font-size: 12px; font-weight: 700; color: var(--grey-4); margin-bottom: 5px; }
+  .ev-form-card input[type="text"] { width: 100%; padding: 10px 12px; font-size: 14px; border: 1.5px solid var(--grey-2); border-radius: 10px; outline: none; font-family: inherit; }
+  .ev-form-card input[type="text"]:focus { border-color: var(--teal); }
+  .ev-btn { padding: 11px 16px; font-size: 13.5px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .ev-btn.primary { background: var(--teal); color: #fff; width: 100%; }
+  .ev-card { cursor: pointer; }
+  .ev-card:active { transform: scale(.99); }
+  .ev-card .evc-name { font-size: 14.5px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+  .ev-card .evc-name.cancelled { color: var(--red); text-decoration: line-through; }
+  .ev-card .evc-meta { font-size: 12px; color: var(--grey-4); }
+  .ev-status-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+  .ev-status-badge.done { background: var(--green-lt); color: var(--green); }
+  .ev-status-badge.cancelled { background: #FDE8E8; color: var(--red); }
+  .ev-empty { text-align: center; color: var(--grey-3); font-size: 13px; padding: 24px 0; }
+  /* Editor */
+  .ev-editor-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .ev-editor-head .ev-back { background: var(--white); border: 1.5px solid var(--grey-2); border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 700; color: var(--grey-4); cursor: pointer; flex-shrink: 0; }
+  .ev-editor-head .ev-title { font-size: 15px; font-weight: 800; color: var(--navy); flex: 1; }
+  .ev-editor-head .ev-title.cancelled { color: var(--red); text-decoration: line-through; }
+  .ev-meta-line { font-size: 12px; color: var(--grey-4); margin-bottom: 12px; }
+  .ev-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 12px; }
+  .ev-table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 12.5px; }
+  .ev-table th { background: var(--navy); color: #fff; font-size: 11.5px; padding: 9px 8px; text-align: left; white-space: nowrap; position: sticky; top: 0; }
+  .ev-table td { padding: 6px 6px; border-bottom: 1px solid var(--grey-1); vertical-align: middle; }
+  .ev-table input[type="text"], .ev-table input[type="number"], .ev-table select {
+    width: 100%; min-width: 90px; padding: 7px 8px; font-size: 12.5px;
+    border: 1.5px solid var(--grey-2); border-radius: 8px; outline: none; font-family: inherit; background: #fff;
+  }
+  .ev-table input:focus, .ev-table select:focus { border-color: var(--teal); }
+  .ev-table select.tu-choi { background: #FDE8E8; border-color: var(--red); color: var(--red); font-weight: 700; }
+  .ev-table select:disabled, .ev-table input:disabled { background: var(--grey-1); color: var(--grey-3); }
+  .ev-table select.locked-red:disabled { background: #FDE8E8; color: var(--red); }
+  .ev-table .ev-del { background: none; border: none; font-size: 15px; cursor: pointer; padding: 4px; }
+  .ev-summary { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 14px; margin-bottom: 12px; }
+  .ev-summary .evs-title { font-size: 12.5px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+  .ev-summary .evs-row { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 5px 0; border-bottom: 1px solid var(--grey-1); }
+  .ev-summary .evs-row:last-child { border-bottom: none; }
+  .ev-summary .evs-label { color: var(--grey-4); }
+  .ev-summary .evs-value { font-weight: 800; color: var(--navy); text-align: right; }
+  .ev-summary .evs-value.money { color: var(--gold); }
+  .ev-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ev-actions .ev-btn { flex: 1 1 45%; }
+  .ev-btn.ghost { background: var(--white); color: var(--grey-4); border: 1.5px solid var(--grey-2); }
+  .ev-btn.done-btn { background: var(--navy); color: #fff; }
+  .ev-btn.cancel-btn { background: #FDE8E8; color: var(--red); }
+
   /* ── v2.2: DASHBOARD ── */
   .dash-wrap { padding: 14px 16px 28px; max-width: 560px; margin: 0 auto; }
   .dash-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -624,12 +691,30 @@
   <button type="button" class="tab-btn" id="tab-btn-tasks" onclick="switchTab('tasks')">🔔 Nhiệm vụ</button>
   <button type="button" class="tab-btn" id="tab-btn-cust" onclick="switchTab('cust')">👥 Khách hàng</button>
   <button type="button" class="tab-btn" id="tab-btn-dash" onclick="switchTab('dash')">📊 Thống kê</button>
+  <button type="button" class="tab-btn" id="tab-btn-event" onclick="switchTab('event')">🎪 Sự kiện</button>
 </div>
 
 <!-- ══════════════ TAB 1: NHẬP / CẬP NHẬT (nội dung cũ, không đổi logic) ══════════════ -->
 <div class="tab-panel active" id="tab-panel-update">
 
 <div id="lookup-banner"></div>
+
+<!-- ── v2.7: NHẬP BỔ SUNG — data cũ thu thập trước đây ──
+     Đặt NGOÀI form để trạng thái tick + ngày GIỮ NGUYÊN sau mỗi lần lưu,
+     phục vụ nhập bổ sung hàng loạt không phải tick lại từng khách. -->
+<div class="form-card bs-card">
+  <label class="bs-toggle" id="bs-toggle">
+    <input type="checkbox" id="bs-check" onchange="onBoSungChange(this)">
+    <span class="bs-text">
+      📥 <b>Nhập bổ sung</b> — data cũ thu thập từ trước
+      <span class="bs-sub">Không tính lượt mới trong ngày. Khách xếp theo đúng ngày thu thập. Vẫn kiểm tra trùng lặp như bình thường.</span>
+    </span>
+  </label>
+  <div class="bs-date-row" id="bs-date-row">
+    <label for="bs-date">Ngày thu thập data <span class="req">*</span></label>
+    <input type="date" id="bs-date">
+  </div>
+</div>
 
 <form id="crm-form" novalidate>
 
@@ -985,6 +1070,63 @@
   </div>
 </div> <!-- /tab-panel-dash -->
 
+<!-- ── TAB 6: SỰ KIỆN GENKII (v2.7) ── -->
+<div class="tab-panel" id="tab-panel-event">
+  <div class="ev-wrap">
+
+    <div class="ev-subnav" id="ev-subnav">
+      <button type="button" class="ev-subtab" id="ev-tab-create" onclick="switchEventView('create')">➕ Tạo sự kiện</button>
+      <button type="button" class="ev-subtab active" id="ev-tab-ongoing" onclick="switchEventView('ongoing')">🔥 Đang diễn ra</button>
+      <button type="button" class="ev-subtab" id="ev-tab-history" onclick="switchEventView('history')">🗂 Lịch sử</button>
+    </div>
+
+    <!-- View 1: tạo sự kiện -->
+    <div id="ev-view-create" style="display:none">
+      <div class="ev-form-card">
+        <div class="field"><label>Tên chương trình <span class="req">*</span></label>
+          <input type="text" id="ev-new-name" placeholder="VD: Workshop trải nghiệm Genkii BES tháng 7"></div>
+        <div class="field"><label>Thời gian diễn ra <span class="req">*</span></label>
+          <input type="text" id="ev-new-time" placeholder="VD: 19:30 Thứ 4, 09/07/2026"></div>
+        <div class="field"><label>Địa điểm / Phương thức <span class="req">*</span></label>
+          <input type="text" id="ev-new-place" placeholder="VD: Zoom online / Showroom Đông Anh"></div>
+        <button type="button" class="ev-btn primary" onclick="createNewEvent()">✅ Tạo sự kiện</button>
+      </div>
+    </div>
+
+    <!-- View 2 + 3: danh sách -->
+    <div id="ev-view-list">
+      <div id="ev-list"></div>
+    </div>
+
+    <!-- View 4: bảng khách của 1 sự kiện -->
+    <div id="ev-view-editor" style="display:none">
+      <div class="ev-editor-head">
+        <button type="button" class="ev-back" onclick="backToEventList()">←</button>
+        <div class="ev-title" id="ev-editor-title">—</div>
+      </div>
+      <div class="ev-meta-line" id="ev-editor-meta"></div>
+      <div class="ev-table-scroll">
+        <table class="ev-table">
+          <thead><tr>
+            <th style="min-width:150px">Họ và tên</th><th style="min-width:110px">Nguồn khách</th>
+            <th>Mời lần 1</th><th>Mời lần 2</th><th>Mời lần 3</th>
+            <th>Tham gia thực tế</th><th style="min-width:110px">Doanh số (đ)</th><th></th>
+          </tr></thead>
+          <tbody id="ev-guest-rows"></tbody>
+        </table>
+      </div>
+      <div class="ev-summary" id="ev-summary"></div>
+      <div class="ev-actions" id="ev-actions">
+        <button type="button" class="ev-btn ghost" onclick="addGuestRow()">➕ Thêm khách</button>
+        <button type="button" class="ev-btn primary" onclick="saveGuests(false)">💾 Lưu bảng khách</button>
+        <button type="button" class="ev-btn done-btn" onclick="closeEvent('done')">🏁 Hoàn thành sự kiện</button>
+        <button type="button" class="ev-btn cancel-btn" onclick="closeEvent('cancelled')">❌ Hủy bỏ sự kiện</button>
+      </div>
+    </div>
+
+  </div>
+</div> <!-- /tab-panel-event -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
 <div id="toast"></div>
@@ -1330,6 +1472,10 @@ function onSubmit(e) {
 
   const isUpdate = lookupResult && lookupResult.found;
 
+  // v2.7: chế độ Nhập bổ sung — kiểm tra ngày trước, lỗi thì chặn submit ngay
+  const bsState = readBoSungState();
+  if (bsState.error) { showToast(bsState.error, 'error-t'); return; }
+
   // v2.6.1: cờ "Khách click lại quảng cáo" gửi ở CẢ 2 chế độ:
   // - UPDATE khách có trong CRM  → backend ghi 'update_click_qc'
   // - CREATE hồ sơ mới (khách cũ ngoài hệ thống quay lại qua ads) → 'create_click_qc'
@@ -1338,7 +1484,9 @@ function onSubmit(e) {
 
   const payload = {
     action:    isUpdate ? 'update' : 'create',
-    clickLaiQC: clickLaiQC,
+    clickLaiQC: bsState.boSung ? false : clickLaiQC, // bổ sung là quá khứ, loại trừ click QC
+    boSung:     bsState.boSung,
+    boSungDate: bsState.boSungDate,
     allRows:   isUpdate ? lookupResult.allRows : null,
     rowIndex:  isUpdate ? lookupResult.rowIndex : null,
     sales:     v('sales'),
@@ -1517,13 +1665,14 @@ function showLoading(on) {
 // TAB SWITCHING
 // ══════════════════════════════════════════════
 function switchTab(tab) {
-  ['update', 'complete', 'tasks', 'cust', 'dash'].forEach(t => {
+  ['update', 'complete', 'tasks', 'cust', 'dash', 'event'].forEach(t => {
     document.getElementById('tab-panel-' + t).classList.toggle('active', tab === t);
     document.getElementById('tab-btn-' + t).classList.toggle('active', tab === t);
   });
   if (tab === 'tasks') loadTodayTasks();
   if (tab === 'dash')  loadDashboard(false);
   if (tab === 'cust')  loadCustomerList(false);
+  if (tab === 'event') loadEvents(false);
 }
 
 // ══════════════════════════════════════════════
@@ -2289,6 +2438,44 @@ function simulateDashboardData() {
 }
 
 // ══════════════════════════════════════════════
+// NHẬP BỔ SUNG (v2.7)
+// ══════════════════════════════════════════════
+// Trạng thái tick + ngày nằm NGOÀI form nên GIỮ NGUYÊN sau mỗi lần lưu —
+// Sales nhập bổ sung hàng loạt chỉ chọn ngày 1 lần cho cả loạt cùng đợt.
+function onBoSungChange(cb) {
+  document.getElementById('bs-date-row').classList.toggle('visible', cb.checked);
+  document.querySelector('.bs-card').classList.toggle('active', cb.checked);
+  // Chế độ bổ sung là ghi chép QUÁ KHỨ → không đồng thời là "click lại QC hôm nay":
+  // khóa mờ checkbox click QC khi bật bổ sung, mở lại khi tắt
+  const qcBox = document.getElementById('clickqc-box');
+  const qcCb  = document.getElementById('clickqc');
+  if (qcBox && qcCb) {
+    if (cb.checked) { qcCb.checked = false; qcBox.classList.remove('checked'); qcBox.classList.add('disabled'); }
+    else qcBox.classList.remove('disabled');
+  }
+  if (cb.checked && !document.getElementById('bs-date').value) {
+    document.getElementById('bs-date').focus();
+  }
+}
+
+/** ISO "yyyy-mm-dd" (input date) → "dd/mm/yyyy"; sai → '' */
+function isoToVN(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+}
+
+/** Đọc trạng thái Nhập bổ sung khi submit — trả {boSung, boSungDate} hoặc {error} */
+function readBoSungState() {
+  const checked = !!document.getElementById('bs-check')?.checked;
+  if (!checked) return { boSung: false, boSungDate: '' };
+  const iso = document.getElementById('bs-date').value;
+  if (!iso) return { error: '⚠️ Đang bật "Nhập bổ sung" — vui lòng chọn Ngày thu thập data' };
+  const todayISO = new Date().toISOString().split('T')[0];
+  if (iso > todayISO) return { error: '⚠️ Ngày thu thập data không thể ở tương lai' };
+  return { boSung: true, boSungDate: isoToVN(iso) };
+}
+
+// ══════════════════════════════════════════════
 // TAB: KHÁCH HÀNG (v2.3) — danh sách + chi tiết
 // ══════════════════════════════════════════════
 let custData = null;        // {customers:[...]} — dữ liệu list gần nhất
@@ -2457,6 +2644,8 @@ function switchDetailTab(sub) {
 const ACTION_LABEL = {
   'create':              { text: 'Tạo mới',        cls: 'a-create' },
   'create_click_qc':     { text: 'Tạo mới · Click QC', cls: 'a-qc' },
+  'create_bo_sung':      { text: 'Nhập bổ sung',   cls: '' },
+  'update_bo_sung':      { text: 'Cập nhật · Bổ sung', cls: '' },
   'update':              { text: 'Cập nhật',       cls: '' },
   'update_click_qc':     { text: 'Click lại QC',   cls: 'a-qc' },
   'hoan_thanh_don_hang': { text: 'Hoàn thành đơn', cls: 'a-don' },
@@ -2548,6 +2737,231 @@ function simulateCustomerList() {
     { name: 'Trần Văn Minh', phone: '0912345678', stage: 'CSKH', temp: 'Ấm', nextstep: '', deadline: '', overdue: false, sales: 'Ngô Vũ', source: 'TikTok', product: 'ZEN+', entryDate: '15/06/2026', lastContact: '01/07/2026' },
   ], generatedAt: new Date().toLocaleString('vi-VN') };
 }
+// ══════════════════════════════════════════════
+// TAB: SỰ KIỆN GENKII (v2.7)
+// ══════════════════════════════════════════════
+const EV_STATUSES = ['', 'Từ chối', 'Xác nhận thông tin', 'Xác nhận tham gia', 'Trả lời sau'];
+const EV_ATTEND   = ['', 'Tham gia', 'Không tham gia'];
+let evData = null;          // {ongoing:[], history:[]}
+let evLastLoaded = 0;
+let evCurrentView = 'ongoing';
+let evCurrent = null;       // sự kiện đang mở editor {id, name, ..., status}
+let evGuests = [];          // state bảng khách của editor
+let evReadonly = false;
+let evJsonpSeq = 0;
+
+// JSONP dùng chung cho module sự kiện
+function evJsonp(query, onData) {
+  const cbName = '_jsonpCBEvent' + (++evJsonpSeq);
+  window[cbName] = function(data) {
+    onData(data);
+    delete window[cbName];
+    const s = document.getElementById('jsonp-' + cbName);
+    if (s) s.remove();
+  };
+  const script = document.createElement('script');
+  script.id = 'jsonp-' + cbName;
+  script.src = `${APPS_SCRIPT_URL}?${query}&callback=${cbName}`;
+  script.onerror = () => showToast('❌ Lỗi tải dữ liệu sự kiện. Thử lại.', 'error-t');
+  document.head.appendChild(script);
+}
+
+function evPost(payload, onDone) {
+  showLoading(true);
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+  })
+  .then(() => { showLoading(false); if (onDone) onDone(); })
+  .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
+}
+
+function loadEvents(force) {
+  if (!currentSalesName) return;
+  if (!force && evData && Date.now() - evLastLoaded < 60000) { renderEventList(); return; }
+  document.getElementById('ev-list').innerHTML = '<div class="ev-empty">Đang tải...</div>';
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    evData = { ongoing: [{ id: 'EVT1', name: 'Workshop demo', time: '19:30 09/07', place: 'Zoom', status: 'ongoing' }], history: [] };
+    evLastLoaded = Date.now(); renderEventList(); return;
+  }
+  evJsonp('action=getEvents', (data) => {
+    evData = data || { ongoing: [], history: [] };
+    evLastLoaded = Date.now();
+    renderEventList();
+  });
+}
+
+function switchEventView(view) {
+  evCurrentView = view;
+  ['create', 'ongoing', 'history'].forEach(v =>
+    document.getElementById('ev-tab-' + v).classList.toggle('active', v === view));
+  document.getElementById('ev-view-create').style.display = view === 'create' ? 'block' : 'none';
+  document.getElementById('ev-view-list').style.display   = view === 'create' ? 'none' : 'block';
+  document.getElementById('ev-view-editor').style.display = 'none';
+  document.getElementById('ev-subnav').style.display = 'flex';
+  if (view !== 'create') renderEventList();
+}
+
+function renderEventList() {
+  const listEl = document.getElementById('ev-list');
+  if (evCurrentView === 'create') return;
+  const events = (evData && evData[evCurrentView === 'history' ? 'history' : 'ongoing']) || [];
+  if (events.length === 0) {
+    listEl.innerHTML = `<div class="ev-empty">${evCurrentView === 'history' ? 'Chưa có sự kiện nào trong lịch sử' : 'Chưa có sự kiện nào đang diễn ra — bấm ➕ Tạo sự kiện'}</div>`;
+    return;
+  }
+  listEl.innerHTML = events.map(ev => {
+    const cancelled = ev.status === 'cancelled';
+    const badge = ev.status === 'done' ? '<span class="ev-status-badge done">Hoàn thành</span>'
+      : cancelled ? '<span class="ev-status-badge cancelled">Đã hủy</span>' : '';
+    return `
+      <div class="ev-card" onclick="openEventEditor('${escapeHtml(ev.id)}')">
+        <div class="evc-name ${cancelled ? 'cancelled' : ''}">${escapeHtml(ev.name)}${badge}</div>
+        <div class="evc-meta">🕐 ${escapeHtml(ev.time) || '—'} · 📍 ${escapeHtml(ev.place) || '—'}${ev.closedAt ? ' · Đóng: ' + escapeHtml(ev.closedAt) : ''}</div>
+      </div>`;
+  }).join('');
+}
+
+function createNewEvent() {
+  const name  = document.getElementById('ev-new-name').value.trim();
+  const time  = document.getElementById('ev-new-time').value.trim();
+  const place = document.getElementById('ev-new-place').value.trim();
+  if (!name || !time || !place) { showToast('⚠️ Điền đủ Tên / Thời gian / Địa điểm', 'error-t'); return; }
+  // ID sinh phía client (POST no-cors không đọc được phản hồi) — timestamp đảm bảo duy nhất
+  const eventId = 'EVT' + Date.now();
+  evPost({ action: 'createEvent', eventId, name, time, place }, () => {
+    showToast('✅ Đã tạo sự kiện "' + name + '"', 'success');
+    document.getElementById('ev-new-name').value = '';
+    document.getElementById('ev-new-time').value = '';
+    document.getElementById('ev-new-place').value = '';
+    setTimeout(() => { loadEvents(true); switchEventView('ongoing'); }, 800);
+  });
+}
+
+function openEventEditor(eventId) {
+  document.getElementById('ev-view-list').style.display = 'none';
+  document.getElementById('ev-view-create').style.display = 'none';
+  document.getElementById('ev-subnav').style.display = 'none';
+  document.getElementById('ev-view-editor').style.display = 'block';
+  document.getElementById('ev-editor-title').textContent = 'Đang tải...';
+  document.getElementById('ev-guest-rows').innerHTML = '';
+  document.getElementById('ev-summary').innerHTML = '';
+
+  evJsonp('action=getEventGuests&eventId=' + encodeURIComponent(eventId), (data) => {
+    if (!data || data.error) { showToast('⚠️ ' + ((data && data.error) || 'Lỗi tải sự kiện'), 'error-t'); backToEventList(); return; }
+    evCurrent = data.event;
+    evGuests = data.guests || [];
+    evReadonly = evCurrent.status !== 'ongoing'; // done/cancelled = chỉ đọc vĩnh viễn
+    const titleEl = document.getElementById('ev-editor-title');
+    titleEl.textContent = evCurrent.name;
+    titleEl.classList.toggle('cancelled', evCurrent.status === 'cancelled');
+    document.getElementById('ev-editor-meta').innerHTML =
+      `🕐 ${escapeHtml(evCurrent.time) || '—'} · 📍 ${escapeHtml(evCurrent.place) || '—'}` +
+      (evCurrent.status === 'done' ? ' · <b style="color:var(--green)">✅ Đã hoàn thành</b>'
+        : evCurrent.status === 'cancelled' ? ' · <b style="color:var(--red)">❌ Đã hủy</b>' : '');
+    document.getElementById('ev-actions').style.display = evReadonly ? 'none' : 'flex';
+    if (!evReadonly && evGuests.length === 0) evGuests.push(emptyGuest());
+    renderGuestTable();
+  });
+}
+
+function backToEventList() {
+  evCurrent = null; evGuests = []; evReadonly = false;
+  document.getElementById('ev-view-editor').style.display = 'none';
+  document.getElementById('ev-subnav').style.display = 'flex';
+  switchEventView(evCurrentView === 'create' ? 'ongoing' : evCurrentView);
+}
+
+function emptyGuest() { return { name: '', source: '', m1: '', m2: '', m3: '', attend: '', revenue: 0 }; }
+function addGuestRow() { evGuests.push(emptyGuest()); renderGuestTable(); }
+function removeGuestRow(i) { evGuests.splice(i, 1); renderGuestTable(); }
+function onGuestField(i, field, value) {
+  evGuests[i][field] = field === 'revenue' ? (Number(value) || 0) : value;
+  // Đổi trạng thái mời có thể mở/khóa các vòng sau → vẽ lại cả bảng + tổng
+  if (field === 'm1' || field === 'm2' || field === 'm3') renderGuestTable();
+  else renderSummary();
+}
+
+function statusSelect(i, field, value, disabled) {
+  // "Từ chối" ở vòng nào → vòng đó tô đỏ; các vòng SAU khóa + đỏ (theo yêu cầu)
+  const cls = value === 'Từ chối' ? 'tu-choi' : (disabled ? 'locked-red' : '');
+  return `<select class="${cls}" ${disabled || evReadonly ? 'disabled' : ''}
+    onchange="onGuestField(${i}, '${field}', this.value)">` +
+    EV_STATUSES.map(s => `<option value="${s}" ${s === value ? 'selected' : ''}>${s || '— chọn —'}</option>`).join('') +
+    '</select>';
+}
+
+function renderGuestTable() {
+  const tbody = document.getElementById('ev-guest-rows');
+  tbody.innerHTML = evGuests.map((g, i) => {
+    const refused1 = g.m1 === 'Từ chối';
+    const refused2 = refused1 || g.m2 === 'Từ chối';
+    return `<tr>
+      <td><input type="text" value="${escapeHtml(g.name)}" placeholder="Họ tên khách" ${evReadonly ? 'disabled' : ''} oninput="onGuestField(${i}, 'name', this.value)"></td>
+      <td><input type="text" value="${escapeHtml(g.source)}" placeholder="Nguồn" ${evReadonly ? 'disabled' : ''} oninput="onGuestField(${i}, 'source', this.value)"></td>
+      <td>${statusSelect(i, 'm1', g.m1, false)}</td>
+      <td>${statusSelect(i, 'm2', refused1 ? '' : g.m2, refused1)}</td>
+      <td>${statusSelect(i, 'm3', refused2 ? '' : g.m3, refused2)}</td>
+      <td><select ${evReadonly ? 'disabled' : ''} onchange="onGuestField(${i}, 'attend', this.value)">
+        ${EV_ATTEND.map(s => `<option value="${s}" ${s === g.attend ? 'selected' : ''}>${s || '— chọn —'}</option>`).join('')}
+      </select></td>
+      <td><input type="number" min="0" step="1000" value="${g.revenue || ''}" placeholder="0" ${evReadonly ? 'disabled' : ''} oninput="onGuestField(${i}, 'revenue', this.value)"></td>
+      <td>${evReadonly ? '' : `<button type="button" class="ev-del" title="Xóa dòng" onclick="removeGuestRow(${i})">🗑</button>`}</td>
+    </tr>`;
+  }).join('');
+  // Khách "Từ chối" vòng trước → dữ liệu vòng sau xóa luôn trong state cho nhất quán
+  evGuests.forEach(g => {
+    if (g.m1 === 'Từ chối') { g.m2 = ''; g.m3 = ''; }
+    else if (g.m2 === 'Từ chối') { g.m3 = ''; }
+  });
+  renderSummary();
+}
+
+function fmtMoney(n) { return (Number(n) || 0).toLocaleString('vi-VN') + ' đ'; }
+
+function renderSummary() {
+  const real = evGuests.filter(g => String(g.name || '').trim() !== '');
+  const countRound = (field) => {
+    const c = { 'Từ chối': 0, 'Xác nhận thông tin': 0, 'Xác nhận tham gia': 0, 'Trả lời sau': 0 };
+    real.forEach(g => { if (c[g[field]] !== undefined) c[g[field]]++; });
+    return `TC <b>${c['Từ chối']}</b> · XN thông tin <b>${c['Xác nhận thông tin']}</b> · XN tham gia <b>${c['Xác nhận tham gia']}</b> · Trả lời sau <b>${c['Trả lời sau']}</b>`;
+  };
+  const attended = real.filter(g => g.attend === 'Tham gia').length;
+  const revenue = real.reduce((s, g) => s + (Number(g.revenue) || 0), 0);
+  document.getElementById('ev-summary').innerHTML = `
+    <div class="evs-title">📊 Tổng quan (tự động — không sửa tay)</div>
+    <div class="evs-row"><span class="evs-label">Tổng số khách ban đầu</span><span class="evs-value">${real.length}</span></div>
+    <div class="evs-row"><span class="evs-label">Mời lần 1</span><span class="evs-value">${countRound('m1')}</span></div>
+    <div class="evs-row"><span class="evs-label">Mời lần 2</span><span class="evs-value">${countRound('m2')}</span></div>
+    <div class="evs-row"><span class="evs-label">Mời lần 3</span><span class="evs-value">${countRound('m3')}</span></div>
+    <div class="evs-row"><span class="evs-label">Tham gia thực tế</span><span class="evs-value">${attended} / ${real.length}</span></div>
+    <div class="evs-row"><span class="evs-label">Tổng doanh số</span><span class="evs-value money">${fmtMoney(revenue)}</span></div>`;
+}
+
+function saveGuests(silent) {
+  if (!evCurrent || evReadonly) return;
+  const clean = evGuests.filter(g => String(g.name || '').trim() !== '');
+  evPost({ action: 'saveEventGuests', eventId: evCurrent.id, guests: clean }, () => {
+    if (!silent) showToast('💾 Đã lưu ' + clean.length + ' khách', 'success');
+  });
+}
+
+function closeEvent(status) {
+  if (!evCurrent || evReadonly) return;
+  const isDone = status === 'done';
+  const msg = isDone
+    ? 'Hoàn thành sự kiện? Toàn bộ bảng sẽ được LƯU và KHÓA vĩnh viễn, chuyển sang Lịch sử.'
+    : 'Hủy bỏ sự kiện? Sự kiện chuyển sang Lịch sử (tên bôi đỏ) và không sửa được nữa.';
+  if (!confirm(msg)) return;
+  const clean = evGuests.filter(g => String(g.name || '').trim() !== '');
+  evPost({ action: 'setEventStatus', eventId: evCurrent.id, status: status, guests: clean }, () => {
+    showToast(isDone ? '🏁 Sự kiện đã hoàn thành và chuyển vào Lịch sử' : '❌ Sự kiện đã hủy và chuyển vào Lịch sử', 'success');
+    evCurrentView = 'history';
+    setTimeout(() => { loadEvents(true); backToEventList(); switchEventView('history'); }, 800);
+  });
+}
+
 function simulateCustomerDetail(name, phone) {
   return { found: true,
     info: { name: name, phone: phone, location: 'Hà Nội', source: 'Facebook Ads', product: 'Genkii BES', stage: 'Đã add Zalo - Tư vấn', temp: 'Nóng', entryDate: '20/06/2026', sales: 'Nguyễn Thị Thùy Linh', hasCompletedDeal: false, purchaseHistory: [] },
