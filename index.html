@@ -415,7 +415,8 @@
 
   /* ── v2.1: Khách click lại quảng cáo — chỉ hiện khi đang cập nhật khách cũ ── */
   .clickqc-box {
-    display: none; /* mặc định ẩn — JS bật lên khi lookup ra khách cũ */
+    display: flex; /* v2.6.1: LUÔN hiện — cả khi tạo mới lẫn cập nhật, vì khách cũ
+                      ngoài hệ thống click lại ads cũng cần được đánh dấu */
     align-items: flex-start; gap: 10px;
     padding: 12px 14px; margin-bottom: 14px;
     background: #FFF7ED; border: 1.5px dashed #F59E0B; border-radius: 10px;
@@ -723,7 +724,7 @@
       <input type="checkbox" id="clickqc" onchange="onClickQCChange(this)">
       <span class="clickqc-text">
         🔁 <b>Khách click lại quảng cáo</b> — tin nhắn lần này phát sinh từ quảng cáo
-        <span class="clickqc-sub">Chỉ tick khi khách CŨ vừa nhắn lại qua ads. Sẽ tính là 1 lượt mới trong thống kê ngày. Cập nhật trao đổi thường thì KHÔNG tick.</span>
+        <span class="clickqc-sub">Tick khi khách CŨ nhắn lại qua ads — kể cả khách cũ chưa có trong CRM mà giờ mới tạo hồ sơ. Khách hoàn toàn mới lần đầu biết đến Genkii, hoặc cập nhật trao đổi thường: KHÔNG tick.</span>
       </span>
     </label>
 
@@ -1180,12 +1181,15 @@ function applyAsExistingCustomer(data) {
  * Mỗi lần ẩn/hiện đều bỏ tick — tránh Sales quên tick cũ gây đếm nhầm lượt.
  */
 function setClickQCVisible(visible) {
+  // v2.6.1: checkbox LUÔN hiển thị ở mọi chế độ (tạo mới + cập nhật) — tham số
+  // visible giữ lại cho tương thích nhưng không còn ẩn khối nữa. Hàm giờ chỉ
+  // làm 1 việc: BỎ TICK mỗi khi đổi trạng thái lookup/reset form, tránh Sales
+  // quên tick cũ từ khách trước gây đếm nhầm lượt.
   const box = document.getElementById('clickqc-box');
   const cb  = document.getElementById('clickqc');
   if (!box || !cb) return;
   cb.checked = false;
   box.classList.remove('checked');
-  box.classList.toggle('visible', !!visible);
 }
 
 function onClickQCChange(cb) {
@@ -1326,9 +1330,11 @@ function onSubmit(e) {
 
   const isUpdate = lookupResult && lookupResult.found;
 
-  // v2.1: cờ "Khách click lại quảng cáo" — chỉ có ý nghĩa khi đang UPDATE khách cũ.
-  // Backend sẽ ghi hành động 'update_click_qc' và tính 1 lượt nhập mới trong ngày.
-  const clickLaiQC = isUpdate && !!document.getElementById('clickqc')?.checked;
+  // v2.6.1: cờ "Khách click lại quảng cáo" gửi ở CẢ 2 chế độ:
+  // - UPDATE khách có trong CRM  → backend ghi 'update_click_qc'
+  // - CREATE hồ sơ mới (khách cũ ngoài hệ thống quay lại qua ads) → 'create_click_qc'
+  // Cả 2 đều tính 1 lượt, thống kê xếp vào cột "Click lại QC".
+  const clickLaiQC = !!document.getElementById('clickqc')?.checked;
 
   const payload = {
     action:    isUpdate ? 'update' : 'create',
@@ -2450,6 +2456,7 @@ function switchDetailTab(sub) {
 
 const ACTION_LABEL = {
   'create':              { text: 'Tạo mới',        cls: 'a-create' },
+  'create_click_qc':     { text: 'Tạo mới · Click QC', cls: 'a-qc' },
   'update':              { text: 'Cập nhật',       cls: '' },
   'update_click_qc':     { text: 'Click lại QC',   cls: 'a-qc' },
   'hoan_thanh_don_hang': { text: 'Hoàn thành đơn', cls: 'a-don' },
