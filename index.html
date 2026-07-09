@@ -1973,6 +1973,11 @@ function updateSubmitBtn() {
 
 function resetForm() {
   document.getElementById('crm-form').reset();
+  // v3.2.3: sau khi lưu xong, tự cuộn về đầu trang — sẵn sàng nhập khách kế tiếp
+  // ngay tại ô lookup, không phải vuốt ngược cả form dài. Tôn trọng cài đặt
+  // "giảm chuyển động" của máy (cuộn thẳng thay vì trượt mượt).
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   document.querySelectorAll('.temp-btn').forEach(b => b.classList.remove('hot','warm','cool'));
   document.querySelectorAll('.field').forEach(f => f.classList.remove('error'));
   document.querySelectorAll('input.filled, select.filled').forEach(el => el.classList.remove('filled'));
