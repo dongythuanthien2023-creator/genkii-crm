@@ -2237,6 +2237,17 @@ function cycleTheme() {
 }
 // Auto mode: kiểm tra mỗi phút — đang dùng mà qua 18h là chuyển tối mượt
 setInterval(() => { if (themeMode === 'auto') applyTheme(); }, 60000);
+
+// v3.2.1: chạm vào bất kỳ ô ngày/giờ nào trong app là bung LỊCH/BẢNG GIỜ ngay,
+// không phải nhắm đúng biểu tượng nhỏ (điện thoại vốn đã vậy, đây là cho máy tính).
+// Áp dụng toàn app: chi phí ads, hiệu quả chi phí, khoảng ngày biểu đồ, nhập bổ
+// sung, tạo sự kiện, dời lịch... — dùng ủy quyền sự kiện nên ô sinh sau cũng ăn.
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if (t && (t.type === 'date' || t.type === 'time') && typeof t.showPicker === 'function') {
+    try { t.showPicker(); } catch (err) { /* trình duyệt cũ/không hỗ trợ: giữ hành vi mặc định */ }
+  }
+});
 document.addEventListener('DOMContentLoaded', applyTheme);
 
 // Lời chào theo buổi trên thanh đăng nhập
@@ -2825,14 +2836,19 @@ function renderHeroExtras(d) {
 // CHI PHÍ ADS + HIỆU QUẢ (v3.2)
 // ══════════════════════════════════════════════
 function formatAdsAmount(el) {
-  const v = parseMoneyInput(el.value);
-  el.value = v ? fmtMoneyStr(v) : '';
+  // v3.2.1: phân biệt "chưa gõ gì" với "gõ số 0" — ngày ads không chạy (lỗi
+  // thanh toán...) cần nhập được đúng giá trị 0 để không bị coi là thiếu dữ liệu
+  const digits = String(el.value || '').replace(/\D/g, '');
+  el.value = digits === '' ? '' : fmtMoneyStr(Number(digits));
 }
 
 function saveAdsCostEntry() {
   const iso = document.getElementById('ads-date').value;
-  const amount = parseMoneyInput(document.getElementById('ads-amount').value);
+  const rawAmount = String(document.getElementById('ads-amount').value || '').replace(/\D/g, '');
   if (!iso) { showToast('⚠️ Chọn ngày chi phí', 'error-t'); return; }
+  // Bỏ trống ô tiền = chưa nhập (chặn); gõ "0" = ngày ads không chạy (hợp lệ, lưu 0 đ)
+  if (rawAmount === '') { showToast('⚠️ Nhập số tiền — ngày ads không chạy thì nhập 0', 'error-t'); return; }
+  const amount = Number(rawAmount);
   if (iso > new Date().toISOString().split('T')[0]) { showToast('⚠️ Không nhập chi phí cho ngày tương lai', 'error-t'); return; }
   showLoading(true);
   fetch(APPS_SCRIPT_URL, {
@@ -2842,7 +2858,9 @@ function saveAdsCostEntry() {
   })
   .then(() => {
     showLoading(false);
-    showToast(`💾 Đã lưu ${fmtMoneyStr(amount)} đ cho ngày ${isoToVN(iso)}`, 'success');
+    showToast(amount === 0
+      ? `💾 Đã ghi nhận ngày ${isoToVN(iso)} KHÔNG chạy ads (0 đ)`
+      : `💾 Đã lưu ${fmtMoneyStr(amount)} đ cho ngày ${isoToVN(iso)}`, 'success');
     document.getElementById('ads-amount').value = '';
     setTimeout(loadAdsRecent, 900); // chờ server ghi xong rồi làm mới bảng mini
   })
@@ -2857,7 +2875,7 @@ function loadAdsRecent() {
     tbody.innerHTML = days.map(dd => `
       <tr>
         <td style="text-align:left; font-weight:600; color:${dd.missing ? 'var(--grey-3)' : 'var(--text)'};">${dd.date}</td>
-        <td style="color:${dd.missing ? 'var(--grey-3)' : 'var(--gold)'}; font-weight:${dd.missing ? '400' : '800'};">${dd.missing ? '— chưa nhập' : fmtMoneyStr(dd.amount) + ' đ'}</td>
+        <td style="color:${dd.missing ? 'var(--grey-3)' : (dd.amount === 0 ? 'var(--grey-4)' : 'var(--gold)')}; font-weight:${dd.missing ? '400' : '800'};">${dd.missing ? '— chưa nhập' : (dd.amount === 0 ? '0 đ (không chạy)' : fmtMoneyStr(dd.amount) + ' đ')}</td>
       </tr>`).join('');
   });
 }
