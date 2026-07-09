@@ -2385,13 +2385,20 @@ function renderTodayTasks(data) {
   const nsTasks = data.nextStepTasks || [];
   const cskhTasks = data.cskhTasks || [];
 
+  // v3.2.2: badge chỉ đếm việc CHƯA hoàn thành — thẻ ✅ xong-hôm-nay vẫn nằm
+  // trong danh sách để đối chiếu nhưng không được tính vào số việc cần xử lý.
+  // Tick Hoàn thành / Dời lịch xong là số tự giảm ngay sau khi tải lại.
+  const nsPending = nsTasks.filter(t => !t.done).length;
   const badgeNS = document.getElementById('badge-nextstep');
-  badgeNS.textContent = nsTasks.length;
-  badgeNS.classList.toggle('zero', nsTasks.length === 0);
+  badgeNS.textContent = nsPending;
+  badgeNS.classList.toggle('zero', nsPending === 0);
+  badgeNS.title = `Còn ${nsPending} chưa xử lý · ${nsTasks.length - nsPending} đã hoàn thành hôm nay`;
 
+  const cskhPending = cskhTasks.filter(t => !t.done).length;
   const badgeCSKH = document.getElementById('badge-cskh');
-  badgeCSKH.textContent = cskhTasks.length;
-  badgeCSKH.classList.toggle('zero', cskhTasks.length === 0);
+  badgeCSKH.textContent = cskhPending;
+  badgeCSKH.classList.toggle('zero', cskhPending === 0);
+  badgeCSKH.title = `Còn ${cskhPending} chưa xử lý · ${cskhTasks.length - cskhPending} đã hoàn thành hôm nay`;
 
   const listNS = document.getElementById('list-nextstep');
   listNS.innerHTML = nsTasks.length === 0
