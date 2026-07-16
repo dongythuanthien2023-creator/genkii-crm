@@ -2324,9 +2324,9 @@ function populateConfigSelects() {
   fill('sales', appConfig.sales, '— Chọn Sales —', ['Khác']);
   fill('source', appConfig.sources.map(s => s.name), '— Chọn nguồn —');
   fill('product', appConfig.products, '— Chọn sản phẩm —');
-  // Kênh trả phí cho ô nhập chi phí ads
-  const paid = appConfig.sources.filter(s => s.paid).map(s => s.name);
-  fill('ads-source', paid.length ? paid : ['Facebook Ads'], '');
+  // v3.5: ô nhập chi phí chỉ còn 2 NHÓM kênh — mọi nguồn có chữ "Agency"
+  // trong tên gộp vào Agency, toàn bộ còn lại là In-House (khớp quy tắc backend)
+  fill('ads-source', ['In-House', 'Agency'], '');
 }
 document.addEventListener('DOMContentLoaded', () => { populateConfigSelects(); loadAppConfig(); });
 
@@ -3094,8 +3094,8 @@ function setAdsCostMode(mode) {
   document.getElementById('ads-mode-period').classList.toggle('ghost', !isPeriod);
   document.getElementById('ads-amount').placeholder = isPeriod ? 'TỔNG chi phí cả đợt (đ)' : 'Chi phí (đ)';
   document.getElementById('ads-mode-hint').textContent = isPeriod
-    ? 'Nhập TỔNG chi phí của cả đợt — hệ thống tự chia đều xuống từng ngày trong khoảng. Nhập lại cùng khoảng = sửa số.'
-    : 'Kênh in-house đã tự đồng bộ chi phí hằng ngày từ mail — chỉ nhập tay ở đây khi cần sửa số một ngày.';
+    ? 'Nhập TỔNG chi phí đợt của Agency — hệ thống tự chia đều xuống từng ngày trong khoảng. Nhập lại cùng khoảng = sửa số.'
+    : 'Kênh In-House đã tự đồng bộ chi phí hằng ngày từ mail — chỉ nhập tay ở đây khi cần sửa số một ngày (số nhập tay là số CHUẨN của cả ngày đó).';
 }
 // Chọn kênh có chữ "Agency" → tự chuyển chế độ Cả đợt (vẫn đổi tay được)
 function onAdsSourceChange() {
