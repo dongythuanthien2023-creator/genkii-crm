@@ -1371,13 +1371,20 @@
 
     <!-- v3.2: NHẬP CHI PHÍ ADS — upsert theo ngày (nhập mới / nhập bù / sửa đều 1 thao tác) -->
     <div class="dash-card">
-      <div class="dash-title">💰 Chi phí Ads — nhập/sửa theo ngày, theo kênh</div>
+      <div class="dash-title">💰 Chi phí Ads — theo kênh</div>
+      <div class="dash-range" style="margin-bottom:6px;">
+        <select id="ads-source" aria-label="Kênh trả phí" onchange="onAdsSourceChange()" style="flex:1; min-width:130px; padding:6px 8px; font-size:12px; border:1.5px solid var(--grey-2); border-radius:8px; background:var(--grey-1); color:var(--text); outline:none; font-family:inherit;"></select>
+        <button type="button" class="ghost" id="ads-mode-day" onclick="setAdsCostMode('day')">Theo ngày</button>
+        <button type="button" class="ghost" id="ads-mode-period" onclick="setAdsCostMode('period')">Cả đợt</button>
+      </div>
       <div class="dash-range">
-        <select id="ads-source" aria-label="Kênh trả phí" style="flex:1; min-width:130px; padding:6px 8px; font-size:12px; border:1.5px solid var(--grey-2); border-radius:8px; background:var(--grey-1); color:var(--text); outline:none; font-family:inherit;"></select>
-        <input type="date" id="ads-date" aria-label="Ngày chi phí">
+        <input type="date" id="ads-date" aria-label="Ngày chi phí (hoặc ngày bắt đầu đợt)">
+        <span class="dr-arrow" id="ads-date-arrow" style="display:none">→</span>
+        <input type="date" id="ads-date-to" aria-label="Ngày kết thúc đợt" style="display:none">
         <input type="text" id="ads-amount" inputmode="numeric" placeholder="Chi phí (đ)" style="flex:1; min-width:110px; padding:6px 10px; font-size:12.5px; border:1.5px solid var(--grey-2); border-radius:8px; background:var(--grey-1); color:var(--text); outline:none; font-family:inherit; text-align:right;" oninput="formatAdsAmount(this)">
         <button type="button" onclick="saveAdsCostEntry()">💾 Lưu</button>
       </div>
+      <div id="ads-mode-hint" style="font-size:11px; color:var(--grey-3); margin-top:2px;"></div>
       <table class="dash-table" id="ads-recent-table">
         <thead><tr><th style="text-align:left;">Ngày</th><th style="text-align:left;">Kênh</th><th>Chi phí</th></tr></thead>
         <tbody><tr><td colspan="3" class="dash-empty">Đang tải...</td></tr></tbody>
@@ -2093,6 +2100,7 @@ function switchTab(tab) {
     loadAdsRecent(); // bảng chi phí 7 ngày — không cache, luôn tươi
     const adsDate = document.getElementById('ads-date');
     if (adsDate && !adsDate.value) adsDate.value = new Date().toISOString().split('T')[0];
+    onAdsSourceChange(); // đặt chế độ nhập theo kênh đang chọn
   }
   if (tab === 'cust')  loadCustomerList(false);
   if (tab === 'event') loadEvents(false);
@@ -3074,13 +3082,59 @@ function formatAdsAmount(el) {
   el.value = digits === '' ? '' : fmtMoneyStr(Number(digits));
 }
 
+// v3.4: chế độ nhập — 'day' cho sửa số kênh in-house (đã tự đồng bộ hằng ngày),
+// 'period' cho Agency báo chi phí theo đợt (nhập TỔNG, server chia đều từng ngày)
+let adsCostMode = 'day';
+function setAdsCostMode(mode) {
+  adsCostMode = mode;
+  const isPeriod = mode === 'period';
+  document.getElementById('ads-date-to').style.display = isPeriod ? '' : 'none';
+  document.getElementById('ads-date-arrow').style.display = isPeriod ? '' : 'none';
+  document.getElementById('ads-mode-day').classList.toggle('ghost', isPeriod);
+  document.getElementById('ads-mode-period').classList.toggle('ghost', !isPeriod);
+  document.getElementById('ads-amount').placeholder = isPeriod ? 'TỔNG chi phí cả đợt (đ)' : 'Chi phí (đ)';
+  document.getElementById('ads-mode-hint').textContent = isPeriod
+    ? 'Nhập TỔNG chi phí của cả đợt — hệ thống tự chia đều xuống từng ngày trong khoảng. Nhập lại cùng khoảng = sửa số.'
+    : 'Kênh in-house đã tự đồng bộ chi phí hằng ngày từ mail — chỉ nhập tay ở đây khi cần sửa số một ngày.';
+}
+// Chọn kênh có chữ "Agency" → tự chuyển chế độ Cả đợt (vẫn đổi tay được)
+function onAdsSourceChange() {
+  const src = document.getElementById('ads-source').value || '';
+  setAdsCostMode(/agency/i.test(src) ? 'period' : 'day');
+}
+
 function saveAdsCostEntry() {
   const iso = document.getElementById('ads-date').value;
   const rawAmount = String(document.getElementById('ads-amount').value || '').replace(/\D/g, '');
-  if (!iso) { showToast('⚠️ Chọn ngày chi phí', 'error-t'); return; }
+  if (!iso) { showToast('⚠️ Chọn ngày', 'error-t'); return; }
   // Bỏ trống ô tiền = chưa nhập (chặn); gõ "0" = ngày ads không chạy (hợp lệ, lưu 0 đ)
   if (rawAmount === '') { showToast('⚠️ Nhập số tiền — ngày ads không chạy thì nhập 0', 'error-t'); return; }
   const amount = Number(rawAmount);
+
+  // ── Chế độ CẢ ĐỢT (Agency) ──
+  if (adsCostMode === 'period') {
+    const isoTo = document.getElementById('ads-date-to').value;
+    if (!isoTo) { showToast('⚠️ Chọn ngày kết thúc đợt', 'error-t'); return; }
+    if (iso > isoTo) { showToast('⚠️ Ngày bắt đầu đợt phải trước ngày kết thúc', 'error-t'); return; }
+    const days = Math.round((new Date(isoTo) - new Date(iso)) / 86400000) + 1;
+    if (days > 92) { showToast('⚠️ Đợt tối đa 92 ngày', 'error-t'); return; }
+    const srcSelP = document.getElementById('ads-source').value;
+    showLoading(true);
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'saveAdsCost', period: true, from: isoToVN(iso), to: isoToVN(isoTo),
+        amount: amount, source: srcSelP, sales: currentSalesName }),
+    })
+    .then(() => {
+      showLoading(false);
+      showToast(`💾 ${srcSelP}: ${fmtMoneyStr(amount)} đ cho đợt ${isoToVN(iso)} → ${isoToVN(isoTo)} (chia đều ${days} ngày, ~${fmtMoneyStr(Math.floor(amount / days))} đ/ngày)`, 'success');
+      document.getElementById('ads-amount').value = '';
+      setTimeout(loadAdsRecent, 1200);
+    })
+    .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
+    return;
+  }
   if (iso > new Date().toISOString().split('T')[0]) { showToast('⚠️ Không nhập chi phí cho ngày tương lai', 'error-t'); return; }
   showLoading(true);
   fetch(APPS_SCRIPT_URL, {
@@ -3109,7 +3163,7 @@ function loadAdsRecent() {
     tbody.innerHTML = (entries.map(en => `
       <tr>
         <td style="text-align:left; font-weight:600;">${en.date}</td>
-        <td style="text-align:left; font-size:11px; color:var(--grey-4);">${escapeHtml(en.source)}</td>
+        <td style="text-align:left; font-size:11px; color:var(--grey-4);">${escapeHtml(en.source)}${en.note ? `<div style="font-size:9px; color:var(--grey-3);">${escapeHtml(en.note)}</div>` : ''}</td>
         <td style="color:${en.amount === 0 ? 'var(--grey-4)' : 'var(--gold)'}; font-weight:800;">${en.amount === 0 ? '0 đ (không chạy)' : fmtMoneyStr(en.amount) + ' đ'}</td>
       </tr>`).join('')) || '<tr><td colspan="3" class="dash-empty">Chưa có dòng chi phí nào</td></tr>';
     // Nhắc ngày kênh chính còn trống trong 7 ngày gần nhất
