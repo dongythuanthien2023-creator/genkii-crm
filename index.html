@@ -555,6 +555,14 @@
 
   .opt-hint { font-size: 10.5px; font-weight: 600; color: var(--grey-3); margin-left: 4px; }
 
+  .banner-confirm-btn {
+    display: block; margin-top: 8px; padding: 8px 14px; width: 100%;
+    background: var(--teal); color: #fff; border: none; border-radius: 9px;
+    font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .banner-confirm-btn:active { transform: scale(.98); }
+
   /* ── v3.3: TAB QUẢN TRỊ ── */
   .adm-row { display: flex; align-items: center; gap: 6px; padding: 8px 2px; border-bottom: 1px solid var(--grey-1); }
   .adm-row:last-child { border-bottom: none; }
@@ -1640,7 +1648,10 @@ function simulateLookupByName(name) {
  *  - Không tìm thấy tên trùng                → khách mới
  *  - Tên trùng + SĐT hiện tại khớp 1 trong existingPhones → khách cũ, gộp
  *  - Tên trùng + SĐT hiện tại khác hết        → khách mới (trùng tên ngẫu nhiên)
- *  - Tên trùng + SĐT hiện tại đang để trống   → khách mới (chưa đủ căn cứ)
+ *  - Tên trùng + SĐT trống + hồ sơ cũ CÓ SĐT  → khách mới (muốn gộp phải nhập đúng số)
+ *  - Tên trùng + SĐT trống + hồ sơ cũ KHÔNG SĐT → mặc định khách mới, nhưng banner
+ *    có nút "✔ Đúng là khách cũ" cho Sales xác nhận gộp (v3.7 — ca khách inbox
+ *    không số click lại quảng cáo)
  */
 function resolveLookupByNameResult(data) {
   if (!data.found) {
@@ -1803,9 +1814,28 @@ function applyAsNewCustomer(sameNameDifferentPhone) {
   setClickQCVisible(false); // khách mới → không cần checkbox, create đã tự tính 1 lượt
   updLbl.textContent = '3 — Cập nhật lần này';
 
-  if (sameNameDifferentPhone) {
-    // Trùng tên nhưng khác SĐT — cảnh báo nhẹ để Sales tự kiểm tra cho chắc,
-    // nhưng vẫn xử lý là khách MỚI theo đúng quy tắc đã thống nhất
+  const phoneNowBanner = v('phone').replace(/\D/g, '');
+  if (sameNameDifferentPhone
+      && (sameNameDifferentPhone.existingPhones || []).length === 0
+      && !phoneNowBanner) {
+    // v3.7 — TRÙNG TÊN VỚI KHÁCH CŨ CHƯA CÓ SĐT (ca phổ biến: khách inbox không
+    // số click lại quảng cáo). Hệ thống không tự gộp (trùng tên ngẫu nhiên vẫn
+    // có thể xảy ra) nhưng trao quyền xác nhận cho Sales — người đang nhìn thấy
+    // đúng cuộc hội thoại của khách. Bấm xác nhận → chuyển chế độ CẬP NHẬT hồ
+    // sơ cũ: tick Click lại QC sẽ ghi đúng lượt lên khách cũ, không sinh dòng trùng.
+    banner.className = 'new';
+    banner.innerHTML = `
+      <div class="banner-body">
+        <span class="banner-icon">⚠️</span>
+        <strong>Trùng tên với khách cũ CHƯA có SĐT</strong><br>
+        Đã có ${sameNameDifferentPhone.duplicateCount} hồ sơ tên "${sameNameDifferentPhone.name}" chưa lưu SĐT.
+        Nếu đúng là khách này quay lại (nhìn hội thoại là biết), bấm nút dưới để CẬP NHẬT hồ sơ cũ thay vì tạo mới:
+        <button type="button" class="banner-confirm-btn" onclick="confirmSameNameNoPhone()">✔ Đúng là khách cũ này — cập nhật hồ sơ</button>
+        <span style="display:block; margin-top:4px; font-size:11px; opacity:.8;">Không bấm gì = tạo hồ sơ mới như bình thường.</span>
+      </div>`;
+  } else if (sameNameDifferentPhone) {
+    // Trùng tên nhưng hồ sơ cũ CÓ SĐT (khác hoặc chưa nhập) — cảnh báo nhẹ,
+    // vẫn xử lý là khách MỚI; muốn gộp thì phải nhập đúng SĐT cũ (căn cứ chắc)
     banner.className = 'new';
     banner.innerHTML = `
       <div class="banner-body">
@@ -1825,6 +1855,17 @@ function applyAsNewCustomer(sameNameDifferentPhone) {
   }
   banner.style.display = 'block';
   updateSubmitBtn();
+}
+
+// v3.7 — Sales xác nhận "trùng tên không SĐT" đúng là khách cũ → chuyển sang
+// chế độ CẬP NHẬT hồ sơ cũ (dùng nguyên kết quả lookup theo tên đã lưu)
+function confirmSameNameNoPhone() {
+  if (!rawNameLookup || !rawNameLookup.found) {
+    showToast('⚠️ Mất kết quả tra cứu — bấm ra ngoài ô Tên để hệ thống kiểm tra lại', 'error-t');
+    return;
+  }
+  applyAsExistingCustomer(rawNameLookup);
+  showToast('✔ Đã chuyển sang CẬP NHẬT hồ sơ cũ — tick Click lại QC nếu lần này khách đến từ quảng cáo', 'success');
 }
 
 // Khi Sales nhập/sửa SĐT SAU khi đã lookup theo Tên xong,
