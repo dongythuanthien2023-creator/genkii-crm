@@ -553,6 +553,8 @@
     color: var(--red); font-size: 12.5px; font-weight: 700;
   }
 
+  .opt-hint { font-size: 10.5px; font-weight: 600; color: var(--grey-3); margin-left: 4px; }
+
   /* ── v3.3: TAB QUẢN TRỊ ── */
   .adm-row { display: flex; align-items: center; gap: 6px; padding: 8px 2px; border-bottom: 1px solid var(--grey-1); }
   .adm-row:last-child { border-bottom: none; }
@@ -986,7 +988,7 @@
     <input type="checkbox" id="bs-check" onchange="onBoSungChange(this)">
     <span class="bs-text">
       📥 <b>Nhập bổ sung</b> — data cũ thu thập từ trước
-      <span class="bs-sub">Không tính lượt mới trong ngày. Khách xếp theo đúng ngày thu thập. Vẫn kiểm tra trùng lặp như bình thường.</span>
+      <span class="bs-sub">Lượt tính vào ĐÚNG NGÀY THU THẬP (không tính vào hôm nay) — nhập trễ data hôm qua vẫn về đúng ngày. Khách xếp theo ngày thu thập. Vẫn kiểm tra trùng lặp như bình thường.</span>
     </span>
   </label>
   <div class="bs-date-row" id="bs-date-row">
@@ -1129,7 +1131,7 @@
     </div>
 
     <div class="field" id="f-nextstep">
-      <label>Next Step cụ thể <span class="req">*</span></label>
+      <label>Next Step cụ thể <span class="req" id="ns-req">*</span><span class="opt-hint" id="ns-opt" style="display:none">— không bắt buộc với Inbox</span></label>
       <input type="text" id="nextstep"
         placeholder="VD: Gọi lại thứ 4 (25/6), hỏi quyết định & gửi bảng hoàn vốn"
         required>
@@ -1138,7 +1140,7 @@
     </div>
 
     <div class="field" id="f-deadline">
-      <label>Deadline Next Step <span class="req">*</span></label>
+      <label>Deadline Next Step <span class="req" id="dl-req">*</span><span class="opt-hint" id="dl-opt" style="display:none">— không bắt buộc với Inbox</span></label>
       <input type="date" id="deadline" required>
       <div class="err-msg">Vui lòng chọn ngày deadline</div>
     </div>
@@ -1953,10 +1955,42 @@ function onSubmit(e) {
 // ──────────────────────────────────────────────
 // VALIDATE
 // ──────────────────────────────────────────────
+// v3.6 — Giai đoạn KHÔNG bắt buộc Next Step/deadline: Inbox (≈50%% data mess
+// chưa có SĐT, chưa có gì để hẹn bước kế) và Không tiềm năng (đóng khách thì
+// không còn bước kế). Backend sẵn có: Next Step trống → không tạo nhiệm vụ.
+function stageSkipsNextStep(stage) {
+  return stage === 'Inbox' || stage === 'Không tiềm năng';
+}
+function updateNextStepRequired() {
+  const skip = stageSkipsNextStep(document.getElementById('stage').value);
+  ['ns', 'dl'].forEach(p => {
+    const req = document.getElementById(p + '-req');
+    const opt = document.getElementById(p + '-opt');
+    if (req) req.style.display = skip ? 'none' : '';
+    if (opt) opt.style.display = skip ? '' : 'none';
+  });
+  if (skip) { // đang báo đỏ vì thiếu mà chuyển sang Inbox → gỡ đỏ ngay
+    document.getElementById('f-nextstep').classList.remove('error');
+    document.getElementById('f-deadline').classList.remove('error');
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const st = document.getElementById('stage');
+  if (st) st.addEventListener('change', updateNextStepRequired);
+});
+
 function validate() {
   let ok = true;
   // SĐT KHÔNG còn bắt buộc — bỏ khỏi danh sách required
-  const required = ['sales', 'name', 'stage', 'content', 'nextstep', 'deadline'];
+  // v3.6: Inbox / Không tiềm năng → Next Step + deadline cũng không bắt buộc
+  const skipNS = stageSkipsNextStep(document.getElementById('stage').value);
+  const required = skipNS
+    ? ['sales', 'name', 'stage', 'content']
+    : ['sales', 'name', 'stage', 'content', 'nextstep', 'deadline'];
+  if (skipNS) {
+    document.getElementById('f-nextstep').classList.remove('error');
+    document.getElementById('f-deadline').classList.remove('error');
+  }
   required.forEach(id => {
     const field = document.getElementById('f-' + id);
     const el    = document.getElementById(id);
