@@ -553,6 +553,12 @@
     color: var(--red); font-size: 12.5px; font-weight: 700;
   }
 
+  /* ── v3.3: TAB QUẢN TRỊ ── */
+  .adm-row { display: flex; align-items: center; gap: 6px; padding: 8px 2px; border-bottom: 1px solid var(--grey-1); }
+  .adm-row:last-child { border-bottom: none; }
+  .adm-label { flex: 1; font-size: 13px; font-weight: 600; color: var(--heading); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .adm-sub { display: block; font-size: 10.5px; font-weight: 400; color: var(--grey-3); }
+
   /* ── v2.2: DASHBOARD ── */
   .dash-wrap { padding: 14px 16px 28px; max-width: 560px; margin: 0 auto; }
   .dash-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -895,8 +901,7 @@
       <label>Sales</label>
       <select id="login-sales">
         <option value="">— Chọn Sales —</option>
-        <option data-phone="0964925283">Ngô Vũ</option>
-        <option data-phone="0906929216">Nguyễn Thị Thùy Linh</option>
+        <!-- v3.3: danh sách nạp từ sheet Cấu hình — SĐT đăng nhập KHÔNG còn nằm trong mã nguồn -->
       </select>
     </div>
 
@@ -905,7 +910,7 @@
       <input type="tel" id="login-phone" placeholder="Nhập SĐT hotline đã đăng ký" inputmode="numeric">
     </div>
 
-    <button type="button" class="btn-login" onclick="doLogin()">Đăng nhập</button>
+    <button type="button" class="btn-login" id="login-btn" onclick="doLogin()">Đăng nhập</button>
     <div class="login-error" id="login-error">SĐT không khớp với Sales đã chọn</div>
   </div>
 </div>
@@ -940,6 +945,7 @@
 <div class="logged-in-bar">
   <span>👋 <span id="greeting-time">Chào</span>, <b id="logged-in-name">—</b></span>
   <button type="button" class="theme-btn" id="theme-btn" onclick="cycleTheme()">🌗 Auto</button>
+  <button type="button" class="theme-btn" onclick="switchTab('admin')" title="Quản trị hệ thống (cần mã PIN)">⚙️</button>
   <button type="button" onclick="doLogout()">Đăng xuất</button>
 </div>
 
@@ -950,6 +956,7 @@
   <button type="button" class="tab-btn" id="tab-btn-cust" onclick="switchTab('cust')">👥 Khách hàng</button>
   <button type="button" class="tab-btn" id="tab-btn-dash" onclick="switchTab('dash')">📊 Thống kê</button>
   <button type="button" class="tab-btn" id="tab-btn-event" onclick="switchTab('event')">🎪 Sự kiện</button>
+  <button type="button" class="tab-btn" id="tab-btn-admin" onclick="switchTab('admin')" style="display:none">⚙️</button>
 </div>
 
 <!-- v3.1: Thanh điều hướng đáy — thao tác một tay, nút Nhập nổi giữa -->
@@ -1039,9 +1046,7 @@
       <div class="select-wrap">
         <select id="source">
           <option value="">— Chọn nguồn —</option>
-          <option>FB Ads - BES</option>
-          <option>FB Ads - Hub</option>
-          <option>FB Ads - Agency</option>
+          <option>Facebook Ads</option>
           <option>TikTok</option>
           <option>Referral – Khách cũ giới thiệu</option>
           <option>Zalo OA</option>
@@ -1366,16 +1371,18 @@
 
     <!-- v3.2: NHẬP CHI PHÍ ADS — upsert theo ngày (nhập mới / nhập bù / sửa đều 1 thao tác) -->
     <div class="dash-card">
-      <div class="dash-title">💰 Chi phí Ads (Meta) — nhập/sửa theo ngày</div>
+      <div class="dash-title">💰 Chi phí Ads — nhập/sửa theo ngày, theo kênh</div>
       <div class="dash-range">
+        <select id="ads-source" aria-label="Kênh trả phí" style="flex:1; min-width:130px; padding:6px 8px; font-size:12px; border:1.5px solid var(--grey-2); border-radius:8px; background:var(--grey-1); color:var(--text); outline:none; font-family:inherit;"></select>
         <input type="date" id="ads-date" aria-label="Ngày chi phí">
         <input type="text" id="ads-amount" inputmode="numeric" placeholder="Chi phí (đ)" style="flex:1; min-width:110px; padding:6px 10px; font-size:12.5px; border:1.5px solid var(--grey-2); border-radius:8px; background:var(--grey-1); color:var(--text); outline:none; font-family:inherit; text-align:right;" oninput="formatAdsAmount(this)">
         <button type="button" onclick="saveAdsCostEntry()">💾 Lưu</button>
       </div>
       <table class="dash-table" id="ads-recent-table">
-        <thead><tr><th>Ngày</th><th>Chi phí đã nhập</th></tr></thead>
-        <tbody><tr><td colspan="2" class="dash-empty">Đang tải...</td></tr></tbody>
+        <thead><tr><th style="text-align:left;">Ngày</th><th style="text-align:left;">Kênh</th><th>Chi phí</th></tr></thead>
+        <tbody><tr><td colspan="3" class="dash-empty">Đang tải...</td></tr></tbody>
       </table>
+      <div id="ads-missing-note"></div>
     </div>
 
     <!-- v3.2: HIỆU QUẢ CHI PHÍ — mess/SĐT theo nguồn, giá tính trên nguồn trả phí -->
@@ -1443,6 +1450,61 @@
 
   </div>
 </div> <!-- /tab-panel-event -->
+
+<!-- ── TAB 7: QUẢN TRỊ (v3.3) — không có nút trên nav đáy, vào từ ⚙️ trên thanh chào ── -->
+<div class="tab-panel" id="tab-panel-admin">
+  <div class="ev-wrap">
+    <div class="ev-editor-head" style="margin-bottom:12px;">
+      <div class="ev-title">⚙️ Quản trị hệ thống</div>
+    </div>
+
+    <!-- Cổng PIN -->
+    <div class="ev-form-card" id="admin-gate">
+      <div class="field"><label>Mã PIN Quản trị</label>
+        <input type="password" id="admin-pin" inputmode="numeric" maxlength="8" placeholder="Nhập mã PIN 4–8 số" autocomplete="off"></div>
+      <button type="button" class="ev-btn primary full" onclick="adminUnlock()">🔓 Mở khóa</button>
+      <div class="hint" style="margin-top:8px;">Chưa có PIN? Mở Google Sheet → menu ⚙️ Genkii CRM → "🔐 Đặt / đổi mã PIN Quản trị". Chỉ người có quyền mở file Sheet mới đặt được PIN.</div>
+    </div>
+
+    <!-- Nội dung quản trị (mở khóa mới hiện) -->
+    <div id="admin-body" style="display:none">
+      <div class="ev-form-card">
+        <div class="dash-title">👤 Sales & thông tin đăng nhập</div>
+        <div id="admin-sales-list"></div>
+        <div class="gc-edit-row">
+          <input type="text" id="adm-sale-name" placeholder="Tên Sales mới">
+          <input type="text" id="adm-sale-phone" inputmode="numeric" placeholder="SĐT hotline (đăng nhập)">
+          <button type="button" class="ev-btn primary" onclick="adminOp('sale','add', v('adm-sale-name'), {phone: v('adm-sale-phone')})">➕</button>
+        </div>
+      </div>
+
+      <div class="ev-form-card">
+        <div class="dash-title">📣 Nguồn khách</div>
+        <div class="hint" style="margin-bottom:8px;">💰 nguồn trả phí = được tính vào bảng hiệu quả chi phí ads (Meta trực tiếp, Agency...)</div>
+        <div id="admin-source-list"></div>
+        <div class="gc-edit-row">
+          <input type="text" id="adm-src-name" placeholder="Tên nguồn mới">
+          <label style="display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--grey-4); flex-shrink:0;">
+            <input type="checkbox" id="adm-src-paid" style="width:16px;height:16px;accent-color:var(--gold);"> 💰 trả phí
+          </label>
+          <button type="button" class="ev-btn primary" onclick="adminOp('source','add', v('adm-src-name'), {paid: document.getElementById('adm-src-paid').checked ? '1' : ''})">➕</button>
+        </div>
+      </div>
+
+      <div class="ev-form-card">
+        <div class="dash-title">📦 Sản phẩm</div>
+        <div id="admin-product-list"></div>
+        <div class="gc-edit-row">
+          <input type="text" id="adm-prod-name" placeholder="Tên sản phẩm mới">
+          <button type="button" class="ev-btn primary" onclick="adminOp('product','add', v('adm-prod-name'), {})">➕</button>
+        </div>
+      </div>
+
+      <div class="hint">Mọi thay đổi có hiệu lực NGAY trên các ô chọn của app và dropdown trong sheet CRM Tổng. Xóa một giá trị không làm mất dữ liệu cũ của khách — chỉ ẩn khỏi lựa chọn mới.</div>
+      <button type="button" class="ev-btn ghost full" style="margin-top:10px;" onclick="adminLock()">🔒 Khóa lại</button>
+    </div>
+  </div>
+</div> <!-- /tab-panel-admin -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
@@ -2016,7 +2078,7 @@ function showLoading(on) {
 // TAB SWITCHING
 // ══════════════════════════════════════════════
 function switchTab(tab) {
-  ['update', 'complete', 'tasks', 'cust', 'dash', 'event'].forEach(t => {
+  ['update', 'complete', 'tasks', 'cust', 'dash', 'event', 'admin'].forEach(t => {
     document.getElementById('tab-panel-' + t).classList.toggle('active', tab === t);
     document.getElementById('tab-btn-' + t).classList.toggle('active', tab === t);
   });
@@ -2221,6 +2283,45 @@ function resetCoForm() {
 // ══════════════════════════════════════════════
 // v3.1: THEME SÁNG/TỐI/AUTO + TIỆN ÍCH GIAO DIỆN
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// CẤU HÌNH ĐỘNG (v3.3) — Sales / Nguồn / Sản phẩm từ sheet Cấu hình
+// ══════════════════════════════════════════════
+let appConfig = null;
+try { appConfig = JSON.parse(localStorage.getItem('genkii_config') || 'null'); } catch (e) {}
+
+function loadAppConfig() {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+  evJsonp('action=getConfig', (data) => {
+    if (!data || !Array.isArray(data.sales)) return;
+    appConfig = data;
+    try { localStorage.setItem('genkii_config', JSON.stringify(data)); } catch (e) {}
+    populateConfigSelects();
+  });
+}
+
+/** Đổ cấu hình vào MỌI dropdown liên quan — giữ nguyên giá trị đang chọn */
+function populateConfigSelects() {
+  if (!appConfig) return;
+  const fill = (id, items, placeholder, extraOpts) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    let html = placeholder ? `<option value="">${placeholder}</option>` : '';
+    items.forEach(n => { html += `<option>${escapeHtml(n)}</option>`; });
+    (extraOpts || []).forEach(n => { if (items.indexOf(n) === -1) html += `<option>${escapeHtml(n)}</option>`; });
+    el.innerHTML = html;
+    if (cur && [...el.options].some(o => o.value === cur)) el.value = cur;
+  };
+  fill('login-sales', appConfig.sales, '— Chọn Sales —');
+  fill('sales', appConfig.sales, '— Chọn Sales —', ['Khác']);
+  fill('source', appConfig.sources.map(s => s.name), '— Chọn nguồn —');
+  fill('product', appConfig.products, '— Chọn sản phẩm —');
+  // Kênh trả phí cho ô nhập chi phí ads
+  const paid = appConfig.sources.filter(s => s.paid).map(s => s.name);
+  fill('ads-source', paid.length ? paid : ['Facebook Ads'], '');
+}
+document.addEventListener('DOMContentLoaded', () => { populateConfigSelects(); loadAppConfig(); });
+
 const THEME_KEY = 'genkii_theme';
 const THEME_LABELS = { auto: '🌗 Auto', light: '☀️ Sáng', dark: '🌙 Tối' };
 let themeMode = 'auto';
@@ -2297,27 +2398,41 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function doLogin() {
+  // v3.3: xác thực PHÍA SERVER — app gửi SĐT lên Apps Script đối chiếu với sheet
+  // Cấu hình; thông tin đăng nhập không còn tồn tại trong mã nguồn trang.
   const selectEl = document.getElementById('login-sales');
   const phoneInput = v('login-phone').replace(/\D/g, '');
   const errorEl = document.getElementById('login-error');
-  const selectedOption = selectEl.options[selectEl.selectedIndex];
-  const expectedPhone = selectedOption ? selectedOption.dataset.phone : '';
 
   if (!selectEl.value || !phoneInput) {
     errorEl.textContent = 'Vui lòng chọn Sales và nhập SĐT hotline';
     errorEl.classList.add('show');
     return;
   }
-  if (phoneInput !== expectedPhone) {
-    errorEl.textContent = 'SĐT không khớp với Sales đã chọn. Vui lòng kiểm tra lại.';
-    errorEl.classList.add('show');
+  errorEl.classList.remove('show');
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { // demo mode
+    currentSalesName = selectEl.value;
+    applyLoggedInState();
     return;
   }
-
-  errorEl.classList.remove('show');
-  currentSalesName = selectEl.value;
-  try { sessionStorage.setItem(LOGIN_STORAGE_KEY, currentSalesName); } catch (e) {}
-  applyLoggedInState();
+  const btn = document.getElementById('login-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang kiểm tra...'; }
+  evJsonp('action=login&phone=' + encodeURIComponent(phoneInput), (data) => {
+    if (btn) { btn.disabled = false; btn.textContent = 'Đăng nhập'; }
+    if (!data || !data.ok) {
+      errorEl.textContent = 'SĐT không có trong hệ thống. Kiểm tra lại hoặc liên hệ quản trị.';
+      errorEl.classList.add('show');
+      return;
+    }
+    if (data.name !== selectEl.value) {
+      errorEl.textContent = 'SĐT này thuộc về "' + data.name + '" — không khớp Sales đã chọn.';
+      errorEl.classList.add('show');
+      return;
+    }
+    currentSalesName = data.name;
+    try { sessionStorage.setItem(LOGIN_STORAGE_KEY, currentSalesName); } catch (e) {}
+    applyLoggedInState();
+  });
 }
 
 function doLogout() {
@@ -2335,6 +2450,7 @@ function applyLoggedInState() {
   document.body.classList.add('logged-in'); // hiện thanh điều hướng đáy
   updateGreeting();
   applyTheme();
+  loadAppConfig(); // v3.3: làm mới cấu hình sau đăng nhập
 
   const salesSelect = document.getElementById('sales');
   if (salesSelect) {
@@ -2847,6 +2963,108 @@ function renderHeroExtras(d) {
 }
 
 // ══════════════════════════════════════════════
+// TAB QUẢN TRỊ (v3.3) — PIN gate + Thêm/Sửa/Xóa cấu hình
+// ══════════════════════════════════════════════
+let adminPin = null; // giữ trong phiên sau khi mở khóa; đóng tab/khóa lại là quên
+
+function adminUnlock() {
+  const pin = v('admin-pin').trim();
+  if (!pin) { showToast('⚠️ Nhập mã PIN', 'error-t'); return; }
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode', 'error-t'); return; }
+  evJsonp('action=adminCheck&pin=' + encodeURIComponent(pin), (data) => {
+    if (!data || !data.ok) {
+      showToast('❌ ' + ((data && data.error) || 'Sai mã PIN'), 'error-t');
+      document.getElementById('admin-pin').value = '';
+      return;
+    }
+    adminPin = pin;
+    document.getElementById('admin-pin').value = '';
+    document.getElementById('admin-gate').style.display = 'none';
+    document.getElementById('admin-body').style.display = 'block';
+    renderAdminLists();
+    showToast('🔓 Đã mở khóa Quản trị', 'success');
+  });
+}
+
+function adminLock() {
+  adminPin = null;
+  document.getElementById('admin-gate').style.display = 'block';
+  document.getElementById('admin-body').style.display = 'none';
+}
+
+function renderAdminLists() {
+  if (!appConfig) { loadAppConfig(); return; }
+  const row = (label, sub, editFn, delFn) => `
+    <div class="adm-row">
+      <span class="adm-label">${label}${sub ? `<span class="adm-sub">${sub}</span>` : ''}</span>
+      <button type="button" class="gc-icon-btn" title="Sửa" onclick="${editFn}">✏️</button>
+      <button type="button" class="gc-icon-btn" title="Xóa" onclick="${delFn}">🗑</button>
+    </div>`;
+  document.getElementById('admin-sales-list').innerHTML = appConfig.sales.map(n =>
+    row(escapeHtml(n), 'SĐT ẩn — sửa để đổi', `adminEditSale('${escapeHtml(n).replace(/'/g, "&#39;")}')`, `adminRemove('sale','${escapeHtml(n).replace(/'/g, "&#39;")}')`)
+  ).join('') || '<div class="task-empty">Chưa có Sales nào</div>';
+  document.getElementById('admin-source-list').innerHTML = appConfig.sources.map(s =>
+    row(`${s.paid ? '💰 ' : ''}${escapeHtml(s.name)}`, '', `adminEditSource('${escapeHtml(s.name).replace(/'/g, "&#39;")}', ${s.paid})`, `adminRemove('source','${escapeHtml(s.name).replace(/'/g, "&#39;")}')`)
+  ).join('') || '<div class="task-empty">Chưa có nguồn nào</div>';
+  document.getElementById('admin-product-list').innerHTML = appConfig.products.map(n =>
+    row(escapeHtml(n), '', `adminEditProduct('${escapeHtml(n).replace(/'/g, "&#39;")}')`, `adminRemove('product','${escapeHtml(n).replace(/'/g, "&#39;")}')`)
+  ).join('') || '<div class="task-empty">Chưa có sản phẩm nào</div>';
+}
+
+function adminEditSale(oldName) {
+  const name = prompt('Tên Sales:', oldName);
+  if (name === null) return;
+  const phone = prompt('SĐT hotline mới (đăng nhập) của "' + (name || oldName) + '":', '');
+  if (phone === null) return;
+  adminOp('sale', 'update', name.trim(), { oldName: oldName, phone: phone.trim() });
+}
+function adminEditSource(oldName, wasPaid) {
+  const name = prompt('Tên nguồn:', oldName);
+  if (name === null) return;
+  const paid = confirm('"' + (name || oldName) + '" là NGUỒN TRẢ PHÍ (tính vào hiệu quả chi phí ads)?\n\nOK = trả phí · Cancel = không trả phí');
+  adminOp('source', 'update', name.trim(), { oldName: oldName, paid: paid ? '1' : '' });
+}
+function adminEditProduct(oldName) {
+  const name = prompt('Tên sản phẩm:', oldName);
+  if (name === null) return;
+  adminOp('product', 'update', name.trim(), { oldName: oldName });
+}
+function adminRemove(entity, name) {
+  const label = entity === 'sale' ? 'Sales' : entity === 'source' ? 'nguồn' : 'sản phẩm';
+  if (!confirm(`Xóa ${label} "${name}" khỏi cấu hình?\nDữ liệu khách cũ mang giá trị này KHÔNG bị mất — chỉ ẩn khỏi lựa chọn mới.`)) return;
+  adminOp(entity, 'remove', '', { oldName: name });
+}
+
+function adminOp(entity, op, name, extra) {
+  if (!adminPin) { showToast('🔒 Phiên quản trị đã khóa — nhập lại PIN', 'error-t'); adminLock(); return; }
+  if (op === 'add' && !String(name || '').trim()) { showToast('⚠️ Nhập tên trước', 'error-t'); return; }
+  const params = new URLSearchParams({
+    action: 'adminConfig', pin: adminPin, entity: entity, op: op,
+    name: String(name || '').trim(),
+    oldName: (extra && extra.oldName) || '',
+    phone: (extra && extra.phone) || '',
+    paid: (extra && extra.paid) || '',
+  });
+  evJsonp(params.toString(), (data) => {
+    if (!data || !data.success) {
+      showToast('❌ ' + ((data && data.error) || 'Lỗi thao tác'), 'error-t');
+      if (data && data.error === 'Sai mã PIN') adminLock();
+      return;
+    }
+    // Server trả về cấu hình mới trong CÙNG phản hồi → cập nhật tức thì
+    appConfig = data.config;
+    try { localStorage.setItem('genkii_config', JSON.stringify(appConfig)); } catch (e) {}
+    populateConfigSelects();
+    renderAdminLists();
+    ['adm-sale-name', 'adm-sale-phone', 'adm-src-name', 'adm-prod-name'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const cb = document.getElementById('adm-src-paid'); if (cb) cb.checked = false;
+    showToast('✅ Đã cập nhật — app và sheet CRM cùng đổi', 'success');
+  });
+}
+
+// ══════════════════════════════════════════════
 // CHI PHÍ ADS + HIỆU QUẢ (v3.2)
 // ══════════════════════════════════════════════
 function formatAdsAmount(el) {
@@ -2868,13 +3086,15 @@ function saveAdsCostEntry() {
   fetch(APPS_SCRIPT_URL, {
     method: 'POST', mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: 'saveAdsCost', date: isoToVN(iso), amount: amount, sales: currentSalesName }),
+    body: JSON.stringify({ action: 'saveAdsCost', date: isoToVN(iso), amount: amount,
+      source: document.getElementById('ads-source').value, sales: currentSalesName }),
   })
   .then(() => {
     showLoading(false);
+    const srcSel = document.getElementById('ads-source').value;
     showToast(amount === 0
-      ? `💾 Đã ghi nhận ngày ${isoToVN(iso)} KHÔNG chạy ads (0 đ)`
-      : `💾 Đã lưu ${fmtMoneyStr(amount)} đ cho ngày ${isoToVN(iso)}`, 'success');
+      ? `💾 ${srcSel}: ngày ${isoToVN(iso)} KHÔNG chạy ads (0 đ)`
+      : `💾 ${srcSel}: đã lưu ${fmtMoneyStr(amount)} đ cho ngày ${isoToVN(iso)}`, 'success');
     document.getElementById('ads-amount').value = '';
     setTimeout(loadAdsRecent, 900); // chờ server ghi xong rồi làm mới bảng mini
   })
@@ -2885,12 +3105,18 @@ function loadAdsRecent() {
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
   jsonpRange('getAdsCostRecent', { from: '', to: '' }, (data) => {
     const tbody = document.querySelector('#ads-recent-table tbody');
-    const days = (data && data.days) || [];
-    tbody.innerHTML = days.map(dd => `
+    const entries = (data && data.entries) || [];
+    tbody.innerHTML = (entries.map(en => `
       <tr>
-        <td style="text-align:left; font-weight:600; color:${dd.missing ? 'var(--grey-3)' : 'var(--text)'};">${dd.date}</td>
-        <td style="color:${dd.missing ? 'var(--grey-3)' : (dd.amount === 0 ? 'var(--grey-4)' : 'var(--gold)')}; font-weight:${dd.missing ? '400' : '800'};">${dd.missing ? '— chưa nhập' : (dd.amount === 0 ? '0 đ (không chạy)' : fmtMoneyStr(dd.amount) + ' đ')}</td>
-      </tr>`).join('');
+        <td style="text-align:left; font-weight:600;">${en.date}</td>
+        <td style="text-align:left; font-size:11px; color:var(--grey-4);">${escapeHtml(en.source)}</td>
+        <td style="color:${en.amount === 0 ? 'var(--grey-4)' : 'var(--gold)'}; font-weight:800;">${en.amount === 0 ? '0 đ (không chạy)' : fmtMoneyStr(en.amount) + ' đ'}</td>
+      </tr>`).join('')) || '<tr><td colspan="3" class="dash-empty">Chưa có dòng chi phí nào</td></tr>';
+    // Nhắc ngày kênh chính còn trống trong 7 ngày gần nhất
+    const miss = (data && data.missingMeta) || [];
+    const note = document.getElementById('ads-missing-note');
+    if (note) note.innerHTML = miss.length === 0 ? ''
+      : `<div style="font-size:11px; color:var(--warn-fg); margin-top:6px;">⏳ ${escapeHtml((data && data.mainSource) || '')} còn thiếu ${miss.length} ngày gần đây: ${miss.join(' · ')}</div>`;
   });
 }
 
@@ -2927,7 +3153,24 @@ function loadCostStats() {
         ${big('💰 Giá mỗi SĐT', data.costPerSdt > 0 ? fmtMoneyStr(data.costPerSdt) + ' đ' : '—', 'chi phí ÷ SĐT ' + escapeHtml(data.paidLabel))}
       </div>
       ${missingNote}
-      <table class="dash-table" style="margin-top:10px;">
+      <div style="font-size:12px; font-weight:700; color:var(--heading); margin:12px 0 4px;">📡 Hiệu quả từng kênh trả phí</div>
+      <table class="dash-table">
+        <thead><tr><th style="text-align:left;">Kênh</th><th>Chi phí</th><th>Mess</th><th>SĐT</th><th>Giá/mess</th><th>Giá/SĐT</th><th>Ra số</th></tr></thead>
+        <tbody>
+          ${(data.channels || []).map(c => `
+            <tr>
+              <td style="text-align:left; font-weight:600;">💰 ${escapeHtml(c.name)}</td>
+              <td>${c.cost > 0 ? fmtMoneyStr(c.cost) : '<span style="color:var(--grey-3)">chưa nhập</span>'}</td>
+              <td>${c.mess}</td>
+              <td>${c.sdt}</td>
+              <td>${c.costPerMess > 0 ? fmtMoneyStr(c.costPerMess) : '—'}</td>
+              <td>${c.costPerSdt > 0 ? fmtMoneyStr(c.costPerSdt) : '—'}</td>
+              <td style="font-weight:700; color:${c.convRate >= 50 ? 'var(--teal)' : 'var(--warn-fg)'};">${c.convRate}%</td>
+            </tr>`).join('') || '<tr><td colspan="7" class="dash-empty">Chưa cấu hình kênh trả phí nào</td></tr>'}
+        </tbody>
+      </table>
+      <div style="font-size:12px; font-weight:700; color:var(--heading); margin:12px 0 4px;">Toàn bộ nguồn khách</div>
+      <table class="dash-table">
         <thead><tr><th style="text-align:left;">Nguồn khách</th><th>Mess</th><th>SĐT</th></tr></thead>
         <tbody>
           ${(data.bySource || []).map(s => `
