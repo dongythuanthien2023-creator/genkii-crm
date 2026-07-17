@@ -336,7 +336,18 @@
     outline: none;
   }
   .cust-toolbar input[type="search"]:focus { border-color: var(--teal); }
-  .cust-filters { display: flex; gap: 8px; }
+  .cust-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cust-filters input[type="date"] {
+    flex: 1; min-width: 130px; padding: 8px 10px; font-size: 12.5px;
+    border: 1.5px solid var(--grey-2); border-radius: 10px;
+    background: var(--white); color: var(--text); outline: none; font-family: inherit;
+  }
+  .cust-filters input[type="date"].active { border-color: var(--teal); font-weight: 700; }
+  .cf-clear {
+    flex-shrink: 0; width: 34px; border: 1.5px solid var(--grey-2); border-radius: 10px;
+    background: var(--grey-1); color: var(--grey-4); font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent;
+  }
   .cust-filters select {
     flex: 1; padding: 8px 10px; font-size: 12.5px; font-weight: 600;
     border: 1.5px solid var(--grey-2); border-radius: 10px; background: var(--white);
@@ -909,23 +920,24 @@
   <div class="login-card">
     <div class="login-logo">G</div>
     <h2>Genkii CRM</h2>
-    <p class="sub">Chọn tên và xác nhận SĐT hotline để tiếp tục</p>
+    <p class="sub">Đăng nhập</p>
 
     <div class="login-field">
-      <label>Sales</label>
+      <label>Tên</label>
       <select id="login-sales">
-        <option value="">— Chọn Sales —</option>
+        <option value="">— Chọn tên —</option>
         <!-- v3.3: danh sách nạp từ sheet Cấu hình — SĐT đăng nhập KHÔNG còn nằm trong mã nguồn -->
       </select>
     </div>
 
     <div class="login-field">
-      <label>SĐT hotline (xác nhận đúng người)</label>
-      <input type="tel" id="login-phone" placeholder="Nhập SĐT hotline đã đăng ký" inputmode="numeric">
+      <label>Mật khẩu</label>
+      <!-- v3.8.1: type=password che ký tự khi gõ; mật khẩu là SĐT hotline tương ứng -->
+      <input type="password" id="login-phone" placeholder="Mật khẩu là SĐT hotline của bạn" inputmode="numeric" autocomplete="current-password">
     </div>
 
     <button type="button" class="btn-login" id="login-btn" onclick="doLogin()">Đăng nhập</button>
-    <div class="login-error" id="login-error">SĐT không khớp với Sales đã chọn</div>
+    <div class="login-error" id="login-error">Mật khẩu không khớp với tên đã chọn</div>
   </div>
 </div>
 
@@ -1262,11 +1274,14 @@
           <select id="cust-filter-sales" onchange="renderCustomerList()">
             <option value="">Tất cả Sales</option>
           </select>
+          <!-- v3.8: lọc theo NGÀY VÀO — chọn ngày là danh sách chỉ còn khách nhập lên hôm đó -->
+          <input type="date" id="cust-filter-date" onchange="renderCustomerList()" aria-label="Lọc theo ngày vào">
+          <button type="button" class="cf-clear" id="cust-filter-date-clear" onclick="clearCustDateFilter()" title="Bỏ lọc ngày" style="display:none">✕</button>
         </div>
       </div>
       <div class="cust-count">
         <span id="cust-count-label">Đang tải...</span>
-        <button type="button" onclick="loadCustomerList(true)">🔄 Làm mới</button>
+        <button type="button" onclick="clearCustActivityCache(); loadCustomerList(true)">🔄 Làm mới</button>
       </div>
       <div id="cust-list"></div>
     </div>
@@ -1490,11 +1505,11 @@
     <!-- Nội dung quản trị (mở khóa mới hiện) -->
     <div id="admin-body" style="display:none">
       <div class="ev-form-card">
-        <div class="dash-title">👤 Sales & thông tin đăng nhập</div>
+        <div class="dash-title">👤 Nhân viên & thông tin đăng nhập</div>
         <div id="admin-sales-list"></div>
         <div class="gc-edit-row">
-          <input type="text" id="adm-sale-name" placeholder="Tên Sales mới">
-          <input type="text" id="adm-sale-phone" inputmode="numeric" placeholder="SĐT hotline (đăng nhập)">
+          <input type="text" id="adm-sale-name" placeholder="Thêm nhân viên mới (tên hiển thị)">
+          <input type="text" id="adm-sale-phone" inputmode="numeric" placeholder="Mật khẩu đăng nhập = SĐT hotline">
           <button type="button" class="ev-btn primary" onclick="adminOp('sale','add', v('adm-sale-name'), {phone: v('adm-sale-phone')})">➕</button>
         </div>
       </div>
@@ -2408,7 +2423,7 @@ function populateConfigSelects() {
     el.innerHTML = html;
     if (cur && [...el.options].some(o => o.value === cur)) el.value = cur;
   };
-  fill('login-sales', appConfig.sales, '— Chọn Sales —');
+  fill('login-sales', appConfig.sales, '— Chọn tên —');
   fill('sales', appConfig.sales, '— Chọn Sales —', ['Khác']);
   fill('source', appConfig.sources.map(s => s.name), '— Chọn nguồn —');
   fill('product', appConfig.products, '— Chọn sản phẩm —');
@@ -2501,7 +2516,7 @@ function doLogin() {
   const errorEl = document.getElementById('login-error');
 
   if (!selectEl.value || !phoneInput) {
-    errorEl.textContent = 'Vui lòng chọn Sales và nhập SĐT hotline';
+    errorEl.textContent = 'Vui lòng chọn tên và nhập mật khẩu';
     errorEl.classList.add('show');
     return;
   }
@@ -2516,12 +2531,12 @@ function doLogin() {
   evJsonp('action=login&phone=' + encodeURIComponent(phoneInput), (data) => {
     if (btn) { btn.disabled = false; btn.textContent = 'Đăng nhập'; }
     if (!data || !data.ok) {
-      errorEl.textContent = 'SĐT không có trong hệ thống. Kiểm tra lại hoặc liên hệ quản trị.';
+      errorEl.textContent = 'Mật khẩu không đúng. Kiểm tra lại hoặc liên hệ quản trị.';
       errorEl.classList.add('show');
       return;
     }
     if (data.name !== selectEl.value) {
-      errorEl.textContent = 'SĐT này thuộc về "' + data.name + '" — không khớp Sales đã chọn.';
+      errorEl.textContent = 'Mật khẩu này thuộc về "' + data.name + '" — không khớp tên đã chọn.';
       errorEl.classList.add('show');
       return;
     }
@@ -3567,6 +3582,15 @@ function buildCustomerFilters() {
   fillSelect('cust-filter-sales', salesSet, 'Tất cả Sales');
 }
 
+// v3.8: bỏ lọc ngày bằng 1 chạm (input date trên mobile khó xóa tay)
+function clearCustDateFilter() {
+  document.getElementById('cust-filter-date').value = '';
+  renderCustomerList();
+}
+
+// Nút 🔄 Làm mới cũng cần quên cache hoạt động — Sales vừa nhập thêm là thấy ngay
+function clearCustActivityCache() { custActivityCache = {}; }
+
 function renderCustomerList() {
   const listEl = document.getElementById('cust-list');
   const customers = (custData && custData.customers) || [];
@@ -3574,10 +3598,17 @@ function renderCustomerList() {
   const q = (document.getElementById('cust-search').value || '').trim().toLowerCase();
   const fStage = document.getElementById('cust-filter-stage').value;
   const fSales = document.getElementById('cust-filter-sales').value;
+  // v3.8: lọc theo Ngày vào — input trả ISO (yyyy-mm-dd), đổi sang dd/mm/yyyy để so
+  const fDateISO = document.getElementById('cust-filter-date').value;
+  const fDate = fDateISO ? isoToVN(fDateISO) : '';
+  const dateEl = document.getElementById('cust-filter-date');
+  dateEl.classList.toggle('active', !!fDate);
+  document.getElementById('cust-filter-date-clear').style.display = fDate ? '' : 'none';
 
   const filtered = customers.filter(c => {
     if (fStage && c.stage !== fStage) return false;
     if (fSales && c.sales !== fSales) return false;
+    if (fDate && c.entryDate !== fDate) return false; // khách VÀO đúng ngày đã chọn
     if (q) {
       const hay = (c.name + ' ' + c.phone).toLowerCase();
       if (hay.indexOf(q) === -1) return false;
@@ -3586,37 +3617,95 @@ function renderCustomerList() {
   });
 
   const overdueCount = filtered.filter(c => c.overdue).length;
-  document.getElementById('cust-count-label').textContent =
-    `${filtered.length}/${customers.length} khách` + (overdueCount ? ` · ${overdueCount} quá hạn` : '');
+  const actCached = fDate ? custActivityCache[fDate] : null;
+  const twoListReady = actCached && actCached !== 'loading' && !actCached.error;
+  document.getElementById('cust-count-label').textContent = twoListReady
+    ? `Ngày ${fDate}` // số từng nhóm đã nằm trên badge 2 khối
+    : `${filtered.length}/${customers.length} khách`
+      + (fDate ? ` · ngày ${fDate}` : '')
+      + (overdueCount ? ` · ${overdueCount} quá hạn` : '');
 
   if (filtered.length === 0) {
     listEl.innerHTML = '<div class="dash-empty">Không có khách nào khớp bộ lọc</div>';
     return;
   }
 
-  listEl.innerHTML = filtered.map(c => {
-    const badgeCls = STAGE_BADGE_CLASS[c.stage] || '';
-    const temp = TEMP_ICON[c.temp] || '';
-    const next = c.nextstep
-      ? `<div class="cc-next">
-           <span class="cc-ns">➜ ${escapeHtml(c.nextstep)}</span>
-           <span class="cc-dl ${c.overdue ? 'overdue' : ''}">${c.overdue ? '⚠ ' : ''}${escapeHtml(c.deadline || '')}</span>
-         </div>`
-      : '';
-    return `
-      <div class="cust-card" onclick="openCustomerDetail('${escapeHtml(c.phone)}','${escapeHtml(c.name).replace(/'/g, '&#39;')}')">
-        <div class="cc-top">
-          <div class="cc-name">${escapeHtml(c.name) || '(chưa có tên)'}</div>
-          <span class="cc-temp">${temp}</span>
-          <span class="stage-badge ${badgeCls}">${escapeHtml(c.stage) || '—'}</span>
-        </div>
-        <div class="cc-mid">
-          <span>📞 ${escapeHtml(c.phone) || 'chưa có SĐT'}</span>
-          ${c.sales ? `<span>· 👤 ${escapeHtml(c.sales)}</span>` : ''}
-        </div>
-        ${next}
-      </div>`;
-  }).join('');
+  listEl.innerHTML = renderActivityView(filtered, fDate);
+}
+
+// v3.8: thẻ 1 khách — tách hàm để dùng chung cho list thường và 2 list theo ngày
+function custCardHtml(c) {
+  const badgeCls = STAGE_BADGE_CLASS[c.stage] || '';
+  const temp = TEMP_ICON[c.temp] || '';
+  const next = c.nextstep
+    ? `<div class="cc-next">
+         <span class="cc-ns">➜ ${escapeHtml(c.nextstep)}</span>
+         <span class="cc-dl ${c.overdue ? 'overdue' : ''}">${c.overdue ? '⚠ ' : ''}${escapeHtml(c.deadline || '')}</span>
+       </div>`
+    : '';
+  return `
+    <div class="cust-card" onclick="openCustomerDetail('${escapeHtml(c.phone)}','${escapeHtml(c.name).replace(/'/g, '&#39;')}')">
+      <div class="cc-top">
+        <div class="cc-name">${escapeHtml(c.name) || '(chưa có tên)'}</div>
+        <span class="cc-temp">${temp}</span>
+        <span class="stage-badge ${badgeCls}">${escapeHtml(c.stage) || '—'}</span>
+      </div>
+      <div class="cc-mid">
+        <span>📞 ${escapeHtml(c.phone) || 'chưa có SĐT'}</span>
+        ${c.sales ? `<span>· 👤 ${escapeHtml(c.sales)}</span>` : ''}
+      </div>
+      ${next}
+    </div>`;
+}
+
+// ══ v3.8: CHỌN NGÀY → 2 LIST (tạo mới trong ngày / có cập nhật trong ngày) ══
+// Dựng từ Lịch sử liên hệ qua endpoint riêng — cột "Lần LH cuối" không đủ tin
+// (khách cập nhật 15/07 rồi lại 16/07 sẽ bị ngày sau che mất ngày trước).
+let custActivityCache = {}; // 'dd/mm/yyyy' → {created:[], updated:[]} | 'loading'
+
+function custKeyOf(phone, name) {
+  const p = String(phone || '').replace(/\D/g, '');
+  let norm = p;
+  if (norm.startsWith('84') && norm.length >= 10) norm = '0' + norm.slice(2);
+  if (norm.length === 9 && !norm.startsWith('0')) norm = '0' + norm;
+  return norm || String(name || '').trim();
+}
+
+function renderActivityView(filtered, fDate) {
+  if (!fDate) { // không lọc ngày → list thường như cũ
+    return filtered.map(c => custCardHtml(c)).join('');
+  }
+  const cached = custActivityCache[fDate];
+  if (cached === 'loading') {
+    return '<div class="dash-empty">⏳ Đang tải hoạt động ngày ' + fDate + '...</div>';
+  }
+  if (!cached || cached.error) {
+    // Chưa có dữ liệu → gọi endpoint (1 lần mỗi ngày được chọn, cache trong phiên)
+    if (!cached) {
+      custActivityCache[fDate] = 'loading';
+      evJsonp('action=getCustomersActivityByDate&date=' + encodeURIComponent(fDate), (data) => {
+        custActivityCache[fDate] = (data && !data.error) ? data : { error: true };
+        renderCustomerList();
+      });
+      return '<div class="dash-empty">⏳ Đang tải hoạt động ngày ' + fDate + '...</div>';
+    }
+    // Endpoint lỗi → fallback lọc theo Ngày vào như bản trước, kèm ghi chú
+    const fb = filtered.filter(c => c.entryDate === fDate);
+    return '<div class="dash-empty" style="padding:8px;">⚠️ Không tải được chi tiết hoạt động — đang lọc tạm theo Ngày vào</div>'
+      + fb.map(c => custCardHtml(c)).join('');
+  }
+  const createdSet = {}, updatedSet = {};
+  (cached.created || []).forEach(x => { createdSet[custKeyOf(x.phone, x.name)] = 1; });
+  (cached.updated || []).forEach(x => { updatedSet[custKeyOf(x.phone, x.name)] = 1; });
+  const list1 = filtered.filter(c => createdSet[custKeyOf(c.phone, c.name)]);
+  const list2 = filtered.filter(c => updatedSet[custKeyOf(c.phone, c.name)]);
+  const section = (icon, title, arr, emptyMsg) => `
+    <div class="task-section-title" style="margin-top:4px;">${icon} ${title}
+      <span class="task-count-badge ${arr.length === 0 ? 'zero' : ''}">${arr.length}</span>
+    </div>
+    ${arr.length ? arr.map(c => custCardHtml(c)).join('') : `<div class="task-empty">${emptyMsg}</div>`}`;
+  return section('🆕', 'Khách nhập mới trong ngày', list1, 'Không có khách mới nào ngày này (theo bộ lọc hiện tại)')
+    + section('🔄', 'Khách cũ có cập nhật trong ngày', list2, 'Không có khách cũ nào được cập nhật ngày này (theo bộ lọc hiện tại)');
 }
 
 // ── CHI TIẾT 1 KHÁCH ──
