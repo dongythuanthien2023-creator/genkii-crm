@@ -857,6 +857,19 @@
   /* v3.9: số hiện tức thì — chỉ nháy nhẹ khi giá trị THAY ĐỔI so với lần tải trước */
   .num-flash { animation: numFlash .45s ease-out; }
   @keyframes numFlash { 0% { opacity: .25; } 100% { opacity: 1; } }
+  /* v3.9.6: trang Lịch sử vi phạm — overlay dưới modal (500), trên nav */
+  #vipham-page { position: fixed; inset: 0; z-index: 200; background: var(--grey-1); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .vp-page-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px;
+    background: var(--white); border-bottom: 0.5px solid var(--grey-2); padding: 12px 14px;
+    padding-top: calc(12px + env(safe-area-inset-top)); }
+  .vp-back { display: inline-flex; align-items: center; gap: 4px; background: none; border: none;
+    color: var(--teal); font-size: 13.5px; font-weight: 700; cursor: pointer; padding: 4px 6px 4px 0; }
+  .vp-page-titles { flex: 1; min-width: 0; }
+  .vp-page-title { font-size: 15px; font-weight: 800; color: var(--heading); }
+  .vp-page-sub { font-size: 11.5px; color: var(--grey-4); }
+  .vp-refresh { background: none; border: none; color: var(--grey-4); cursor: pointer; padding: 6px; }
+  .vp-page-body { padding: 14px 14px calc(24px + env(safe-area-inset-bottom)); max-width: 720px; margin: 0 auto; }
+  .vp-sec-title { font-size: 12px; font-weight: 800; color: var(--grey-4); text-transform: uppercase; letter-spacing: .04em; margin: 4px 0 8px; }
   /* v3.9: số dùng tabular-nums — cột thẳng hàng, không giật layout khi đổi giá trị */
   .dh-value, .dh-ring-pct, .sc-value, .sc-sub, .dash-time,
   .ev-kpi, .ck-progress-card, .stat-chip, .dash-card, .hist-item, .cd-task {
@@ -939,6 +952,7 @@
 <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/><path d="M8 15h2v2H8z"/></symbol>
 <symbol id="i-gear" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
 <symbol id="i-userplus" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h5"/><path d="M16 11h6M19 8v6"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 6.34"/><path d="M20 5v6h-6"/></symbol>
 <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 2.1 18a2 2 0 0 0 1.7 3h16.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
 <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.7 5.7l12.6 12.6"/></symbol>
@@ -1013,6 +1027,19 @@
   <button type="button" class="tab-btn" id="tab-btn-dash" onclick="switchTab('dash')"><svg class="i"><use href="#i-chart"/></svg>Thống kê</button>
   <button type="button" class="tab-btn" id="tab-btn-event" onclick="switchTab('event')"><svg class="i"><use href="#i-cal"/></svg>Sự kiện</button>
   <button type="button" class="tab-btn" id="tab-btn-admin" onclick="switchTab('admin')" style="display:none"><svg class="i"><use href="#i-gear"/></svg></button>
+</div>
+
+<!-- v3.9.6: TRANG LỊCH SỬ VI PHẠM — overlay độc lập, không thuộc hệ tab -->
+<div id="vipham-page" style="display:none;">
+  <div class="vp-page-head">
+    <button type="button" class="vp-back" onclick="closeViPhamPage()"><svg class="i"><use href="#i-back"/></svg> Quay lại</button>
+    <div class="vp-page-titles">
+      <div class="vp-page-title">Lịch sử vi phạm</div>
+      <div class="vp-page-sub" id="vp-page-count"></div>
+    </div>
+    <button type="button" class="vp-refresh" onclick="fetchViPhamAllData()" title="Làm mới"><svg class="i"><use href="#i-refresh"/></svg></button>
+  </div>
+  <div id="vipham-page-body" class="vp-page-body"></div>
 </div>
 
 <!-- v3.1: Thanh điều hướng đáy — thao tác một tay, nút Nhập nổi giữa -->
@@ -2228,7 +2255,6 @@ function switchTab(tab) {
   const navTab = tab === 'complete' ? 'update' : tab;
   document.querySelectorAll('#bottom-nav [data-tab]').forEach(b =>
     b.classList.toggle('active', b.getAttribute('data-tab') === navTab));
-  if (tab !== 'tasks') viPhamViewMode = false; // v3.9.5: rời tab là thoát chế độ xem vi phạm
   if (tab === 'tasks') loadTodayTasks();
   if (tab === 'dash')  {
     loadDashboard(false);
@@ -2640,9 +2666,10 @@ function loadTodayTasks() {
   script.src = `${APPS_SCRIPT_URL}?action=getTodayTasks&sales=${encodeURIComponent(currentSalesName)}&callback=_jsonpCBTasks`;
   script.onerror = () => showToast('❌ Lỗi tải nhiệm vụ. Bấm Làm mới để thử lại.', 'error-t');
   document.head.appendChild(script);
-  // v3.9.5: đang xem toàn bộ vi phạm → tải lại song song danh sách đó, để sau
-  // khi xử lý bù 1 nhiệm vụ, cả 2 khu cùng tươi mà vẫn Ở NGUYÊN chế độ xem
-  if (viPhamViewMode) fetchViPhamAllData();
+  // v3.9.6: trang Lịch sử vi phạm đang mở → làm tươi trang đó song song
+  // (các nút xử lý bù gọi loadTodayTasks sau khi lưu — trang tự cập nhật theo)
+  const vpPage = document.getElementById('vipham-page');
+  if (vpPage && vpPage.style.display !== 'none' && vpPage.style.display !== '') fetchViPhamAllData();
 }
 
 function simulateTodayTasks() {
@@ -2685,20 +2712,16 @@ function renderTodayTasks(data) {
     ? '<div class="task-empty">🎉 Không có nhắc hỏi thăm nào đến hạn hôm nay</div>'
     : cskhTasks.map(t => taskCardHtml(t, 'cskh')).join('');
 
-  // v3.2: khối "Sales không hoàn thành" — chỉ hiện khi có nhiệm vụ mang dấu.
-  // v3.9.5: GUARD — nếu đang ở chế độ "xem toàn bộ vi phạm" thì KHÔNG ghi đè
-  // khu này (trước đây getTodayTasks về sau getViPhamAll là đè mất → lỗi chập chờn)
-  if (!viPhamViewMode) {
-    const vpTasks = data.viPhamTasks || [];
-    const vpTitle = document.getElementById('vipham-title');
-    document.getElementById('vipham-title-text').textContent = '⛔ Sales không hoàn thành';
-    const badgeVP = document.getElementById('badge-vipham');
-    const listVP = document.getElementById('list-vipham');
-    vpTitle.style.display = vpTasks.length > 0 ? 'flex' : 'none';
-    badgeVP.textContent = vpTasks.length;
-    badgeVP.classList.toggle('zero', vpTasks.length === 0);
-    listVP.innerHTML = vpTasks.map(t => viPhamCardHtml(t)).join('');
-  }
+  // v3.2: khối "Sales không hoàn thành" — chỉ hiện khi có nhiệm vụ mang dấu
+  // (v3.9.6: khu này giờ ĐỘC LẬP hoàn toàn với trang Lịch sử vi phạm — hết xung đột)
+  const vpTasks = data.viPhamTasks || [];
+  const vpTitle = document.getElementById('vipham-title');
+  const badgeVP = document.getElementById('badge-vipham');
+  const listVP = document.getElementById('list-vipham');
+  vpTitle.style.display = vpTasks.length > 0 ? 'flex' : 'none';
+  badgeVP.textContent = vpTasks.length;
+  badgeVP.classList.toggle('zero', vpTasks.length === 0);
+  listVP.innerHTML = vpTasks.map(t => viPhamCardHtml(t)).join('');
 }
 
 // v3.2: thẻ nhiệm vụ bị đóng dấu — 3 lựa chọn xử lý, vết vi phạm giữ vĩnh viễn
@@ -2733,53 +2756,58 @@ function viPhamCardHtml(t) {
 // chưa deploy, bấm chip chỉ hiện toast lỗi — không ảnh hưởng gì khác.
 // Xử lý xong 1 nhiệm vụ trong chế độ này → app tải lại danh sách thường (chủ ý).
 // ══════════════════════════════════════════════
-let viPhamViewMode = false; // v3.9.5: true = khu ⛔ đang hiển thị TOÀN BỘ lịch sử vi phạm
-
+// ══════════════════════════════════════════════
+// v3.9.6 — TRANG LỊCH SỬ VI PHẠM (overlay toàn màn hình, ĐỘC LẬP với hệ tab)
+// Bấm chip "Không hoàn thành" trên Thống kê → mở trang này. Không đụng gì tới
+// tab Nhiệm vụ nên không còn xung đột render như 2 bản trước. Các nút xử lý bù
+// dùng lại nguyên bộ hàm cũ; sau khi lưu, loadTodayTasks() chạy nền và hook ở đó
+// tự làm tươi trang này (nếu đang mở). Modal Dời lịch (z-index 500) nằm TRÊN
+// trang (z-index 200) nên thao tác bình thường.
+// ══════════════════════════════════════════════
 function openViPhamAll() {
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode — chưa cấu hình URL', 'error-t'); return; }
-  viPhamViewMode = true;          // đặt cờ TRƯỚC switchTab — guard chặn mọi ghi đè từ getTodayTasks
-  switchTab('tasks');
-  document.getElementById('vipham-title').style.display = 'flex';
-  document.getElementById('vipham-title-text').textContent = '⛔ Toàn bộ vi phạm — đang tải...';
-  document.getElementById('list-vipham').innerHTML = '<div class="task-empty">Đang tải lịch sử vi phạm...</div>';
+  const page = document.getElementById('vipham-page');
+  page.style.display = 'block';
+  document.getElementById('vipham-page-body').innerHTML = '<div class="task-empty">Đang tải lịch sử vi phạm...</div>';
+  document.getElementById('vp-page-count').textContent = '';
   fetchViPhamAllData();
+}
+
+function closeViPhamPage() {
+  document.getElementById('vipham-page').style.display = 'none';
 }
 
 function fetchViPhamAllData() {
   evJsonp('action=getViPhamAll', (data) => {
-    if (!viPhamViewMode) return; // người dùng đã thoát chế độ trong lúc chờ mạng
+    const page = document.getElementById('vipham-page');
+    if (!page || page.style.display === 'none') return; // đã đóng trang trong lúc chờ mạng
     if (!data || data.error) {
       showToast('⚠️ ' + ((data && data.error) || 'Lỗi tải lịch sử vi phạm'), 'error-t');
-      exitViPhamAll();
+      closeViPhamPage();
       return;
     }
     renderViPhamAll(data);
   });
 }
 
-function exitViPhamAll() {
-  viPhamViewMode = false;
-  loadTodayTasks();
-}
-
 function renderViPhamAll(data) {
   const pending = data.pending || [], resolved = data.resolved || [];
   const total = pending.length + resolved.length;
-  document.getElementById('vipham-title-text').textContent = '⛔ Toàn bộ vi phạm';
-  const badgeVP = document.getElementById('badge-vipham');
-  badgeVP.textContent = total;
-  badgeVP.classList.toggle('zero', total === 0);
-  badgeVP.title = pending.length + ' chưa xử lý · ' + resolved.length + ' đã hoàn thành bù';
-  const backBtn = '<div style="margin:2px 0 10px;"><button type="button" onclick="exitViPhamAll()" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:700;cursor:pointer;">← Quay về danh sách chưa xử lý</button></div>';
-  const listVP = document.getElementById('list-vipham');
+  document.getElementById('vp-page-count').textContent =
+    total === 0 ? 'Chưa có vi phạm nào' : (pending.length + ' chưa xử lý · ' + resolved.length + ' đã bù');
+  const body = document.getElementById('vipham-page-body');
   if (total === 0) {
-    listVP.innerHTML = backBtn + '<div class="task-empty">🎉 Chưa có nhiệm vụ nào bị đóng dấu vi phạm</div>';
+    body.innerHTML = '<div class="task-empty">🎉 Chưa có nhiệm vụ nào bị đóng dấu vi phạm</div>';
     return;
   }
-  listVP.innerHTML = backBtn
-    + (pending.length ? pending.map(t => viPhamCardHtml(t)).join('') : '<div class="task-empty">Không còn vi phạm nào chờ xử lý bù 🎉</div>')
-    + (resolved.length ? '<div style="font-size:11.5px;font-weight:700;color:var(--grey-4);margin:14px 0 6px;">Đã hoàn thành bù — vết vẫn giữ (' + resolved.length + ')</div>'
-        + resolved.map(t => viPhamDoneCardHtml(t)).join('') : '');
+  body.innerHTML =
+    (pending.length
+      ? '<div class="vp-sec-title">Chưa xử lý bù (' + pending.length + ')</div>' + pending.map(t => viPhamCardHtml(t)).join('')
+      : '<div class="task-empty">Không còn vi phạm nào chờ xử lý bù 🎉</div>')
+    + (resolved.length
+      ? '<div class="vp-sec-title" style="margin-top:16px;">Đã hoàn thành bù — vết vẫn giữ (' + resolved.length + ')</div>'
+        + resolved.map(t => viPhamDoneCardHtml(t)).join('')
+      : '');
 }
 
 // Thẻ vi phạm ĐÃ BÙ: chỉ đọc, không nút hành động — phục vụ tra cứu kỷ luật
