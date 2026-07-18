@@ -1404,6 +1404,7 @@
 
     <div class="dash-card">
       <div class="dash-title">Phễu giai đoạn — toàn bộ khách hiện tại</div>
+      <div class="dash-legend" id="funnel-legend"></div>
       <div class="chart-box" id="chart-funnel-box" style="height:230px;"><canvas id="chart-funnel"></canvas></div>
     </div>
 
@@ -3082,24 +3083,58 @@ function renderDashboard(d) {
   const funnel = d.funnel || [];
   const tkF = chartTokens();
   document.getElementById('chart-funnel-box').style.height = Math.max(150, funnel.length * 34 + 40) + 'px';
-  // v3.9.2: ramp brand theo chiều sâu phễu — blue nhạt→đậm theo tiến trình,
-  // Chốt = teal brand (giai đoạn thắng), CSKH = teal đậm, ngoài phễu = xám/gold
-  const FUNNEL_COLORS = { 'Inbox': '#AFD9E8', 'SĐT - Chưa add Zalo': '#64B7D3', 'Đã add Zalo - Tư vấn': '#297E9B', 'Chốt': '#02B2A9', 'CSKH': '#018A83', 'Khách cũ': '#99E0DC', 'Khách yêu cầu đặc biệt': '#C8922A', 'Không tiềm năng': '#B9C4C1' };
-  drawChart('funnel', 'chart-funnel', {
-    type: 'bar',
-    data: {
-      labels: funnel.map(x => x.stage),
-      datasets: [{ data: funnel.map(x => x.count), backgroundColor: funnel.map(x => FUNNEL_COLORS[x.stage] || '#B9C4C1'), borderRadius: { topRight: 3, bottomRight: 3 } }],
-    },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: tkF.grid }, ticks: { precision: 0, font: { size: 10 }, color: tkF.tick } },
-        y: { grid: { display: false }, ticks: { font: { size: 10.5 }, color: tkF.label } },
+  // v3.9.4: mỗi thanh giai đoạn TÁCH ĐOẠN theo nhóm kênh (In-House / Agency /...).
+  // Danh sách nhóm do backend trả (funnelGroups) — thêm nhóm mới trong tương lai
+  // là tự có màu tiếp theo trong bảng FUNNEL_GROUP_COLORS, không phải sửa chart.
+  // Backend chưa deploy bản mới (payload cũ không có byGroup) → tự rơi về 1 màu
+  // ramp theo giai đoạn như v3.9.2, không vỡ gì.
+  const FUNNEL_GROUP_COLORS = ['#02B2A9', '#C8922A', '#38A3C7', '#8C6BC8', '#E8604C', '#566963'];
+  const fGroups = d.funnelGroups || [];
+  const hasGroups = fGroups.length > 0 && funnel.some(x => x.byGroup && Object.keys(x.byGroup).length);
+  const fLegend = document.getElementById('funnel-legend');
+  if (hasGroups) {
+    fLegend.innerHTML = fGroups.map((g, i) =>
+      `<span><i style="background:${FUNNEL_GROUP_COLORS[i % FUNNEL_GROUP_COLORS.length]}"></i>${escapeHtml(g)}</span>`
+    ).join('');
+    drawChart('funnel', 'chart-funnel', {
+      type: 'bar',
+      data: {
+        labels: funnel.map(x => x.stage),
+        datasets: fGroups.map((g, i) => ({
+          label: g,
+          data: funnel.map(x => (x.byGroup && x.byGroup[g]) || 0),
+          backgroundColor: FUNNEL_GROUP_COLORS[i % FUNNEL_GROUP_COLORS.length],
+          stack: 'f',
+        })),
       },
-    },
-  });
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { stacked: true, grid: { color: tkF.grid }, ticks: { precision: 0, font: { size: 10 }, color: tkF.tick } },
+          y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10.5 }, color: tkF.label } },
+        },
+      },
+    });
+  } else {
+    fLegend.innerHTML = '';
+    const FUNNEL_COLORS = { 'Inbox': '#AFD9E8', 'SĐT - Chưa add Zalo': '#64B7D3', 'Đã add Zalo - Tư vấn': '#297E9B', 'Chốt': '#02B2A9', 'CSKH': '#018A83', 'Khách cũ': '#99E0DC', 'Khách yêu cầu đặc biệt': '#C8922A', 'Không tiềm năng': '#B9C4C1' };
+    drawChart('funnel', 'chart-funnel', {
+      type: 'bar',
+      data: {
+        labels: funnel.map(x => x.stage),
+        datasets: [{ data: funnel.map(x => x.count), backgroundColor: funnel.map(x => FUNNEL_COLORS[x.stage] || '#B9C4C1'), borderRadius: { topRight: 3, bottomRight: 3 } }],
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: tkF.grid }, ticks: { precision: 0, font: { size: 10 }, color: tkF.tick } },
+          y: { grid: { display: false }, ticks: { font: { size: 10.5 }, color: tkF.label } },
+        },
+      },
+    });
+  }
 
   // ── Nguồn lead (doughnut) — mặc định theo tháng; đổi khoảng ngày qua applySrcRange ──
   const src = (d.sources && d.sources.items) || [];
