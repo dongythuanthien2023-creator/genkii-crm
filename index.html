@@ -2228,6 +2228,7 @@ function switchTab(tab) {
   const navTab = tab === 'complete' ? 'update' : tab;
   document.querySelectorAll('#bottom-nav [data-tab]').forEach(b =>
     b.classList.toggle('active', b.getAttribute('data-tab') === navTab));
+  if (tab !== 'tasks') viPhamViewMode = false; // v3.9.5: rời tab là thoát chế độ xem vi phạm
   if (tab === 'tasks') loadTodayTasks();
   if (tab === 'dash')  {
     loadDashboard(false);
@@ -2639,6 +2640,9 @@ function loadTodayTasks() {
   script.src = `${APPS_SCRIPT_URL}?action=getTodayTasks&sales=${encodeURIComponent(currentSalesName)}&callback=_jsonpCBTasks`;
   script.onerror = () => showToast('❌ Lỗi tải nhiệm vụ. Bấm Làm mới để thử lại.', 'error-t');
   document.head.appendChild(script);
+  // v3.9.5: đang xem toàn bộ vi phạm → tải lại song song danh sách đó, để sau
+  // khi xử lý bù 1 nhiệm vụ, cả 2 khu cùng tươi mà vẫn Ở NGUYÊN chế độ xem
+  if (viPhamViewMode) fetchViPhamAllData();
 }
 
 function simulateTodayTasks() {
@@ -2681,16 +2685,20 @@ function renderTodayTasks(data) {
     ? '<div class="task-empty">🎉 Không có nhắc hỏi thăm nào đến hạn hôm nay</div>'
     : cskhTasks.map(t => taskCardHtml(t, 'cskh')).join('');
 
-  // v3.2: khối "Sales không hoàn thành" — chỉ hiện khi có nhiệm vụ mang dấu
-  const vpTasks = data.viPhamTasks || [];
-  const vpTitle = document.getElementById('vipham-title');
-  document.getElementById('vipham-title-text').textContent = '⛔ Sales không hoàn thành';
-  const badgeVP = document.getElementById('badge-vipham');
-  const listVP = document.getElementById('list-vipham');
-  vpTitle.style.display = vpTasks.length > 0 ? 'flex' : 'none';
-  badgeVP.textContent = vpTasks.length;
-  badgeVP.classList.toggle('zero', vpTasks.length === 0);
-  listVP.innerHTML = vpTasks.map(t => viPhamCardHtml(t)).join('');
+  // v3.2: khối "Sales không hoàn thành" — chỉ hiện khi có nhiệm vụ mang dấu.
+  // v3.9.5: GUARD — nếu đang ở chế độ "xem toàn bộ vi phạm" thì KHÔNG ghi đè
+  // khu này (trước đây getTodayTasks về sau getViPhamAll là đè mất → lỗi chập chờn)
+  if (!viPhamViewMode) {
+    const vpTasks = data.viPhamTasks || [];
+    const vpTitle = document.getElementById('vipham-title');
+    document.getElementById('vipham-title-text').textContent = '⛔ Sales không hoàn thành';
+    const badgeVP = document.getElementById('badge-vipham');
+    const listVP = document.getElementById('list-vipham');
+    vpTitle.style.display = vpTasks.length > 0 ? 'flex' : 'none';
+    badgeVP.textContent = vpTasks.length;
+    badgeVP.classList.toggle('zero', vpTasks.length === 0);
+    listVP.innerHTML = vpTasks.map(t => viPhamCardHtml(t)).join('');
+  }
 }
 
 // v3.2: thẻ nhiệm vụ bị đóng dấu — 3 lựa chọn xử lý, vết vi phạm giữ vĩnh viễn
@@ -2725,20 +2733,33 @@ function viPhamCardHtml(t) {
 // chưa deploy, bấm chip chỉ hiện toast lỗi — không ảnh hưởng gì khác.
 // Xử lý xong 1 nhiệm vụ trong chế độ này → app tải lại danh sách thường (chủ ý).
 // ══════════════════════════════════════════════
+let viPhamViewMode = false; // v3.9.5: true = khu ⛔ đang hiển thị TOÀN BỘ lịch sử vi phạm
+
 function openViPhamAll() {
-  switchTab('tasks');
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode — chưa cấu hình URL', 'error-t'); return; }
+  viPhamViewMode = true;          // đặt cờ TRƯỚC switchTab — guard chặn mọi ghi đè từ getTodayTasks
+  switchTab('tasks');
   document.getElementById('vipham-title').style.display = 'flex';
   document.getElementById('vipham-title-text').textContent = '⛔ Toàn bộ vi phạm — đang tải...';
   document.getElementById('list-vipham').innerHTML = '<div class="task-empty">Đang tải lịch sử vi phạm...</div>';
+  fetchViPhamAllData();
+}
+
+function fetchViPhamAllData() {
   evJsonp('action=getViPhamAll', (data) => {
+    if (!viPhamViewMode) return; // người dùng đã thoát chế độ trong lúc chờ mạng
     if (!data || data.error) {
       showToast('⚠️ ' + ((data && data.error) || 'Lỗi tải lịch sử vi phạm'), 'error-t');
-      loadTodayTasks();
+      exitViPhamAll();
       return;
     }
     renderViPhamAll(data);
   });
+}
+
+function exitViPhamAll() {
+  viPhamViewMode = false;
+  loadTodayTasks();
 }
 
 function renderViPhamAll(data) {
@@ -2749,7 +2770,7 @@ function renderViPhamAll(data) {
   badgeVP.textContent = total;
   badgeVP.classList.toggle('zero', total === 0);
   badgeVP.title = pending.length + ' chưa xử lý · ' + resolved.length + ' đã hoàn thành bù';
-  const backBtn = '<div style="margin:2px 0 10px;"><button type="button" onclick="loadTodayTasks()" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:700;cursor:pointer;">← Quay về danh sách chưa xử lý</button></div>';
+  const backBtn = '<div style="margin:2px 0 10px;"><button type="button" onclick="exitViPhamAll()" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:700;cursor:pointer;">← Quay về danh sách chưa xử lý</button></div>';
   const listVP = document.getElementById('list-vipham');
   if (total === 0) {
     listVP.innerHTML = backBtn + '<div class="task-empty">🎉 Chưa có nhiệm vụ nào bị đóng dấu vi phạm</div>';
