@@ -857,6 +857,16 @@
   /* v3.9: số hiện tức thì — chỉ nháy nhẹ khi giá trị THAY ĐỔI so với lần tải trước */
   .num-flash { animation: numFlash .45s ease-out; }
   @keyframes numFlash { 0% { opacity: .25; } 100% { opacity: 1; } }
+  /* v4.0: bảng Người dùng trong Quản trị */
+  .adm-user-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px 0;
+    border-bottom: 0.5px solid var(--grey-2); }
+  .adm-user-row input[type="text"], .adm-user-row select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--grey-2); border-radius: 8px;
+    font-size: 13px; background: var(--white); color: var(--text); }
+  .adm-user-active { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--grey-4); }
+  .adm-user-active input { width: 16px; height: 16px; accent-color: var(--teal); }
+  .adm-user-del { background: none; border: none; cursor: pointer; font-size: 15px; justify-self: end; }
+  .adm-user-meta { display: flex; align-items: center; justify-content: space-between; grid-column: 1 / -1; }
   /* v3.9.6: trang Lịch sử vi phạm — overlay dưới modal (500), trên nav */
   #vipham-page { position: fixed; inset: 0; z-index: 200; background: var(--grey-1); overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .vp-page-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px;
@@ -967,17 +977,14 @@
     <p class="sub">Đăng nhập</p>
 
     <div class="login-field">
-      <label>Tên</label>
-      <select id="login-sales">
-        <option value="">— Chọn tên —</option>
-        <!-- v3.3: danh sách nạp từ sheet Cấu hình — SĐT đăng nhập KHÔNG còn nằm trong mã nguồn -->
-      </select>
+      <label>Tên đăng nhập</label>
+      <!-- v4.0: đăng nhập bằng tài khoản từ sheet "Người dùng" — admin quản lý trong tab Quản trị -->
+      <input type="text" id="login-user" placeholder="Tên đăng nhập" autocomplete="username" autocapitalize="off">
     </div>
 
     <div class="login-field">
       <label>Mật khẩu</label>
-      <!-- v3.8.1: type=password che ký tự khi gõ; mật khẩu là SĐT hotline tương ứng -->
-      <input type="password" id="login-phone" placeholder="Mật khẩu là SĐT hotline của bạn" inputmode="numeric" autocomplete="current-password">
+      <input type="password" id="login-pass" placeholder="Mật khẩu" autocomplete="current-password">
     </div>
 
     <button type="button" class="btn-login" id="login-btn" onclick="doLogin()">Đăng nhập</button>
@@ -1563,11 +1570,20 @@
     <!-- Nội dung quản trị (mở khóa mới hiện) -->
     <div id="admin-body" style="display:none">
       <div class="ev-form-card">
-        <div class="dash-title">👤 Nhân viên & thông tin đăng nhập</div>
+        <div class="dash-title">🔑 Người dùng &amp; Đăng nhập</div>
+        <div class="hint" style="margin-bottom:8px;">Tài khoản đăng nhập app cho toàn hệ thống. Lưu xong: đăng nhập mới nhận thông tin mới ngay; <b>phiên đang mở không bị thoát</b> — thay đổi áp khi người đó tự tải lại app. Vai trò là nền tảng phân quyền (đang tắt, sẽ kích hoạt sau).</div>
+        <div id="admin-users-list"></div>
+        <button type="button" class="ev-btn ghost full" style="margin:8px 0 6px;" onclick="adminUserAddRow()">➕ Thêm người dùng</button>
+        <button type="button" class="ev-btn primary full" onclick="adminUsersSave()">💾 Lưu danh sách người dùng</button>
+      </div>
+
+      <div class="ev-form-card">
+        <div class="dash-title">🧑‍💼 Danh sách Sales (gán khách &amp; thống kê)</div>
+        <div class="hint" style="margin-bottom:8px;">Tên trong danh sách này dùng cho ô chọn Sales, gán khách và thống kê. Đăng nhập quản lý ở mục 🔑 phía trên.</div>
         <div id="admin-sales-list"></div>
         <div class="gc-edit-row">
           <input type="text" id="adm-sale-name" placeholder="Thêm nhân viên mới (tên hiển thị)">
-          <input type="text" id="adm-sale-phone" inputmode="numeric" placeholder="Mật khẩu đăng nhập = SĐT hotline">
+          <input type="text" id="adm-sale-phone" inputmode="numeric" placeholder="SĐT hotline (tra cứu nội bộ)">
           <button type="button" class="ev-btn primary" onclick="adminOp('sale','add', v('adm-sale-name'), {phone: v('adm-sale-phone')})">➕</button>
         </div>
       </div>
@@ -2481,7 +2497,6 @@ function populateConfigSelects() {
     el.innerHTML = html;
     if (cur && [...el.options].some(o => o.value === cur)) el.value = cur;
   };
-  fill('login-sales', appConfig.sales, '— Chọn tên —');
   fill('sales', appConfig.sales, '— Chọn Sales —', ['Khác']);
   fill('source', appConfig.sources.map(s => s.name), '— Chọn nguồn —');
   fill('product', appConfig.products, '— Chọn sản phẩm —');
@@ -2560,52 +2575,68 @@ function animateNum(id, target) {
 
 const LOGIN_STORAGE_KEY = 'genkii_crm_logged_in_sales';
 let currentSalesName = null;
+let currentUserRole = ''; // v4.0: vai trò của người đăng nhập — nền tảng phân quyền
 
 document.addEventListener('DOMContentLoaded', () => {
   // Khôi phục đăng nhập từ lần trước (lưu trong session của trình duyệt này)
   try {
     const saved = sessionStorage.getItem(LOGIN_STORAGE_KEY);
     if (saved) {
-      currentSalesName = saved;
+      let sess = null;
+      try { sess = JSON.parse(saved); } catch (e2) { sess = { name: saved, username: saved }; } // phiên định dạng cũ (chỉ tên)
+      currentSalesName = sess.name || '';
+      currentUserRole = sess.role || '';
       applyLoggedInState();
+      // v4.0: xác thực lại phiên MỖI LẦN LOAD APP — đúng yêu cầu vận hành:
+      // admin đổi tên/khóa tài khoản KHÔNG đá phiên đang chạy; thay đổi chỉ áp
+      // khi người dùng chủ động tải lại app (chính là lúc này).
+      if (APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE' && sess.username) {
+        evJsonp('action=checkUser&user=' + encodeURIComponent(sess.username), (d) => {
+          if (!d || !d.ok || d.active === false) {
+            showToast('🔒 Tài khoản đã bị khóa hoặc thay đổi — vui lòng đăng nhập lại', 'error-t');
+            doLogout();
+            return;
+          }
+          if (d.name && d.name !== currentSalesName) { currentSalesName = d.name; applyLoggedInState(); }
+          currentUserRole = d.role || currentUserRole;
+          try { sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ name: currentSalesName, username: sess.username, role: currentUserRole })); } catch (e3) {}
+        });
+      }
     }
   } catch (e) { /* sessionStorage có thể bị chặn ở 1 số trình duyệt — bỏ qua, yêu cầu đăng nhập lại */ }
 });
 
 function doLogin() {
-  // v3.3: xác thực PHÍA SERVER — app gửi SĐT lên Apps Script đối chiếu với sheet
-  // Cấu hình; thông tin đăng nhập không còn tồn tại trong mã nguồn trang.
-  const selectEl = document.getElementById('login-sales');
-  const phoneInput = v('login-phone').replace(/\D/g, '');
+  // v4.0: đăng nhập Tên đăng nhập + Mật khẩu — đối chiếu server với sheet "Người
+  // dùng". Vai trò (role) trả về lưu vào phiên: nền tảng phân quyền tab/thành phần
+  // (công tắc RBAC đang TẮT — app vẫn hiển thị đầy đủ cho mọi người).
+  const userInput = v('login-user').trim();
+  const passInput = v('login-pass');
   const errorEl = document.getElementById('login-error');
 
-  if (!selectEl.value || !phoneInput) {
-    errorEl.textContent = 'Vui lòng chọn tên và nhập mật khẩu';
+  if (!userInput || !passInput) {
+    errorEl.textContent = 'Vui lòng nhập tên đăng nhập và mật khẩu';
     errorEl.classList.add('show');
     return;
   }
   errorEl.classList.remove('show');
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { // demo mode
-    currentSalesName = selectEl.value;
+    currentSalesName = userInput;
     applyLoggedInState();
     return;
   }
   const btn = document.getElementById('login-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Đang kiểm tra...'; }
-  evJsonp('action=login&phone=' + encodeURIComponent(phoneInput), (data) => {
+  evJsonp('action=loginUser&user=' + encodeURIComponent(userInput) + '&pass=' + encodeURIComponent(passInput), (data) => {
     if (btn) { btn.disabled = false; btn.textContent = 'Đăng nhập'; }
     if (!data || !data.ok) {
-      errorEl.textContent = 'Mật khẩu không đúng. Kiểm tra lại hoặc liên hệ quản trị.';
-      errorEl.classList.add('show');
-      return;
-    }
-    if (data.name !== selectEl.value) {
-      errorEl.textContent = 'Mật khẩu này thuộc về "' + data.name + '" — không khớp tên đã chọn.';
+      errorEl.textContent = 'Sai tên đăng nhập hoặc mật khẩu. Kiểm tra lại hoặc liên hệ quản trị.';
       errorEl.classList.add('show');
       return;
     }
     currentSalesName = data.name;
-    try { sessionStorage.setItem(LOGIN_STORAGE_KEY, currentSalesName); } catch (e) {}
+    currentUserRole = data.role || '';
+    try { sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ name: data.name, username: data.username, role: currentUserRole })); } catch (e) {}
     applyLoggedInState();
   });
 }
@@ -2615,8 +2646,9 @@ function doLogout() {
   currentSalesName = null;
   try { sessionStorage.removeItem(LOGIN_STORAGE_KEY); } catch (e) {}
   document.getElementById('login-screen').classList.remove('hide');
-  document.getElementById('login-sales').value = '';
-  document.getElementById('login-phone').value = '';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  currentUserRole = '';
 }
 
 function applyLoggedInState() {
@@ -3278,7 +3310,87 @@ function adminUnlock() {
     document.getElementById('admin-gate').style.display = 'none';
     document.getElementById('admin-body').style.display = 'block';
     renderAdminLists();
+    adminUsersLoad(); // v4.0: nạp danh sách người dùng
     showToast('🔓 Đã mở khóa Quản trị', 'success');
+  });
+}
+
+// ══════════════════════════════════════════════
+// v4.0 — QUẢN LÝ NGƯỜI DÙNG (trong Quản trị, sau PIN)
+// Mô hình lưu ATOMIC: sửa trên bản nháp trong RAM, bấm Lưu gửi CẢ danh sách —
+// backend kiểm tra (trùng tên đăng nhập, thiếu trường, không còn admin) rồi ghi
+// đè toàn bộ. Không lưu từng dòng để tránh trạng thái lệch nửa chừng.
+// ══════════════════════════════════════════════
+let adminUsersData = [];
+const ROLE_OPTIONS = [
+  ['admin', 'Admin (Tối cao)'], ['ceo', 'CEO'],
+  ['sales_leader', 'Sales — Leader'], ['sales_nv', 'Sales — Nhân viên'], ['sales_tv', 'Sales — Thử việc/TTS'],
+];
+function escapeAttr(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+function adminUsersLoad() {
+  if (!adminPin) return;
+  document.getElementById('admin-users-list').innerHTML = '<div class="hint">Đang tải...</div>';
+  evJsonp('action=adminUsers&op=list&pin=' + encodeURIComponent(adminPin), (d) => {
+    if (!d || !d.ok) {
+      document.getElementById('admin-users-list').innerHTML = '<div class="hint">⚠️ ' + escapeHtml((d && d.error) || 'Không tải được danh sách') + '</div>';
+      return;
+    }
+    adminUsersData = d.users || [];
+    renderAdminUsers();
+  });
+}
+
+function renderAdminUsers() {
+  const wrap = document.getElementById('admin-users-list');
+  if (!adminUsersData.length) { wrap.innerHTML = '<div class="hint">Chưa có người dùng — bấm ➕ để thêm</div>'; return; }
+  wrap.innerHTML = adminUsersData.map((u, i) => `
+    <div class="adm-user-row">
+      <input type="text" value="${escapeAttr(u.name)}" placeholder="Tên người dùng" oninput="adminUsersData[${i}].name=this.value">
+      <input type="text" value="${escapeAttr(u.username)}" placeholder="Tên đăng nhập" autocapitalize="off" oninput="adminUsersData[${i}].username=this.value">
+      <input type="text" value="${escapeAttr(u.pass)}" placeholder="Mật khẩu" oninput="adminUsersData[${i}].pass=this.value">
+      <select onchange="adminUsersData[${i}].role=this.value">
+        ${ROLE_OPTIONS.map(r => `<option value="${r[0]}"${(u.role || 'sales_nv') === r[0] ? ' selected' : ''}>${r[1]}</option>`).join('')}
+      </select>
+      <div class="adm-user-meta">
+        <label class="adm-user-active"><input type="checkbox" ${u.active ? 'checked' : ''} onchange="adminUsersData[${i}].active=this.checked"> đang hoạt động</label>
+        <button type="button" class="adm-user-del" onclick="adminUserDelRow(${i})" title="Xóa dòng">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function adminUserAddRow() {
+  adminUsersData.push({ name: '', username: '', pass: '', role: 'sales_nv', active: true });
+  renderAdminUsers();
+}
+
+function adminUserDelRow(i) {
+  const u = adminUsersData[i];
+  if (u && (u.name || u.username) && !confirm('Xóa "' + (u.name || u.username) + '" khỏi danh sách?\n(Lưu ý: nên dùng tắt "đang hoạt động" thay vì xóa — giữ đối chiếu lịch sử)')) return;
+  adminUsersData.splice(i, 1);
+  renderAdminUsers();
+}
+
+function adminUsersSave() {
+  if (!adminPin) { showToast('🔒 Phiên quản trị đã khóa — nhập lại PIN', 'error-t'); adminLock(); return; }
+  const users = adminUsersData.map(u => ({
+    name: String(u.name || '').trim(), username: String(u.username || '').trim(),
+    pass: String(u.pass || '').trim(), role: u.role || 'sales_nv', active: !!u.active,
+  }));
+  for (let i = 0; i < users.length; i++) {
+    if (!users[i].name || !users[i].username || !users[i].pass) {
+      showToast('⚠️ Dòng ' + (i + 1) + ': cần đủ Tên, Tên đăng nhập, Mật khẩu', 'error-t'); return;
+    }
+  }
+  const lower = users.map(u => u.username.toLowerCase());
+  if (new Set(lower).size !== lower.length) { showToast('⚠️ Có tên đăng nhập bị trùng', 'error-t'); return; }
+  if (!users.some(u => u.active && u.role === 'admin')) { showToast('⚠️ Phải còn ít nhất 1 Admin đang hoạt động', 'error-t'); return; }
+  const payload = encodeURIComponent(JSON.stringify(users));
+  if (payload.length > 6000) { showToast('⚠️ Danh sách quá dài cho 1 lần lưu — chia bớt', 'error-t'); return; }
+  evJsonp('action=adminUsers&op=save&pin=' + encodeURIComponent(adminPin) + '&payload=' + payload, (d) => {
+    if (!d || !d.ok) { showToast('❌ ' + ((d && d.error) || 'Lưu thất bại'), 'error-t'); return; }
+    showToast('✅ Đã lưu ' + d.saved + ' người dùng — đăng nhập mới áp dụng ngay, phiên đang mở giữ nguyên');
+    adminUsersLoad();
   });
 }
 
