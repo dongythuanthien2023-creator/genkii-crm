@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#1a2e44">
+<meta name="theme-color" content="#0C3835">
 <title>Genkii CRM — Nhập khách hàng</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,67 +25,73 @@
      Giữ nguyên TÊN mọi biến cũ nên toàn bộ CSS phía dưới không phải sửa;
      dark mode chỉ là đổi GIÁ TRỊ qua [data-theme="dark"]. */
   :root, [data-theme="light"] {
-    --navy:    #14273D;
-    --heading: #14273D;           /* chữ tiêu đề — tách khỏi --navy vì navy còn dùng làm nền */
-    --teal:    #0E8A78;
-    --teal-lt: #E2F4F0;
+    --navy:    #0C3835;
+    --heading: #123A37;           /* chữ tiêu đề — tách khỏi --navy vì navy còn dùng làm nền */
+    --teal:    #02B2A9;
+    --teal-lt: #E0F5F4;
     --gold:    #C8922A;
     --gold-lt: #FBF2DF;
-    --red:     #C0392B;
-    --red-lt:  #FDECEA;
-    --green:   #178A60;
-    --green-lt:#E3F5EC;
-    --grey-1:  #F1F5F9;           /* nền trang */
-    --grey-2:  #E4E9F0;           /* viền */
-    --grey-3:  #94A0B0;           /* chữ mờ */
-    --grey-4:  #5B6B80;           /* chữ phụ */
-    --text:    #1B2A3D;
+    --red:     #C2452F;
+    --red-lt:  #FCEBE8;
+    --green:   #0F6E56;
+    --green-lt:#E1F5EE;
+    --grey-1:  #F2F6F5;           /* nền trang */
+    --grey-2:  #E2E8E7;           /* viền */
+    --grey-3:  #91A09C;           /* chữ mờ */
+    --grey-4:  #566963;           /* chữ phụ */
+    --text:    #1B2E2C;
     --white:   #FFFFFF;           /* nền thẻ */
     --radius:  14px;
-    --shadow:  0 2px 14px rgba(20,39,61,.08);
+    --shadow:  0 1px 8px rgba(15,45,42,.06);
     /* Trạng thái (mời sự kiện, cảnh báo) */
-    --st-red-bg: #FDE8E8;  --st-blue-bg: #E8F0FB; --st-blue-fg: #2F6BB5;
+    --st-red-bg: #FDE8E8;  --st-blue-bg: #E7F3F8; --st-blue-fg: #297E9B;
+  --chart-main: #297E9B;      /* series chính: brand blue đậm trên nền sáng */
+  --chart-soft: #AFD9E8;      /* series phụ: blue-200 */
+  --chart-grid: rgba(90,107,103,.22);
     --st-green-bg: #DFF3ED; --st-green-fg: #1D7A66;
     --st-gold-bg: #FAEEDA;  --st-gold-fg: #8A5A0A;
     --warn-bg: #FFF7ED; --warn-bg2: #FEF3C7; --warn-bd: #F59E0B; --warn-fg: #B45309;
     /* Chất liệu premium */
-    --grad-hero: linear-gradient(135deg, #0E8A78, #1497A0);
-    --grad-fab:  linear-gradient(135deg, #0E8A78, #2F9DD0);
-    --aur1: rgba(14,138,120,.10);
-    --aur2: rgba(47,127,209,.08);
+    --grad-hero: linear-gradient(135deg, #02B2A9, #38A3C7);
+    --grad-fab:  linear-gradient(135deg, #02B2A9, #38A3C7);
+    --aur1: rgba(2,178,169,.12);
+    --aur2: rgba(56,163,199,.10);
     --glass: rgba(255,255,255,.86);
-    --nav-bg: rgba(255,255,255,.92);
-    --fab-glow: 0 6px 20px rgba(14,138,120,.38);
+    --nav-bg: rgba(255,255,255,.97);
+    --fab-glow: 0 4px 14px rgba(2,178,169,.30);
   }
   [data-theme="dark"] {
-    --navy:    #23395B;
+    --navy:    #143C39;
     --heading: #EDF3FB;
-    --teal:    #2DD4BF;
+    --teal:    #35C7BE;
     --teal-lt: rgba(45,212,191,.14);
     --gold:    #E8B04B;
     --gold-lt: rgba(232,176,75,.14);
-    --red:     #F17E71;
-    --red-lt:  rgba(241,126,113,.14);
-    --green:   #3AD69B;
-    --green-lt:rgba(58,214,155,.14);
-    --grey-1:  #0B1220;
-    --grey-2:  #3D4E6E;
-    --grey-3:  #8FA1BB;
-    --grey-4:  #C4D0E2;
-    --text:    #DFE7F2;
-    --white:   #1B2842;
-    --shadow:  0 4px 20px rgba(0,0,0,.52);
-    --st-red-bg: rgba(241,126,113,.15);  --st-blue-bg: rgba(96,165,250,.14); --st-blue-fg: #7EB3F4;
-    --st-green-bg: rgba(45,212,191,.13); --st-green-fg: #4CD9C0;
+    --red:     #ED8371;
+    --red-lt:  rgba(237,131,113,.14);
+    --green:   #4FD0C0;
+    --green-lt:rgba(79,208,192,.14);
+    --grey-1:  #0C1514;   /* nền trang — giữ sâu nhất */
+    --grey-2:  #33504B;   /* viền — nâng mạnh: trước đây gần như tàng hình */
+    --grey-3:  #7FA29B;
+    --grey-4:  #B7CBC6;
+    --text:    #E8F1EF;
+    --white:   #182827;   /* nền thẻ — nâng sáng để tách khỏi nền trang */
+    --shadow:  0 4px 18px rgba(0,0,0,.42);
+    --st-red-bg: rgba(241,126,113,.15);  --st-blue-bg: rgba(56,163,199,.14); --st-blue-fg: #64B7D3;
+  --chart-main: #64B7D3;      /* series chính: brand blue sáng trên nền tối */
+  --chart-soft: rgba(100,183,211,.42);
+  --chart-grid: rgba(158,190,183,.24);
+    --st-green-bg: rgba(53,199,190,.13); --st-green-fg: #4FD0C0;
     --st-gold-bg: rgba(232,176,75,.14);  --st-gold-fg: #E8B04B;
     --warn-bg: rgba(232,176,75,.10); --warn-bg2: rgba(232,176,75,.18); --warn-bd: #C8922A; --warn-fg: #E8B04B;
-    --grad-hero: linear-gradient(135deg, #0F9C87, #1B7FA8);
-    --grad-fab:  linear-gradient(135deg, #2DD4BF, #38BDF8);
-    --aur1: rgba(45,212,191,.14);
-    --aur2: rgba(56,120,248,.12);
-    --glass: rgba(27,40,66,.86);
-    --nav-bg: rgba(16,25,44,.94);
-    --fab-glow: 0 0 22px rgba(45,212,191,.45);
+    --grad-hero: linear-gradient(135deg, #029A92, #2F8CAD);
+    --grad-fab:  linear-gradient(135deg, #35C7BE, #64B7D3);
+    --aur1: rgba(2,178,169,.16);
+    --aur2: rgba(56,163,199,.13);
+    --glass: rgba(22,40,38,.86);
+    --nav-bg: rgba(16,26,25,.98);
+    --fab-glow: 0 0 16px rgba(53,199,190,.38);
   }
 
   /* ─── RESET ─── */
@@ -93,11 +99,7 @@
   html { -webkit-text-size-adjust: 100%; }
   body {
     font-family: 'Be Vietnam Pro', -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background:
-      radial-gradient(620px 480px at -8% -6%, var(--aur1), transparent 62%),
-      radial-gradient(540px 420px at 108% 14%, var(--aur2), transparent 62%),
-      var(--grey-1);
-    background-attachment: fixed;
+    background: var(--grey-1);
     color: var(--text);
     padding-bottom: 92px; /* chừa chỗ cho thanh điều hướng đáy */
     transition: background .3s ease, color .3s ease;
@@ -782,7 +784,7 @@
 
   /* ═══ v3.1 PREMIUM LAYER ═══ */
   /* Header gradient + nút theme */
-  .app-header { background: linear-gradient(120deg, #14273D 0%, #0E4B54 100%); }
+  .app-header { background: linear-gradient(120deg, #0C3835 0%, #0E4B56 100%); }
   [data-theme="dark"] .app-header { background: linear-gradient(120deg, #0D1526 0%, #0E3A44 100%); border-bottom: 1px solid rgba(45,212,191,.18); }
   .theme-btn {
     background: var(--grey-1); border: 1px solid var(--grey-2);
@@ -794,7 +796,7 @@
   #bottom-nav {
     display: none; position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 60;
     align-items: center; justify-content: space-around;
-    background: var(--nav-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    background: var(--nav-bg);
     border: 1px solid var(--grey-2); border-radius: 999px; padding: 8px 6px;
     box-shadow: 0 10px 32px rgba(10,20,35,.22); max-width: 560px; margin: 0 auto;
   }
@@ -832,7 +834,7 @@
     background:
       radial-gradient(520px 420px at 12% 8%, var(--aur1), transparent 60%),
       radial-gradient(460px 380px at 90% 88%, var(--aur2), transparent 60%),
-      linear-gradient(160deg, #14273D, #0E4B54) !important;
+      linear-gradient(160deg, #0C3835, #0E4B56) !important;
   }
   #login-screen .login-card { background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.25); box-shadow: 0 20px 60px rgba(5,15,30,.4); }
   #login-screen .login-logo { background: var(--grad-fab) !important; box-shadow: var(--fab-glow); }
@@ -845,17 +847,57 @@
   }
   .quick-complete b { color: var(--green); }
 
+  /* v3.9: icon SVG dùng chung — kích thước theo ngữ cảnh, màu theo currentColor */
+  .i { width: 17px; height: 17px; stroke: currentColor; fill: none;
+       stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+       vertical-align: -3px; flex-shrink: 0; }
+  .tab-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .bn-ico .i { width: 20px; height: 20px; }
+  .bnav-fab .i { width: 22px; height: 22px; stroke: #fff; }
+  .sc-ico .i { width: 15px; height: 15px; stroke: #fff; }
+  .theme-btn .i { width: 15px; height: 15px; }
+  /* v3.9: số hiện tức thì — chỉ nháy nhẹ khi giá trị THAY ĐỔI so với lần tải trước */
+  .num-flash { animation: numFlash .45s ease-out; }
+  @keyframes numFlash { 0% { opacity: .25; } 100% { opacity: 1; } }
+  /* v4.0: bảng Người dùng trong Quản trị */
+  .adm-user-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px 0;
+    border-bottom: 0.5px solid var(--grey-2); }
+  .adm-user-row input[type="text"], .adm-user-row select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--grey-2); border-radius: 8px;
+    font-size: 13px; background: var(--white); color: var(--text); }
+  .adm-user-active { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--grey-4); }
+  .adm-user-active input { width: 16px; height: 16px; accent-color: var(--teal); }
+  .adm-user-del { background: none; border: none; cursor: pointer; font-size: 15px; justify-self: end; }
+  .adm-user-meta { display: flex; align-items: center; justify-content: space-between; grid-column: 1 / -1; }
+  /* v3.9.6: trang Lịch sử vi phạm — overlay dưới modal (500), trên nav */
+  #vipham-page { position: fixed; inset: 0; z-index: 200; background: var(--grey-1); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .vp-page-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px;
+    background: var(--white); border-bottom: 0.5px solid var(--grey-2); padding: 12px 14px;
+    padding-top: calc(12px + env(safe-area-inset-top)); }
+  .vp-back { display: inline-flex; align-items: center; gap: 4px; background: none; border: none;
+    color: var(--teal); font-size: 13.5px; font-weight: 700; cursor: pointer; padding: 4px 6px 4px 0; }
+  .vp-page-titles { flex: 1; min-width: 0; }
+  .vp-page-title { font-size: 15px; font-weight: 800; color: var(--heading); }
+  .vp-page-sub { font-size: 11.5px; color: var(--grey-4); }
+  .vp-refresh { background: none; border: none; color: var(--grey-4); cursor: pointer; padding: 6px; }
+  .vp-page-body { padding: 14px 14px calc(24px + env(safe-area-inset-bottom)); max-width: 720px; margin: 0 auto; }
+  .vp-sec-title { font-size: 12px; font-weight: 800; color: var(--grey-4); text-transform: uppercase; letter-spacing: .04em; margin: 4px 0 8px; }
+  /* v3.9: số dùng tabular-nums — cột thẳng hàng, không giật layout khi đổi giá trị */
+  .dh-value, .dh-ring-pct, .sc-value, .sc-sub, .dash-time,
+  .ev-kpi, .ck-progress-card, .stat-chip, .dash-card, .hist-item, .cd-task {
+    font-variant-numeric: tabular-nums;
+  }
   /* ═══ v3.1.1: HERO KPI + CHIP THỐNG KÊ ═══ */
   .dash-hero {
     display: flex; align-items: center; gap: 14px;
     border-radius: 18px; padding: 16px; margin-bottom: 12px;
     background: var(--grad-hero);
-    box-shadow: 0 8px 24px rgba(14,138,120,.28);
+    box-shadow: 0 6px 20px rgba(2,178,169,.22);
   }
   [data-theme="dark"] .dash-hero {
     background: linear-gradient(150deg, rgba(24,38,62,.92), rgba(13,24,42,.95));
-    border: 1px solid rgba(45,212,191,.32);
-    box-shadow: 0 0 30px rgba(45,212,191,.12), inset 0 1px 0 rgba(255,255,255,.05);
+    border: 1px solid rgba(53,199,190,.30);
+    box-shadow: 0 0 24px rgba(53,199,190,.10), inset 0 1px 0 rgba(255,255,255,.05);
   }
   .dash-hero .dh-left { flex: 1; min-width: 0; }
   .dash-hero .dh-label {
@@ -865,7 +907,7 @@
   [data-theme="dark"] .dash-hero .dh-label { color: var(--grey-3); }
   .dash-hero .dh-value { font-size: 36px; font-weight: 800; letter-spacing: -1px; line-height: 1.15; color: #fff; }
   [data-theme="dark"] .dash-hero .dh-value {
-    background: linear-gradient(90deg, #2DD4BF, #38BDF8);
+    background: linear-gradient(90deg, #35C7BE, #64B7D3);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .dash-hero .dh-delta { font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,.9); }
@@ -883,13 +925,13 @@
     transition: background .4s ease;
   }
   :root .dh-ring, [data-theme="light"] .dh-ring { --ring-fill: #FFFFFF; --ring-track: rgba(255,255,255,.28); }
-  [data-theme="dark"] .dh-ring { --ring-fill: #2DD4BF; --ring-track: rgba(148,163,184,.18); filter: drop-shadow(0 0 10px rgba(45,212,191,.35)); }
+  [data-theme="dark"] .dh-ring { --ring-fill: #35C7BE; --ring-track: rgba(148,163,184,.24); filter: drop-shadow(0 0 8px rgba(53,199,190,.30)); }
   .dh-ring-inner {
     width: 60px; height: 60px; border-radius: 50%;
-    background: rgba(10,60,54,.55);
+    background: rgba(4,52,49,.55);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
-  [data-theme="dark"] .dh-ring-inner { background: #0D1727; }
+  [data-theme="dark"] .dh-ring-inner { background: #0E1B1A; }
   .dh-ring-pct { font-size: 15px; font-weight: 800; color: #fff; }
   .dh-ring-lbl { font-size: 7.5px; color: rgba(255,255,255,.75); text-align: center; line-height: 1.2; }
   [data-theme="dark"] .dh-ring-lbl { color: var(--grey-3); }
@@ -906,7 +948,6 @@
   .stat-chip .sc-ico {
     width: 28px; height: 28px; border-radius: 9px; margin-bottom: 7px;
     display: flex; align-items: center; justify-content: center; font-size: 13px;
-    box-shadow: 0 3px 10px rgba(10,20,35,.18);
   }
   .stat-chip .sc-value { font-size: 19px; font-weight: 800; color: var(--heading); line-height: 1.2; }
   .stat-chip .sc-label { font-size: 10px; font-weight: 700; color: var(--grey-4); }
@@ -914,6 +955,21 @@
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.83 2.83 0 1 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10 5a2 2 0 1 1 4 0 7 7 0 0 1 4 6v3a4 4 0 0 0 2 3H4a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M6 20v-6"/><path d="M12 20V8"/><path d="M18 20V4"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/><path d="M8 15h2v2H8z"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+<symbol id="i-userplus" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h5"/><path d="M16 11h6M19 8v6"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 6.34"/><path d="M20 5v6h-6"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 2.1 18a2 2 0 0 0 1.7 3h16.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.7 5.7l12.6 12.6"/></symbol>
+</svg>
+
 
 <!-- ══════════════ MÀN HÌNH ĐĂNG NHẬP ══════════════ -->
 <div id="login-screen">
@@ -923,17 +979,14 @@
     <p class="sub">Đăng nhập</p>
 
     <div class="login-field">
-      <label>Tên</label>
-      <select id="login-sales">
-        <option value="">— Chọn tên —</option>
-        <!-- v3.3: danh sách nạp từ sheet Cấu hình — SĐT đăng nhập KHÔNG còn nằm trong mã nguồn -->
-      </select>
+      <label>Tên đăng nhập</label>
+      <!-- v4.0: đăng nhập bằng tài khoản từ sheet "Người dùng" — admin quản lý trong tab Quản trị -->
+      <input type="text" id="login-user" placeholder="Tên đăng nhập" autocomplete="username" autocapitalize="off">
     </div>
 
     <div class="login-field">
       <label>Mật khẩu</label>
-      <!-- v3.8.1: type=password che ký tự khi gõ; mật khẩu là SĐT hotline tương ứng -->
-      <input type="password" id="login-phone" placeholder="Mật khẩu là SĐT hotline của bạn" inputmode="numeric" autocomplete="current-password">
+      <input type="password" id="login-pass" placeholder="Mật khẩu" autocomplete="current-password">
     </div>
 
     <button type="button" class="btn-login" id="login-btn" onclick="doLogin()">Đăng nhập</button>
@@ -971,27 +1024,40 @@
 <div class="logged-in-bar">
   <span>👋 <span id="greeting-time">Chào</span>, <b id="logged-in-name">—</b></span>
   <button type="button" class="theme-btn" id="theme-btn" onclick="cycleTheme()">🌗 Auto</button>
-  <button type="button" class="theme-btn" onclick="switchTab('admin')" title="Quản trị hệ thống (cần mã PIN)">⚙️</button>
+  <button type="button" class="theme-btn" onclick="switchTab('admin')" title="Quản trị hệ thống (cần mã PIN)"><svg class="i"><use href="#i-gear"/></svg></button>
   <button type="button" onclick="doLogout()">Đăng xuất</button>
 </div>
 
 <div class="tab-bar">
-  <button type="button" class="tab-btn active" id="tab-btn-update" onclick="switchTab('update')">✍️ Nhập / Cập nhật</button>
-  <button type="button" class="tab-btn" id="tab-btn-complete" onclick="switchTab('complete')">✅ Hoàn thành đơn</button>
-  <button type="button" class="tab-btn" id="tab-btn-tasks" onclick="switchTab('tasks')">🔔 Nhiệm vụ</button>
-  <button type="button" class="tab-btn" id="tab-btn-cust" onclick="switchTab('cust')">👥 Khách hàng</button>
-  <button type="button" class="tab-btn" id="tab-btn-dash" onclick="switchTab('dash')">📊 Thống kê</button>
-  <button type="button" class="tab-btn" id="tab-btn-event" onclick="switchTab('event')">🎪 Sự kiện</button>
-  <button type="button" class="tab-btn" id="tab-btn-admin" onclick="switchTab('admin')" style="display:none">⚙️</button>
+  <button type="button" class="tab-btn active" id="tab-btn-update" onclick="switchTab('update')"><svg class="i"><use href="#i-edit"/></svg>Nhập / Cập nhật</button>
+  <button type="button" class="tab-btn" id="tab-btn-complete" onclick="switchTab('complete')"><svg class="i"><use href="#i-check"/></svg>Hoàn thành đơn</button>
+  <button type="button" class="tab-btn" id="tab-btn-tasks" onclick="switchTab('tasks')"><svg class="i"><use href="#i-bell"/></svg>Nhiệm vụ</button>
+  <button type="button" class="tab-btn" id="tab-btn-cust" onclick="switchTab('cust')"><svg class="i"><use href="#i-users"/></svg>Khách hàng</button>
+  <button type="button" class="tab-btn" id="tab-btn-dash" onclick="switchTab('dash')"><svg class="i"><use href="#i-chart"/></svg>Thống kê</button>
+  <button type="button" class="tab-btn" id="tab-btn-event" onclick="switchTab('event')"><svg class="i"><use href="#i-cal"/></svg>Sự kiện</button>
+  <button type="button" class="tab-btn" id="tab-btn-admin" onclick="switchTab('admin')" style="display:none"><svg class="i"><use href="#i-gear"/></svg></button>
+</div>
+
+<!-- v3.9.6: TRANG LỊCH SỬ VI PHẠM — overlay độc lập, không thuộc hệ tab -->
+<div id="vipham-page" style="display:none;">
+  <div class="vp-page-head">
+    <button type="button" class="vp-back" onclick="closeViPhamPage()"><svg class="i"><use href="#i-back"/></svg> Quay lại</button>
+    <div class="vp-page-titles">
+      <div class="vp-page-title">Lịch sử vi phạm</div>
+      <div class="vp-page-sub" id="vp-page-count"></div>
+    </div>
+    <button type="button" class="vp-refresh" onclick="fetchViPhamAllData()" title="Làm mới"><svg class="i"><use href="#i-refresh"/></svg></button>
+  </div>
+  <div id="vipham-page-body" class="vp-page-body"></div>
 </div>
 
 <!-- v3.1: Thanh điều hướng đáy — thao tác một tay, nút Nhập nổi giữa -->
 <nav id="bottom-nav" aria-label="Điều hướng chính">
-  <button type="button" class="bnav-item" data-tab="cust" onclick="switchTab('cust')"><span class="bn-ico">👥</span><span class="bn-lbl">Khách</span></button>
-  <button type="button" class="bnav-item" data-tab="tasks" onclick="switchTab('tasks')"><span class="bn-ico">🔔</span><span class="bn-lbl">Nhiệm vụ</span></button>
-  <button type="button" class="bnav-fab" data-tab="update" onclick="switchTab('update')" title="Nhập / Cập nhật khách">✏️</button>
-  <button type="button" class="bnav-item" data-tab="dash" onclick="switchTab('dash')"><span class="bn-ico">📊</span><span class="bn-lbl">Thống kê</span></button>
-  <button type="button" class="bnav-item" data-tab="event" onclick="switchTab('event')"><span class="bn-ico">🎪</span><span class="bn-lbl">Sự kiện</span></button>
+  <button type="button" class="bnav-item" data-tab="cust" onclick="switchTab('cust')"><span class="bn-ico"><svg class="i"><use href="#i-users"/></svg></span><span class="bn-lbl">Khách</span></button>
+  <button type="button" class="bnav-item" data-tab="tasks" onclick="switchTab('tasks')"><span class="bn-ico"><svg class="i"><use href="#i-bell"/></svg></span><span class="bn-lbl">Nhiệm vụ</span></button>
+  <button type="button" class="bnav-fab" data-tab="update" onclick="switchTab('update')" title="Nhập / Cập nhật khách"><svg class="i"><use href="#i-edit"/></svg></button>
+  <button type="button" class="bnav-item" data-tab="dash" onclick="switchTab('dash')"><span class="bn-ico"><svg class="i"><use href="#i-chart"/></svg></span><span class="bn-lbl">Thống kê</span></button>
+  <button type="button" class="bnav-item" data-tab="event" onclick="switchTab('event')"><span class="bn-ico"><svg class="i"><use href="#i-cal"/></svg></span><span class="bn-lbl">Sự kiện</span></button>
 </nav>
 
 <!-- ══════════════ TAB 1: NHẬP / CẬP NHẬT (nội dung cũ, không đổi logic) ══════════════ -->
@@ -1240,7 +1306,7 @@
 
   <!-- v3.2: nhiệm vụ bị đóng dấu tự động (quá hạn ≥3 ngày) — xử lý bù tại đây -->
   <div class="task-section-title" id="vipham-title" style="display:none">
-    ⛔ Sales không hoàn thành
+    <span id="vipham-title-text">⛔ Sales không hoàn thành</span>
     <span class="task-count-badge zero" id="badge-vipham">0</span>
   </div>
   <div id="list-vipham"></div>
@@ -1334,23 +1400,23 @@
     </div>
     <div class="stat-chips">
       <div class="stat-chip">
-        <div class="sc-ico" style="background: linear-gradient(135deg, #0E8A78, #14A08A);">👤</div>
+        <div class="sc-ico" style="background: #02B2A9;"><svg class="i"><use href="#i-userplus"/></svg></div>
         <div class="sc-value" id="kpi-moi">–</div>
         <div class="sc-label">Khách mới</div>
       </div>
       <div class="stat-chip">
-        <div class="sc-ico" style="background: linear-gradient(135deg, #E8A33B, #C97B12);">🔁</div>
+        <div class="sc-ico" style="background: #C8922A;"><svg class="i"><use href="#i-refresh"/></svg></div>
         <div class="sc-value" id="kpi-qc">–</div>
         <div class="sc-label">Click lại QC</div>
         <div class="sc-sub" id="kpi-qc-uniq">–</div>
       </div>
       <div class="stat-chip danger" onclick="switchTab('tasks')" title="Bấm để mở tab Nhiệm vụ">
-        <div class="sc-ico" style="background: linear-gradient(135deg, #F17E71, #D64545);">⚠️</div>
+        <div class="sc-ico" style="background: #E8604C;"><svg class="i"><use href="#i-alert"/></svg></div>
         <div class="sc-value" id="kpi-overdue">–</div>
         <div class="sc-label">Quá hạn →</div>
       </div>
-      <div class="stat-chip danger" onclick="switchTab('tasks')" title="Nhiệm vụ bị đóng dấu Sales không hoàn thành — bấm để xử lý bù">
-        <div class="sc-ico" style="background: linear-gradient(135deg, #8B1E1E, #5C1010);">⛔</div>
+      <div class="stat-chip danger" onclick="openViPhamAll()" title="Bấm để xem TOÀN BỘ nhiệm vụ từng bị đóng dấu Sales không hoàn thành (kể cả đã bù)">
+        <div class="sc-ico" style="background: #8C2F1F;"><svg class="i"><use href="#i-ban"/></svg></div>
         <div class="sc-value" id="kpi-vipham">–</div>
         <div class="sc-label">Không hoàn thành →</div>
       </div>
@@ -1366,14 +1432,15 @@
         <button type="button" class="ghost" onclick="resetLuotRange()">14 ngày</button>
       </div>
       <div class="dash-legend">
-        <span><i style="background:#2a8a7e"></i>Khách mới</span>
-        <span><i style="background:#c8922a"></i>Click lại quảng cáo</span>
+        <span><i style="background:var(--chart-main)"></i>Khách mới</span>
+        <span><i style="background:var(--chart-soft)"></i>Click lại quảng cáo</span>
       </div>
       <div class="chart-box" style="height:210px;"><canvas id="chart-daily"></canvas></div>
     </div>
 
     <div class="dash-card">
       <div class="dash-title">Phễu giai đoạn — toàn bộ khách hiện tại</div>
+      <div class="dash-legend" id="funnel-legend"></div>
       <div class="chart-box" id="chart-funnel-box" style="height:230px;"><canvas id="chart-funnel"></canvas></div>
     </div>
 
@@ -1387,7 +1454,7 @@
         <button type="button" class="ghost" onclick="resetSrcRange()">Tháng này</button>
       </div>
       <div class="dash-legend" id="src-legend"></div>
-      <div class="chart-box" style="height:190px;"><canvas id="chart-src"></canvas></div>
+      <div class="chart-box" id="chart-src-box" style="height:190px;"><canvas id="chart-src"></canvas></div>
     </div>
 
     <div class="dash-card">
@@ -1505,11 +1572,20 @@
     <!-- Nội dung quản trị (mở khóa mới hiện) -->
     <div id="admin-body" style="display:none">
       <div class="ev-form-card">
-        <div class="dash-title">👤 Nhân viên & thông tin đăng nhập</div>
+        <div class="dash-title">🔑 Người dùng &amp; Đăng nhập</div>
+        <div class="hint" style="margin-bottom:8px;">Tài khoản đăng nhập app cho toàn hệ thống. Lưu xong: đăng nhập mới nhận thông tin mới ngay; <b>phiên đang mở không bị thoát</b> — thay đổi áp khi người đó tự tải lại app. Vai trò là nền tảng phân quyền (đang tắt, sẽ kích hoạt sau).</div>
+        <div id="admin-users-list"></div>
+        <button type="button" class="ev-btn ghost full" style="margin:8px 0 6px;" onclick="adminUserAddRow()">➕ Thêm người dùng</button>
+        <button type="button" class="ev-btn primary full" onclick="adminUsersSave()">💾 Lưu danh sách người dùng</button>
+      </div>
+
+      <div class="ev-form-card">
+        <div class="dash-title">🧑‍💼 Danh sách Sales (gán khách &amp; thống kê)</div>
+        <div class="hint" style="margin-bottom:8px;">Tên trong danh sách này dùng cho ô chọn Sales, gán khách và thống kê. Đăng nhập quản lý ở mục 🔑 phía trên.</div>
         <div id="admin-sales-list"></div>
         <div class="gc-edit-row">
           <input type="text" id="adm-sale-name" placeholder="Thêm nhân viên mới (tên hiển thị)">
-          <input type="text" id="adm-sale-phone" inputmode="numeric" placeholder="Mật khẩu đăng nhập = SĐT hotline">
+          <input type="text" id="adm-sale-phone" inputmode="numeric" placeholder="SĐT hotline (tra cứu nội bộ)">
           <button type="button" class="ev-btn primary" onclick="adminOp('sale','add', v('adm-sale-name'), {phone: v('adm-sale-phone')})">➕</button>
         </div>
       </div>
@@ -2423,7 +2499,6 @@ function populateConfigSelects() {
     el.innerHTML = html;
     if (cur && [...el.options].some(o => o.value === cur)) el.value = cur;
   };
-  fill('login-sales', appConfig.sales, '— Chọn tên —');
   fill('sales', appConfig.sales, '— Chọn Sales —', ['Khác']);
   fill('source', appConfig.sources.map(s => s.name), '— Chọn nguồn —');
   fill('product', appConfig.products, '— Chọn sản phẩm —');
@@ -2444,9 +2519,16 @@ function resolveTheme() {
   return (h >= 6 && h < 18) ? 'light' : 'dark'; // 06:00–18:00 sáng, còn lại tối
 }
 function applyTheme() {
-  document.documentElement.setAttribute('data-theme', resolveTheme());
+  const prev = document.documentElement.getAttribute('data-theme');
+  const next = resolveTheme();
+  document.documentElement.setAttribute('data-theme', next);
   const btn = document.getElementById('theme-btn');
   if (btn) btn.textContent = THEME_LABELS[themeMode];
+  // v3.9.2: theme đổi thật sự → vẽ lại chart bằng dữ liệu cache cho màu khớp theme
+  if (prev !== next && typeof dashLastData !== 'undefined' && dashLastData
+      && typeof renderDashboard === 'function') {
+    try { renderDashboard(dashLastData); } catch (e) {}
+  }
 }
 function cycleTheme() {
   themeMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
@@ -2477,71 +2559,86 @@ function updateGreeting() {
   el.textContent = h < 11 ? 'Chào buổi sáng' : h < 13 ? 'Chào buổi trưa' : h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
 }
 
-// Số KPI đếm chạy lên khi mở Thống kê (tôn trọng cài đặt giảm chuyển động)
+// v3.9: số hiện TỨC THÌ (đọc được ngay, không chờ đếm); chỉ nháy nhẹ khi
+// giá trị THAY ĐỔI so với lần tải trước — motion mang thông tin, không trang trí.
+// Giữ nguyên tên hàm + chữ ký để mọi điểm gọi cũ không phải sửa.
+const _numPrev = {};
 function animateNum(id, target) {
   const el = document.getElementById(id);
   if (!el) return;
   target = Number(target) || 0;
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    el.textContent = target; return;
+  const changed = (id in _numPrev) && _numPrev[id] !== target;
+  _numPrev[id] = target;
+  el.textContent = target;
+  if (changed && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    el.classList.remove('num-flash'); void el.offsetWidth; el.classList.add('num-flash');
   }
-  const dur = 450, t0 = performance.now();
-  function tick(t) {
-    const p = Math.min(1, (t - t0) / dur);
-    el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
-    if (p < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
 }
 
 const LOGIN_STORAGE_KEY = 'genkii_crm_logged_in_sales';
 let currentSalesName = null;
+let currentUserRole = ''; // v4.0: vai trò của người đăng nhập — nền tảng phân quyền
 
 document.addEventListener('DOMContentLoaded', () => {
   // Khôi phục đăng nhập từ lần trước (lưu trong session của trình duyệt này)
   try {
     const saved = sessionStorage.getItem(LOGIN_STORAGE_KEY);
     if (saved) {
-      currentSalesName = saved;
+      let sess = null;
+      try { sess = JSON.parse(saved); } catch (e2) { sess = { name: saved, username: saved }; } // phiên định dạng cũ (chỉ tên)
+      currentSalesName = sess.name || '';
+      currentUserRole = sess.role || '';
       applyLoggedInState();
+      // v4.0: xác thực lại phiên MỖI LẦN LOAD APP — đúng yêu cầu vận hành:
+      // admin đổi tên/khóa tài khoản KHÔNG đá phiên đang chạy; thay đổi chỉ áp
+      // khi người dùng chủ động tải lại app (chính là lúc này).
+      if (APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE' && sess.username) {
+        evJsonp('action=checkUser&user=' + encodeURIComponent(sess.username), (d) => {
+          if (!d || !d.ok || d.active === false) {
+            showToast('🔒 Tài khoản đã bị khóa hoặc thay đổi — vui lòng đăng nhập lại', 'error-t');
+            doLogout();
+            return;
+          }
+          if (d.name && d.name !== currentSalesName) { currentSalesName = d.name; applyLoggedInState(); }
+          currentUserRole = d.role || currentUserRole;
+          try { sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ name: currentSalesName, username: sess.username, role: currentUserRole })); } catch (e3) {}
+        });
+      }
     }
   } catch (e) { /* sessionStorage có thể bị chặn ở 1 số trình duyệt — bỏ qua, yêu cầu đăng nhập lại */ }
 });
 
 function doLogin() {
-  // v3.3: xác thực PHÍA SERVER — app gửi SĐT lên Apps Script đối chiếu với sheet
-  // Cấu hình; thông tin đăng nhập không còn tồn tại trong mã nguồn trang.
-  const selectEl = document.getElementById('login-sales');
-  const phoneInput = v('login-phone').replace(/\D/g, '');
+  // v4.0: đăng nhập Tên đăng nhập + Mật khẩu — đối chiếu server với sheet "Người
+  // dùng". Vai trò (role) trả về lưu vào phiên: nền tảng phân quyền tab/thành phần
+  // (công tắc RBAC đang TẮT — app vẫn hiển thị đầy đủ cho mọi người).
+  const userInput = v('login-user').trim();
+  const passInput = v('login-pass');
   const errorEl = document.getElementById('login-error');
 
-  if (!selectEl.value || !phoneInput) {
-    errorEl.textContent = 'Vui lòng chọn tên và nhập mật khẩu';
+  if (!userInput || !passInput) {
+    errorEl.textContent = 'Vui lòng nhập tên đăng nhập và mật khẩu';
     errorEl.classList.add('show');
     return;
   }
   errorEl.classList.remove('show');
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { // demo mode
-    currentSalesName = selectEl.value;
+    currentSalesName = userInput;
     applyLoggedInState();
     return;
   }
   const btn = document.getElementById('login-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Đang kiểm tra...'; }
-  evJsonp('action=login&phone=' + encodeURIComponent(phoneInput), (data) => {
+  evJsonp('action=loginUser&user=' + encodeURIComponent(userInput) + '&pass=' + encodeURIComponent(passInput), (data) => {
     if (btn) { btn.disabled = false; btn.textContent = 'Đăng nhập'; }
     if (!data || !data.ok) {
-      errorEl.textContent = 'Mật khẩu không đúng. Kiểm tra lại hoặc liên hệ quản trị.';
-      errorEl.classList.add('show');
-      return;
-    }
-    if (data.name !== selectEl.value) {
-      errorEl.textContent = 'Mật khẩu này thuộc về "' + data.name + '" — không khớp tên đã chọn.';
+      errorEl.textContent = 'Sai tên đăng nhập hoặc mật khẩu. Kiểm tra lại hoặc liên hệ quản trị.';
       errorEl.classList.add('show');
       return;
     }
     currentSalesName = data.name;
-    try { sessionStorage.setItem(LOGIN_STORAGE_KEY, currentSalesName); } catch (e) {}
+    currentUserRole = data.role || '';
+    try { sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ name: data.name, username: data.username, role: currentUserRole })); } catch (e) {}
     applyLoggedInState();
   });
 }
@@ -2551,8 +2648,9 @@ function doLogout() {
   currentSalesName = null;
   try { sessionStorage.removeItem(LOGIN_STORAGE_KEY); } catch (e) {}
   document.getElementById('login-screen').classList.remove('hide');
-  document.getElementById('login-sales').value = '';
-  document.getElementById('login-phone').value = '';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  currentUserRole = '';
 }
 
 function applyLoggedInState() {
@@ -2602,6 +2700,10 @@ function loadTodayTasks() {
   script.src = `${APPS_SCRIPT_URL}?action=getTodayTasks&sales=${encodeURIComponent(currentSalesName)}&callback=_jsonpCBTasks`;
   script.onerror = () => showToast('❌ Lỗi tải nhiệm vụ. Bấm Làm mới để thử lại.', 'error-t');
   document.head.appendChild(script);
+  // v3.9.6: trang Lịch sử vi phạm đang mở → làm tươi trang đó song song
+  // (các nút xử lý bù gọi loadTodayTasks sau khi lưu — trang tự cập nhật theo)
+  const vpPage = document.getElementById('vipham-page');
+  if (vpPage && vpPage.style.display !== 'none' && vpPage.style.display !== '') fetchViPhamAllData();
 }
 
 function simulateTodayTasks() {
@@ -2645,6 +2747,7 @@ function renderTodayTasks(data) {
     : cskhTasks.map(t => taskCardHtml(t, 'cskh')).join('');
 
   // v3.2: khối "Sales không hoàn thành" — chỉ hiện khi có nhiệm vụ mang dấu
+  // (v3.9.6: khu này giờ ĐỘC LẬP hoàn toàn với trang Lịch sử vi phạm — hết xung đột)
   const vpTasks = data.viPhamTasks || [];
   const vpTitle = document.getElementById('vipham-title');
   const badgeVP = document.getElementById('badge-vipham');
@@ -2676,6 +2779,81 @@ function viPhamCardHtml(t) {
         <button class="tc-btn postpone" onclick='openPostponeModal(${JSON.stringify(t)}, "${t.type}")'>⏳ Dời lịch (kèm lý do)</button>
         <button class="tc-btn ktn" onclick='closeTaskKTN(${JSON.stringify(t)})'>🚫 Không tiềm năng</button>
       </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+// v3.9.3 — XEM TOÀN BỘ VI PHẠM (bấm từ chip "Không hoàn thành" trên Thống kê)
+// Khác khu ⛔ mặc định (chỉ hiện CHƯA xử lý bù): chế độ này liệt kê MỌI nhiệm vụ
+// từng bị đóng dấu, gồm cả đã bù xong — vết giữ vĩnh viễn đúng triết lý kỷ luật.
+// Cần backend có action getViPhamAll (bổ sung kèm phiên bản này). Nếu backend
+// chưa deploy, bấm chip chỉ hiện toast lỗi — không ảnh hưởng gì khác.
+// Xử lý xong 1 nhiệm vụ trong chế độ này → app tải lại danh sách thường (chủ ý).
+// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// v3.9.6 — TRANG LỊCH SỬ VI PHẠM (overlay toàn màn hình, ĐỘC LẬP với hệ tab)
+// Bấm chip "Không hoàn thành" trên Thống kê → mở trang này. Không đụng gì tới
+// tab Nhiệm vụ nên không còn xung đột render như 2 bản trước. Các nút xử lý bù
+// dùng lại nguyên bộ hàm cũ; sau khi lưu, loadTodayTasks() chạy nền và hook ở đó
+// tự làm tươi trang này (nếu đang mở). Modal Dời lịch (z-index 500) nằm TRÊN
+// trang (z-index 200) nên thao tác bình thường.
+// ══════════════════════════════════════════════
+function openViPhamAll() {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode — chưa cấu hình URL', 'error-t'); return; }
+  const page = document.getElementById('vipham-page');
+  page.style.display = 'block';
+  document.getElementById('vipham-page-body').innerHTML = '<div class="task-empty">Đang tải lịch sử vi phạm...</div>';
+  document.getElementById('vp-page-count').textContent = '';
+  fetchViPhamAllData();
+}
+
+function closeViPhamPage() {
+  document.getElementById('vipham-page').style.display = 'none';
+}
+
+function fetchViPhamAllData() {
+  evJsonp('action=getViPhamAll', (data) => {
+    const page = document.getElementById('vipham-page');
+    if (!page || page.style.display === 'none') return; // đã đóng trang trong lúc chờ mạng
+    if (!data || data.error) {
+      showToast('⚠️ ' + ((data && data.error) || 'Lỗi tải lịch sử vi phạm'), 'error-t');
+      closeViPhamPage();
+      return;
+    }
+    renderViPhamAll(data);
+  });
+}
+
+function renderViPhamAll(data) {
+  const pending = data.pending || [], resolved = data.resolved || [];
+  const total = pending.length + resolved.length;
+  document.getElementById('vp-page-count').textContent =
+    total === 0 ? 'Chưa có vi phạm nào' : (pending.length + ' chưa xử lý · ' + resolved.length + ' đã bù');
+  const body = document.getElementById('vipham-page-body');
+  if (total === 0) {
+    body.innerHTML = '<div class="task-empty">🎉 Chưa có nhiệm vụ nào bị đóng dấu vi phạm</div>';
+    return;
+  }
+  body.innerHTML =
+    (pending.length
+      ? '<div class="vp-sec-title">Chưa xử lý bù (' + pending.length + ')</div>' + pending.map(t => viPhamCardHtml(t)).join('')
+      : '<div class="task-empty">Không còn vi phạm nào chờ xử lý bù 🎉</div>')
+    + (resolved.length
+      ? '<div class="vp-sec-title" style="margin-top:16px;">Đã hoàn thành bù — vết vẫn giữ (' + resolved.length + ')</div>'
+        + resolved.map(t => viPhamDoneCardHtml(t)).join('')
+      : '');
+}
+
+// Thẻ vi phạm ĐÃ BÙ: chỉ đọc, không nút hành động — phục vụ tra cứu kỷ luật
+function viPhamDoneCardHtml(t) {
+  return `
+    <div class="task-card vipham" style="opacity:.78;">
+      <div class="tc-top">
+        <span class="tc-name">${escapeHtml(t.name || t.phone)}</span>
+        <span class="tc-deadline">⛔ đóng dấu ${escapeHtml(t.stampDate || '')}</span>
+      </div>
+      <div class="tc-content">${t.content}</div>
+      <div class="tc-meta">✅ Đã hoàn thành bù${t.doneDate ? ' ngày ' + escapeHtml(t.doneDate) : ''}${t.doneBy ? ' · bởi ' + escapeHtml(t.doneBy) : ''} · Hạn gốc ${escapeHtml(t.deadline || '—')} · Sales: ${escapeHtml(t.sales || '—')}</div>
     </div>`;
 }
 
@@ -2924,6 +3102,7 @@ function submitTaskUpdate(payload, onSuccess) {
 // TAB 4: DASHBOARD (v2.2)
 // ══════════════════════════════════════════════
 let dashCharts = {};        // giữ instance Chart.js để destroy trước khi vẽ lại
+let dashLastData = null;    // v3.9.2: cache payload gần nhất — đổi theme vẽ lại không cần mạng
 let dashLastLoaded = 0;     // timestamp lần tải gần nhất — tránh gọi lại liên tục khi bấm qua lại tab
 
 function loadDashboard(force) {
@@ -2958,6 +3137,7 @@ function loadDashboard(force) {
 }
 
 function renderDashboard(d) {
+  if (d && !d.error) dashLastData = d;
   if (!d || d.error) {
     document.getElementById('dash-time').textContent = 'Lỗi: ' + (d && d.error ? d.error : 'không rõ');
     return;
@@ -2984,23 +3164,60 @@ function renderDashboard(d) {
 
   // ── Phễu giai đoạn (thanh ngang) ──
   const funnel = d.funnel || [];
+  const tkF = chartTokens();
   document.getElementById('chart-funnel-box').style.height = Math.max(150, funnel.length * 34 + 40) + 'px';
-  const FUNNEL_COLORS = { 'Inbox': '#8fb8e8', 'SĐT - Chưa add Zalo': '#5a92d6', 'Đã add Zalo - Tư vấn': '#2f6bb5', 'Chốt': '#1a2e44', 'CSKH': '#2a8a7e', 'Khách cũ': '#7bbfb5', 'Khách yêu cầu đặc biệt': '#c8922a', 'Không tiềm năng': '#c9ced6' };
-  drawChart('funnel', 'chart-funnel', {
-    type: 'bar',
-    data: {
-      labels: funnel.map(x => x.stage),
-      datasets: [{ data: funnel.map(x => x.count), backgroundColor: funnel.map(x => FUNNEL_COLORS[x.stage] || '#9aa3af'), borderRadius: { topRight: 3, bottomRight: 3 } }],
-    },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(148,163,184,.22)' }, ticks: { precision: 0, font: { size: 10 }, color: '#9aa3af' } },
-        y: { grid: { display: false }, ticks: { font: { size: 10.5 }, color: '#5a6473' } },
+  // v3.9.4: mỗi thanh giai đoạn TÁCH ĐOẠN theo nhóm kênh (In-House / Agency /...).
+  // Danh sách nhóm do backend trả (funnelGroups) — thêm nhóm mới trong tương lai
+  // là tự có màu tiếp theo trong bảng FUNNEL_GROUP_COLORS, không phải sửa chart.
+  // Backend chưa deploy bản mới (payload cũ không có byGroup) → tự rơi về 1 màu
+  // ramp theo giai đoạn như v3.9.2, không vỡ gì.
+  const FUNNEL_GROUP_COLORS = ['#02B2A9', '#C8922A', '#38A3C7', '#8C6BC8', '#E8604C', '#566963'];
+  const fGroups = d.funnelGroups || [];
+  const hasGroups = fGroups.length > 0 && funnel.some(x => x.byGroup && Object.keys(x.byGroup).length);
+  const fLegend = document.getElementById('funnel-legend');
+  if (hasGroups) {
+    fLegend.innerHTML = fGroups.map((g, i) =>
+      `<span><i style="background:${FUNNEL_GROUP_COLORS[i % FUNNEL_GROUP_COLORS.length]}"></i>${escapeHtml(g)}</span>`
+    ).join('');
+    drawChart('funnel', 'chart-funnel', {
+      type: 'bar',
+      data: {
+        labels: funnel.map(x => x.stage),
+        datasets: fGroups.map((g, i) => ({
+          label: g,
+          data: funnel.map(x => (x.byGroup && x.byGroup[g]) || 0),
+          backgroundColor: FUNNEL_GROUP_COLORS[i % FUNNEL_GROUP_COLORS.length],
+          stack: 'f',
+        })),
       },
-    },
-  });
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { stacked: true, grid: { color: tkF.grid }, ticks: { precision: 0, font: { size: 10 }, color: tkF.tick } },
+          y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10.5 }, color: tkF.label } },
+        },
+      },
+    });
+  } else {
+    fLegend.innerHTML = '';
+    const FUNNEL_COLORS = { 'Inbox': '#AFD9E8', 'SĐT - Chưa add Zalo': '#64B7D3', 'Đã add Zalo - Tư vấn': '#297E9B', 'Chốt': '#02B2A9', 'CSKH': '#018A83', 'Khách cũ': '#99E0DC', 'Khách yêu cầu đặc biệt': '#C8922A', 'Không tiềm năng': '#B9C4C1' };
+    drawChart('funnel', 'chart-funnel', {
+      type: 'bar',
+      data: {
+        labels: funnel.map(x => x.stage),
+        datasets: [{ data: funnel.map(x => x.count), backgroundColor: funnel.map(x => FUNNEL_COLORS[x.stage] || '#B9C4C1'), borderRadius: { topRight: 3, bottomRight: 3 } }],
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: tkF.grid }, ticks: { precision: 0, font: { size: 10 }, color: tkF.tick } },
+          y: { grid: { display: false }, ticks: { font: { size: 10.5 }, color: tkF.label } },
+        },
+      },
+    });
+  }
 
   // ── Nguồn lead (doughnut) — mặc định theo tháng; đổi khoảng ngày qua applySrcRange ──
   const src = (d.sources && d.sources.items) || [];
@@ -3024,7 +3241,9 @@ function renderDashboard(d) {
 }
 
 /**
- * v3.1.1 — Hero card: sparkline 14 ngày + vòng % so với trung bình 7 ngày trước.
+ * v3.9.1 — Hero card: sparkline 14 ngày + vòng % so với trung bình 7 ngày trước.
+ * (Sparkline từng bị gỡ ở v3.9, khôi phục theo đánh giá thực tế: nó là dữ liệu
+ * xem-thoáng-qua và giữ cân bằng bố cục card — không phải trang trí thuần.)
  * Vòng "mục tiêu": mặc định LUOT_TARGET = 0 → tự lấy TRUNG BÌNH 7 ngày gần nhất
  * (không tính hôm nay) làm mốc so sánh — tự hiệu chỉnh theo nhịp thật của team.
  * Muốn đặt mục tiêu cứng (VD 20 lượt/ngày): đổi LUOT_TARGET = 20.
@@ -3093,7 +3312,87 @@ function adminUnlock() {
     document.getElementById('admin-gate').style.display = 'none';
     document.getElementById('admin-body').style.display = 'block';
     renderAdminLists();
+    adminUsersLoad(); // v4.0: nạp danh sách người dùng
     showToast('🔓 Đã mở khóa Quản trị', 'success');
+  });
+}
+
+// ══════════════════════════════════════════════
+// v4.0 — QUẢN LÝ NGƯỜI DÙNG (trong Quản trị, sau PIN)
+// Mô hình lưu ATOMIC: sửa trên bản nháp trong RAM, bấm Lưu gửi CẢ danh sách —
+// backend kiểm tra (trùng tên đăng nhập, thiếu trường, không còn admin) rồi ghi
+// đè toàn bộ. Không lưu từng dòng để tránh trạng thái lệch nửa chừng.
+// ══════════════════════════════════════════════
+let adminUsersData = [];
+const ROLE_OPTIONS = [
+  ['admin', 'Admin (Tối cao)'], ['ceo', 'CEO'],
+  ['sales_leader', 'Sales — Leader'], ['sales_nv', 'Sales — Nhân viên'], ['sales_tv', 'Sales — Thử việc/TTS'],
+];
+function escapeAttr(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+function adminUsersLoad() {
+  if (!adminPin) return;
+  document.getElementById('admin-users-list').innerHTML = '<div class="hint">Đang tải...</div>';
+  evJsonp('action=adminUsers&op=list&pin=' + encodeURIComponent(adminPin), (d) => {
+    if (!d || !d.ok) {
+      document.getElementById('admin-users-list').innerHTML = '<div class="hint">⚠️ ' + escapeHtml((d && d.error) || 'Không tải được danh sách') + '</div>';
+      return;
+    }
+    adminUsersData = d.users || [];
+    renderAdminUsers();
+  });
+}
+
+function renderAdminUsers() {
+  const wrap = document.getElementById('admin-users-list');
+  if (!adminUsersData.length) { wrap.innerHTML = '<div class="hint">Chưa có người dùng — bấm ➕ để thêm</div>'; return; }
+  wrap.innerHTML = adminUsersData.map((u, i) => `
+    <div class="adm-user-row">
+      <input type="text" value="${escapeAttr(u.name)}" placeholder="Tên người dùng" oninput="adminUsersData[${i}].name=this.value">
+      <input type="text" value="${escapeAttr(u.username)}" placeholder="Tên đăng nhập" autocapitalize="off" oninput="adminUsersData[${i}].username=this.value">
+      <input type="text" value="${escapeAttr(u.pass)}" placeholder="Mật khẩu" oninput="adminUsersData[${i}].pass=this.value">
+      <select onchange="adminUsersData[${i}].role=this.value">
+        ${ROLE_OPTIONS.map(r => `<option value="${r[0]}"${(u.role || 'sales_nv') === r[0] ? ' selected' : ''}>${r[1]}</option>`).join('')}
+      </select>
+      <div class="adm-user-meta">
+        <label class="adm-user-active"><input type="checkbox" ${u.active ? 'checked' : ''} onchange="adminUsersData[${i}].active=this.checked"> đang hoạt động</label>
+        <button type="button" class="adm-user-del" onclick="adminUserDelRow(${i})" title="Xóa dòng">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function adminUserAddRow() {
+  adminUsersData.push({ name: '', username: '', pass: '', role: 'sales_nv', active: true });
+  renderAdminUsers();
+}
+
+function adminUserDelRow(i) {
+  const u = adminUsersData[i];
+  if (u && (u.name || u.username) && !confirm('Xóa "' + (u.name || u.username) + '" khỏi danh sách?\n(Lưu ý: nên dùng tắt "đang hoạt động" thay vì xóa — giữ đối chiếu lịch sử)')) return;
+  adminUsersData.splice(i, 1);
+  renderAdminUsers();
+}
+
+function adminUsersSave() {
+  if (!adminPin) { showToast('🔒 Phiên quản trị đã khóa — nhập lại PIN', 'error-t'); adminLock(); return; }
+  const users = adminUsersData.map(u => ({
+    name: String(u.name || '').trim(), username: String(u.username || '').trim(),
+    pass: String(u.pass || '').trim(), role: u.role || 'sales_nv', active: !!u.active,
+  }));
+  for (let i = 0; i < users.length; i++) {
+    if (!users[i].name || !users[i].username || !users[i].pass) {
+      showToast('⚠️ Dòng ' + (i + 1) + ': cần đủ Tên, Tên đăng nhập, Mật khẩu', 'error-t'); return;
+    }
+  }
+  const lower = users.map(u => u.username.toLowerCase());
+  if (new Set(lower).size !== lower.length) { showToast('⚠️ Có tên đăng nhập bị trùng', 'error-t'); return; }
+  if (!users.some(u => u.active && u.role === 'admin')) { showToast('⚠️ Phải còn ít nhất 1 Admin đang hoạt động', 'error-t'); return; }
+  const payload = encodeURIComponent(JSON.stringify(users));
+  if (payload.length > 6000) { showToast('⚠️ Danh sách quá dài cho 1 lần lưu — chia bớt', 'error-t'); return; }
+  evJsonp('action=adminUsers&op=save&pin=' + encodeURIComponent(adminPin) + '&payload=' + payload, (d) => {
+    if (!d || !d.ok) { showToast('❌ ' + ((d && d.error) || 'Lưu thất bại'), 'error-t'); return; }
+    showToast('✅ Đã lưu ' + d.saved + ' người dùng — đăng nhập mới áp dụng ngay, phiên đang mở giữ nguyên');
+    adminUsersLoad();
   });
 }
 
@@ -3342,6 +3641,22 @@ function loadCostStats() {
   });
 }
 
+// v3.9.2: màu biểu đồ đọc từ CSS variables TẠI THỜI ĐIỂM VẼ — light/dark tự khớp,
+// đổi brand sau này chỉ sửa token, không sửa JS
+function chartTokens() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (n, fb) => (cs.getPropertyValue(n) || '').trim() || fb;
+  return {
+    teal:  v('--teal', '#02B2A9'),
+    main:  v('--chart-main', '#297E9B'),
+    soft:  v('--chart-soft', '#AFD9E8'),
+    gold:  v('--gold', '#C8922A'),
+    tick:  v('--grey-3', '#91A09C'),
+    label: v('--grey-4', '#566963'),
+    grid:  v('--chart-grid', 'rgba(145,160,156,.20)'),
+  };
+}
+
 function drawChart(key, canvasId, config) {
   if (typeof Chart === 'undefined') return; // CDN chưa tải xong/bị chặn — bỏ qua, số liệu KPI vẫn hiện
   if (dashCharts[key]) { dashCharts[key].destroy(); }
@@ -3353,39 +3668,62 @@ function drawLuotChart(daily, titleText) {
   document.getElementById('luot-title').textContent = titleText;
   // Khoảng dài (>16 cột) → bật autoSkip cho trục X khỏi dồn chữ chồng nhau
   const manyBars = daily.length > 16;
+  const tk = chartTokens();
   drawChart('daily', 'chart-daily', {
     type: 'bar',
     data: {
       labels: daily.map(x => x.label),
       datasets: [
-        { label: 'Khách mới',    data: daily.map(x => x.khachMoi), backgroundColor: '#2a8a7e', stack: 's', borderRadius: { topLeft: 3, topRight: 3 } },
-        { label: 'Click lại QC', data: daily.map(x => x.clickQC),  backgroundColor: '#c8922a', stack: 's' },
+        { label: 'Khách mới',    data: daily.map(x => x.khachMoi), backgroundColor: tk.main, stack: 's', borderRadius: { topLeft: 3, topRight: 3 } },
+        { label: 'Click lại QC', data: daily.map(x => x.clickQC),  backgroundColor: tk.soft, stack: 's' },
       ],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9.5 }, color: '#9aa3af', autoSkip: manyBars, maxTicksLimit: manyBars ? 15 : undefined, maxRotation: 60 } },
-        y: { stacked: true, grid: { color: 'rgba(148,163,184,.22)' }, ticks: { precision: 0, font: { size: 10 }, color: '#9aa3af' } },
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9.5 }, color: tk.tick, autoSkip: manyBars, maxTicksLimit: manyBars ? 15 : undefined, maxRotation: 60 } },
+        y: { stacked: true, grid: { color: tk.grid }, ticks: { precision: 0, font: { size: 10 }, color: tk.tick } },
       },
     },
   });
 }
 
-const SRC_COLORS = ['#2a8a7e', '#1a2e44', '#c8922a', '#5a92d6', '#c0392b', '#7bbfb5', '#9aa3af', '#d6a2ad'];
+// v3.9.2: doughnut → BAR NGANG có emphasis. Doughnut khó so sánh phần hơn/kém
+// khi các lát gần bằng nhau; bar ngang đọc tên nguồn dài kiểu "FB Ads - Hub"
+// thoải mái. Màu: nguồn TOP = teal (điểm nhấn), nhì = blue, còn lại xám câm —
+// mắt bị kéo đúng vào nguồn đang thắng, không phải bảng màu ngẫu nhiên.
+// LƯU Ý: items từ backend đã sắp giảm dần; sort lại phòng khi thứ tự đổi.
+function srcColor(rank) {
+  return rank === 0 ? '#02B2A9' : rank === 1 ? '#38A3C7' : '#B9C4C1';
+}
 function drawSrcChart(items, titleText) {
   document.getElementById('src-title').textContent = titleText;
-  const srcTotal = items.reduce((s, x) => s + x.count, 0) || 1;
-  document.getElementById('src-legend').innerHTML = items.length === 0
+  const sorted = [...items].sort((a, b) => b.count - a.count);
+  const srcTotal = sorted.reduce((s, x) => s + x.count, 0) || 1;
+  document.getElementById('src-legend').innerHTML = sorted.length === 0
     ? '<span style="color:var(--grey-3)">Không có khách nào vào phễu trong khoảng này</span>'
-    : items.map((x, i) =>
-        `<span><i style="background:${SRC_COLORS[i % SRC_COLORS.length]}"></i>${escapeHtml(x.name)} ${Math.round(x.count * 100 / srcTotal)}% (${x.count})</span>`
+    : sorted.map((x, i) =>
+        `<span><i style="background:${srcColor(i)}"></i>${escapeHtml(x.name)} ${Math.round(x.count * 100 / srcTotal)}% (${x.count})</span>`
       ).join('');
+  // Chiều cao khung theo số nguồn — bar ngang không bị bóp dẹt khi nhiều nguồn
+  const box = document.getElementById('chart-src-box');
+  if (box) box.style.height = Math.max(150, sorted.length * 32 + 40) + 'px';
+  const tk = chartTokens();
   drawChart('src', 'chart-src', {
-    type: 'doughnut',
-    data: { labels: items.map(x => x.name), datasets: [{ data: items.map(x => x.count), backgroundColor: items.map((x, i) => SRC_COLORS[i % SRC_COLORS.length]), borderWidth: 2, borderColor: 'rgba(0,0,0,0)' }] },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false } } },
+    type: 'bar',
+    data: {
+      labels: sorted.map(x => x.name),
+      datasets: [{ data: sorted.map(x => x.count), backgroundColor: sorted.map((x, i) => srcColor(i)), borderRadius: { topRight: 3, bottomRight: 3 } }],
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: tk.grid }, ticks: { precision: 0, font: { size: 10 }, color: tk.tick } },
+        y: { grid: { display: false }, ticks: { font: { size: 10.5 }, color: tk.label } },
+      },
+    },
   });
 }
 
