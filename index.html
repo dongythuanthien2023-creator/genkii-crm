@@ -1,4 +1,35 @@
 <!DOCTYPE html>
+<!--
+═══════════════════════════════════════════════════════════════════════════
+GENKII CRM — FRONTEND (GitHub Pages, single-file)
+PHIÊN BẢN HIỆN TẠI: v4.0.1 | Backend tương thích: v4.0.2
+
+QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
+LUÔN Ở TRÊN CÙNG.
+───────────────────────────────────────────────────────────────────────────
+v4.0.1 — Dark mode: giãn 3 tầng sáng (nền trang/nền thẻ/viền), viền #33504B
+         nổi rõ, chữ phụ sáng hơn, lưới chart theo theme (--chart-grid).
+v4.0   — Đăng nhập mới: Tên đăng nhập + Mật khẩu (action loginUser), xác thực
+         lại phiên khi load app (checkUser — đổi tên/khóa áp khi tải lại,
+         không đá phiên đang mở). Tab Quản trị thêm mục "Người dùng & Đăng
+         nhập" (lưu atomic cả danh sách, chặn tự khóa admin cuối cùng).
+v3.9.6 — Trang "Lịch sử vi phạm" tách thành overlay độc lập (z-index 200,
+         dưới modal 500) — hết xung đột render với tab Nhiệm vụ.
+v3.9.5 — (đã thay bằng v3.9.6) cờ chống race getTodayTasks/getViPhamAll.
+v3.9.4 — Phễu stacked theo nhóm kênh In-House/Agency + chú thích, màu nhóm
+         mới tự cấp từ bảng FUNNEL_GROUP_COLORS; fallback payload cũ.
+v3.9.2 — Chart theo token (chartTokens đọc CSS vars lúc vẽ, tự khớp theme,
+         vẽ lại khi đổi theme từ cache); nguồn lead doughnut → bar ngang
+         emphasis; phễu ramp brand.
+v3.9.1 — Khôi phục sparkline hero (đánh giá render thật: là dữ liệu + giữ
+         cân bằng bố cục, không phải trang trí).
+v3.9   — Hệ màu brand theo logo (teal #02B2A9 / blue #38A3C7 / coral #E8604C,
+         quy tắc phân vùng: không khí ở rìa, phẳng ở vùng dữ liệu); sprite
+         SVG icon thay emoji chrome; số hiện tức thì + nháy khi đổi giá trị;
+         tabular-nums.
+v3.8.2 trở về trước — xem lịch sử chat/backup.
+═══════════════════════════════════════════════════════════════════════════
+-->
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
