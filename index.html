@@ -2,11 +2,16 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.0.1 | Backend tương thích: v4.0.2
+PHIÊN BẢN HIỆN TẠI: v4.1 | Backend tương thích: v4.1
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.1   — apiPost đọc PHẢN HỒI THẬT cho cả 6 điểm ghi (vá feedback mục 8):
+         chỉ toast thành công khi backend trả success:true, hiện đúng lỗi
+         backend, CHỈ reset form khi xác nhận thành công. Không đọc được
+         phản hồi → cảnh báo trung thực, KHÔNG tự gửi lại (tránh nhân đôi
+         bản ghi), giữ nguyên form.
 v4.0.1 — Dark mode: giãn 3 tầng sáng (nền trang/nền thẻ/viền), viền #33504B
          nổi rõ, chữ phụ sáng hơn, lưới chart theo theme (--chart-grid).
 v4.0   — Đăng nhập mới: Tên đăng nhập + Mật khẩu (action loginUser), xác thực
@@ -2104,21 +2109,38 @@ function onSubmit(e) {
   }
 
   showLoading(true);
-  fetch(APPS_SCRIPT_URL, {
+  apiPost(payload)
+    .then((r) => {
+      showLoading(false);
+      if (r.__unconfirmed) { showToast('⚠️ Đã gửi nhưng KHÔNG xác nhận được kết quả — mở tab Khách hàng kiểm tra trước khi nhập tiếp', 'error-t'); return; }
+      if (!r.success) { showToast('❌ ' + (r.error || 'Backend từ chối — dữ liệu KHÔNG được lưu'), 'error-t'); return; }
+      showToast('✅ Đã lưu vào CRM thành công!', 'success');
+      resetForm(); // v4.1: CHỈ reset khi backend xác nhận thành công thật
+    })
+    .catch(() => {
+      showLoading(false);
+      showToast('❌ Lỗi kết nối. Kiểm tra mạng và thử lại.', 'error-t');
+    });
+}
+
+// ══════════════════════════════════════════════
+// v4.1 — apiPost: GỌI POST ĐỌC PHẢN HỒI THẬT (vá feedback mục 8)
+// Apps Script phục vụ JSON kèm CORS '*' ở response cuối khi POST Content-Type
+// text/plain (không preflight) → bỏ mode:'no-cors' là đọc được {success,error}
+// thật. QUYẾT ĐỊNH AN TOÀN QUAN TRỌNG: khi không đọc được phản hồi, KHÔNG
+// tự gửi lại — lỗi chặn-đọc-CORS nghĩa là request ĐÃ tới server, gửi lại là
+// nhân đôi bản ghi. Thay vào đó trả {__unconfirmed:true} để nơi gọi cảnh báo
+// trung thực và giữ nguyên form cho người dùng tự kiểm tra.
+// ══════════════════════════════════════════════
+function apiPost(payload) {
+  return fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload),
+    redirect: 'follow',
   })
-  .then(() => {
-    showLoading(false);
-    showToast('✅ Đã lưu vào CRM thành công!', 'success');
-    resetForm();
-  })
-  .catch(() => {
-    showLoading(false);
-    showToast('❌ Lỗi kết nối. Kiểm tra mạng và thử lại.', 'error-t');
-  });
+  .then((res) => res.json())
+  .catch(() => ({ __unconfirmed: true }));
 }
 
 // ──────────────────────────────────────────────
@@ -2472,21 +2494,18 @@ function onCompleteOrder() {
   }
 
   showLoading(true);
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload),
-  })
-  .then(() => {
-    showLoading(false);
-    showToast('✅ Đã hoàn thành đơn hàng — khách chuyển sang CSKH', 'success');
-    resetCoForm();
-  })
-  .catch(() => {
-    showLoading(false);
-    showToast('❌ Lỗi kết nối. Kiểm tra mạng và thử lại.', 'error-t');
-  });
+  apiPost(payload)
+    .then((r) => {
+      showLoading(false);
+      if (r.__unconfirmed) { showToast('⚠️ Không xác nhận được kết quả — kiểm tra khách trước khi thao tác tiếp', 'error-t'); return; }
+      if (!r.success) { showToast('❌ ' + (r.error || 'Hoàn thành đơn thất bại'), 'error-t'); return; }
+      showToast('✅ Đã hoàn thành đơn hàng — khách chuyển sang CSKH', 'success');
+      resetCoForm();
+    })
+    .catch(() => {
+      showLoading(false);
+      showToast('❌ Lỗi kết nối. Kiểm tra mạng và thử lại.', 'error-t');
+    });
 }
 
 function resetCoForm() {
@@ -3120,13 +3139,14 @@ function submitTaskUpdate(payload, onSuccess) {
   }
 
   showLoading(true);
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST', mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload),
-  })
-  .then(() => { showLoading(false); onSuccess(); })
-  .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
+  apiPost(payload)
+    .then((r) => {
+      showLoading(false);
+      if (r.__unconfirmed) { showToast('⚠️ Không xác nhận được kết quả — đang tải lại danh sách', 'error-t'); loadTodayTasks(); return; }
+      if (!r.success) { showToast('❌ ' + (r.error || 'Cập nhật nhiệm vụ thất bại'), 'error-t'); return; }
+      onSuccess();
+    })
+    .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
 }
 
 // ══════════════════════════════════════════════
@@ -3553,14 +3573,12 @@ function saveAdsCostEntry() {
     if (days > 92) { showToast('⚠️ Đợt tối đa 92 ngày', 'error-t'); return; }
     const srcSelP = document.getElementById('ads-source').value;
     showLoading(true);
-    fetch(APPS_SCRIPT_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'saveAdsCost', period: true, from: isoToVN(iso), to: isoToVN(isoTo),
-        amount: amount, source: srcSelP, sales: currentSalesName }),
-    })
-    .then(() => {
+    apiPost({ action: 'saveAdsCost', period: true, from: isoToVN(iso), to: isoToVN(isoTo),
+        amount: amount, source: srcSelP, sales: currentSalesName })
+    .then((r) => {
       showLoading(false);
+      if (r.__unconfirmed) { showToast('⚠️ Không xác nhận được kết quả — kiểm tra danh sách gần đây', 'error-t'); setTimeout(loadAdsRecent, 1200); return; }
+      if (!r.success) { showToast('❌ ' + (r.error || 'Lưu chi phí thất bại'), 'error-t'); return; }
       showToast(`💾 ${srcSelP}: ${fmtMoneyStr(amount)} đ cho đợt ${isoToVN(iso)} → ${isoToVN(isoTo)} (chia đều ${days} ngày, ~${fmtMoneyStr(Math.floor(amount / days))} đ/ngày)`, 'success');
       document.getElementById('ads-amount').value = '';
       setTimeout(loadAdsRecent, 1200);
@@ -3570,14 +3588,12 @@ function saveAdsCostEntry() {
   }
   if (iso > new Date().toISOString().split('T')[0]) { showToast('⚠️ Không nhập chi phí cho ngày tương lai', 'error-t'); return; }
   showLoading(true);
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST', mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: 'saveAdsCost', date: isoToVN(iso), amount: amount,
-      source: document.getElementById('ads-source').value, sales: currentSalesName }),
-  })
-  .then(() => {
+  apiPost({ action: 'saveAdsCost', date: isoToVN(iso), amount: amount,
+      source: document.getElementById('ads-source').value, sales: currentSalesName })
+  .then((r) => {
     showLoading(false);
+    if (r.__unconfirmed) { showToast('⚠️ Không xác nhận được kết quả — kiểm tra danh sách gần đây', 'error-t'); setTimeout(loadAdsRecent, 900); return; }
+    if (!r.success) { showToast('❌ ' + (r.error || 'Lưu chi phí thất bại'), 'error-t'); return; }
     const srcSel = document.getElementById('ads-source').value;
     showToast(amount === 0
       ? `💾 ${srcSel}: ngày ${isoToVN(iso)} KHÔNG chạy ads (0 đ)`
@@ -4253,13 +4269,14 @@ function evJsonp(query, onData) {
 
 function evPost(payload, onDone) {
   showLoading(true);
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST', mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload),
-  })
-  .then(() => { showLoading(false); if (onDone) onDone(); })
-  .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
+  apiPost(payload)
+    .then((r) => {
+      showLoading(false);
+      if (r.__unconfirmed) { showToast('⚠️ Không xác nhận được kết quả — tải lại để kiểm tra', 'error-t'); if (onDone) onDone(r); return; }
+      if (!r.success) { showToast('❌ ' + (r.error || 'Thao tác sự kiện thất bại'), 'error-t'); return; }
+      if (onDone) onDone(r);
+    })
+    .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
 }
 
 // ── Tiền tệ: gõ số thường → tự thêm dấu chấm ngăn cách ──
