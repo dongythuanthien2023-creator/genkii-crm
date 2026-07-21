@@ -2,11 +2,15 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.2.1 | Backend tương thích: v4.2
+PHIÊN BẢN HIỆN TẠI: v4.2.3 | Backend tương thích: v4.2.2
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.2.3 — Fix ô chọn ngày chữ đen trên nền tối (Nhập bổ sung + mọi ô ngày):
+         color-scheme khai báo theo theme ở :root/[data-theme=dark] để widget
+         lịch gốc tự đổi, gỡ rule ép cứng color-scheme:light cũ, thêm
+         color:var(--text) cho input date/time.
 v4.2.1 — Phiên cũ không có token bị ép đăng nhập lại một lần (phát hiện qua
          audit đối chiếu: thiếu bước này người dùng chạy vô danh với gác cổng).
 v4.2   — Token HMAC gắn vào MỌI request (9 điểm JSONP + apiPost), lưu/khôi
@@ -67,6 +71,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
      Giữ nguyên TÊN mọi biến cũ nên toàn bộ CSS phía dưới không phải sửa;
      dark mode chỉ là đổi GIÁ TRỊ qua [data-theme="dark"]. */
   :root, [data-theme="light"] {
+    color-scheme: light; /* v4.2.3: widget gốc (date picker, select) theo theme */
     --navy:    #0C3835;
     --heading: #123A37;           /* chữ tiêu đề — tách khỏi --navy vì navy còn dùng làm nền */
     --teal:    #02B2A9;
@@ -103,6 +108,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     --fab-glow: 0 4px 14px rgba(2,178,169,.30);
   }
   [data-theme="dark"] {
+    color-scheme: dark; /* v4.2.3: chữ ngày + icon lịch + popup lịch tự chuyển tối */
     --navy:    #143C39;
     --heading: #EDF3FB;
     --teal:    #35C7BE;
@@ -240,7 +246,8 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     box-shadow: 0 0 0 3px rgba(42,138,126,.12);
   }
   .field textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
-  .field input[type="date"] { color-scheme: light; }
+  /* v4.2.3: mọi ô ngày/giờ dùng chữ theo theme — hết cảnh chữ đen trên nền tối */
+  input[type="date"], input[type="time"] { color: var(--text); }
   .field input.filled { background: var(--teal-lt); border-color: var(--teal); color: var(--heading); }
   .field .hint { font-size: 11.5px; color: var(--grey-3); margin-top: 5px; }
   .field.error input,
@@ -493,7 +500,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   .bs-date-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1.5px dashed var(--grey-2); }
   .bs-date-row.visible { display: block; }
   .bs-date-row label { display: block; font-size: 12px; font-weight: 700; color: var(--grey-4); margin-bottom: 5px; }
-  .bs-date-row input[type="date"] { width: 100%; padding: 10px 12px; font-size: 14px; border: 1.5px solid var(--navy); border-radius: 10px; background: var(--grey-1); outline: none; font-family: inherit; }
+  .bs-date-row input[type="date"] { width: 100%; padding: 10px 12px; font-size: 14px; border: 1.5px solid var(--navy); border-radius: 10px; background: var(--grey-1); color: var(--text); outline: none; font-family: inherit; }
   .bs-card.active { border: 2px solid var(--navy); background: var(--grey-1); }
   .clickqc-box.disabled { opacity: .45; pointer-events: none; }
 
