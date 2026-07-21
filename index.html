@@ -2,11 +2,15 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.2.3 | Backend tương thích: v4.2.2
+PHIÊN BẢN HIỆN TẠI: v4.2.4 | Backend tương thích: v4.2.2
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.2.4 — Fix ô đăng nhập chữ tàng hình khi focus ở dark mode: gỡ background
+         #fff ép cứng khi focus (di sản thiết kế cũ, lây cả modal Dời lịch),
+         thêm color theo theme cho input login, chặn Chrome autofill sơn nền
+         trắng bằng inset-shadow màu thẻ.
 v4.2.3 — Fix ô chọn ngày chữ đen trên nền tối (Nhập bổ sung + mọi ô ngày):
          color-scheme khai báo theo theme ở :root/[data-theme=dark] để widget
          lịch gốc tự đổi, gỡ rule ép cứng color-scheme:light cũ, thêm
@@ -246,6 +250,15 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     box-shadow: 0 0 0 3px rgba(42,138,126,.12);
   }
   .field textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+  /* v4.2.4: Chrome autofill tự sơn nền trắng/vàng đè CSS — sơn ngược lại bằng
+     inset shadow màu thẻ theme + ép màu chữ, áp mọi input toàn app */
+  input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text);
+    -webkit-box-shadow: 0 0 0 1000px var(--white) inset;
+    box-shadow: 0 0 0 1000px var(--white) inset;
+    caret-color: var(--text);
+    transition: background-color 99999s ease-out 0s;
+  }
   /* v4.2.3: mọi ô ngày/giờ dùng chữ theo theme — hết cảnh chữ đen trên nền tối */
   input[type="date"], input[type="time"] { color: var(--text); }
   .field input.filled { background: var(--teal-lt); border-color: var(--teal); color: var(--heading); }
@@ -745,9 +758,9 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   .login-field select, .login-field input {
     width: 100%; font-size: 15px; padding: 12px 13px;
     border: 1.5px solid var(--grey-2); border-radius: 8px;
-    background: var(--grey-1); outline: none;
+    background: var(--grey-1); color: var(--text); outline: none;
   }
-  .login-field select:focus, .login-field input:focus { border-color: var(--teal); background: #fff; }
+  .login-field select:focus, .login-field input:focus { border-color: var(--teal); background: var(--white); }
   .login-error { font-size: 12.5px; color: var(--red); margin-top: 8px; text-align: center; display: none; }
   .login-error.show { display: block; }
   .btn-login {
