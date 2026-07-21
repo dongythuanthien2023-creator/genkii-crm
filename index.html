@@ -2,11 +2,17 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.1 | Backend tương thích: v4.1
+PHIÊN BẢN HIỆN TẠI: v4.2.1 | Backend tương thích: v4.2
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.2.1 — Phiên cũ không có token bị ép đăng nhập lại một lần (phát hiện qua
+         audit đối chiếu: thiếu bước này người dùng chạy vô danh với gác cổng).
+v4.2   — Token HMAC gắn vào MỌI request (9 điểm JSONP + apiPost), lưu/khôi
+         phục theo phiên. PIN quản trị chuyển sang BODY POST đổi lấy
+         adminToken 30' — PIN không còn xuất hiện trên URL. Gác cổng backend
+         đang SHADOW: chưa ai bị chặn, chỉ ghi nhật ký để đối chiếu.
 v4.1   — apiPost đọc PHẢN HỒI THẬT cho cả 6 điểm ghi (vá feedback mục 8):
          chỉ toast thành công khi backend trả success:true, hiện đúng lỗi
          backend, CHỈ reset form khi xác nhận thành công. Không đọc được
@@ -1739,7 +1745,7 @@ function jsonpLookupByName(name) {
 
   const script = document.createElement('script');
   script.id = 'jsonp-script';
-  script.src = `${APPS_SCRIPT_URL}?action=lookupByName&name=${encodeURIComponent(name)}&callback=_jsonpCB`;
+  script.src = `${APPS_SCRIPT_URL}?action=lookupByName&name=${encodeURIComponent(name)}&callback=_jsonpCB` + authQ();
   script.onerror = () => {
     showLoading(false);
     lookupInProgress = false;
@@ -2133,10 +2139,11 @@ function onSubmit(e) {
 // trung thực và giữ nguyên form cho người dùng tự kiểm tra.
 // ══════════════════════════════════════════════
 function apiPost(payload) {
+  const body = Object.assign({}, payload, { token: authToken }); // v4.2: danh tính đi kèm mọi request ghi
   return fetch(APPS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
     redirect: 'follow',
   })
   .then((res) => res.json())
@@ -2396,7 +2403,7 @@ function doLookupForComplete(name, phone) {
 
   const script = document.createElement('script');
   script.id = 'jsonp-script-co';
-  script.src = `${APPS_SCRIPT_URL}?action=lookupForComplete&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&callback=_jsonpCBComplete`;
+  script.src = `${APPS_SCRIPT_URL}?action=lookupForComplete&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phone)}&callback=_jsonpCBComplete` + authQ();
   script.onerror = () => {
     showLoading(false);
     coLookupInProgress = false;
@@ -2628,6 +2635,12 @@ function animateNum(id, target) {
 const LOGIN_STORAGE_KEY = 'genkii_crm_logged_in_sales';
 let currentSalesName = null;
 let currentUserRole = ''; // v4.0: vai trò của người đăng nhập — nền tảng phân quyền
+let authToken = '';       // v4.2: token HMAC do server phát khi đăng nhập
+let adminToken = '';      // v4.2: session quản trị 30' đổi từ PIN (không lặp PIN trên URL)
+
+// v4.2 — Đuôi token gắn vào MỌI request đọc (JSONP). Gác cổng đang SHADOW nên
+// thiếu token chưa bị chặn; khi bật ENFORCE thì đây là chỗ duy nhất cần đúng.
+function authQ() { return authToken ? '&token=' + encodeURIComponent(authToken) : ''; }
 
 document.addEventListener('DOMContentLoaded', () => {
   // Khôi phục đăng nhập từ lần trước (lưu trong session của trình duyệt này)
@@ -2638,6 +2651,15 @@ document.addEventListener('DOMContentLoaded', () => {
       try { sess = JSON.parse(saved); } catch (e2) { sess = { name: saved, username: saved }; } // phiên định dạng cũ (chỉ tên)
       currentSalesName = sess.name || '';
       currentUserRole = sess.role || '';
+      authToken = sess.token || '';
+      // v4.2.1 — phiên tạo TRƯỚC khi có hệ token (không mang token): ép đăng
+      // nhập lại MỘT LẦN để nhận token. Nếu không, người dùng chạy "vô danh"
+      // với gác cổng (spam nhật ký SHADOW, và bị chặn khó hiểu khi bật ENFORCE).
+      if (!authToken && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+        showToast('🔐 Hệ thống nâng cấp bảo mật — vui lòng đăng nhập lại (chỉ lần này)', 'error-t');
+        doLogout();
+        return;
+      }
       applyLoggedInState();
       // v4.0: xác thực lại phiên MỖI LẦN LOAD APP — đúng yêu cầu vận hành:
       // admin đổi tên/khóa tài khoản KHÔNG đá phiên đang chạy; thay đổi chỉ áp
@@ -2651,7 +2673,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           if (d.name && d.name !== currentSalesName) { currentSalesName = d.name; applyLoggedInState(); }
           currentUserRole = d.role || currentUserRole;
-          try { sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ name: currentSalesName, username: sess.username, role: currentUserRole })); } catch (e3) {}
+          try { sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ name: currentSalesName, username: sess.username, role: currentUserRole, token: authToken })); } catch (e3) {}
         });
       }
     }
@@ -2688,7 +2710,8 @@ function doLogin() {
     }
     currentSalesName = data.name;
     currentUserRole = data.role || '';
-    try { sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ name: data.name, username: data.username, role: currentUserRole })); } catch (e) {}
+    authToken = data.token || '';
+    try { sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ name: data.name, username: data.username, role: currentUserRole, token: authToken })); } catch (e) {}
     applyLoggedInState();
   });
 }
@@ -2701,6 +2724,7 @@ function doLogout() {
   document.getElementById('login-user').value = '';
   document.getElementById('login-pass').value = '';
   currentUserRole = '';
+  authToken = ''; adminToken = '';
 }
 
 function applyLoggedInState() {
@@ -2747,7 +2771,7 @@ function loadTodayTasks() {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-script-tasks';
-  script.src = `${APPS_SCRIPT_URL}?action=getTodayTasks&sales=${encodeURIComponent(currentSalesName)}&callback=_jsonpCBTasks`;
+  script.src = `${APPS_SCRIPT_URL}?action=getTodayTasks&sales=${encodeURIComponent(currentSalesName)}&callback=_jsonpCBTasks` + authQ();
   script.onerror = () => showToast('❌ Lỗi tải nhiệm vụ. Bấm Làm mới để thử lại.', 'error-t');
   document.head.appendChild(script);
   // v3.9.6: trang Lịch sử vi phạm đang mở → làm tươi trang đó song song
@@ -3011,7 +3035,7 @@ function toggleTaskInfo(escId, el) {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-' + cbName;
-  script.src = `${APPS_SCRIPT_URL}?action=getCustomerDetail&phone=${encodeURIComponent(phone)}&name=${encodeURIComponent(name)}&callback=${cbName}`;
+  script.src = `${APPS_SCRIPT_URL}?action=getCustomerDetail&phone=${encodeURIComponent(phone)}&name=${encodeURIComponent(name)}&callback=${cbName}` + authQ();
   script.onerror = () => { box.innerHTML = '<div class="tci-loading">Lỗi tải — bấm để thử lại</div>'; };
   document.head.appendChild(script);
 }
@@ -3179,7 +3203,7 @@ function loadDashboard(force) {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-script-dash';
-  script.src = `${APPS_SCRIPT_URL}?action=getDashboardData${force ? '&fresh=1' : ''}&callback=_jsonpCBDash`;
+  script.src = `${APPS_SCRIPT_URL}?action=getDashboardData${force ? '&fresh=1' : ''}&callback=_jsonpCBDash` + authQ();
   script.onerror = () => {
     document.getElementById('dash-time').textContent = 'Lỗi tải dữ liệu';
     showToast('❌ Lỗi tải Dashboard. Bấm Làm mới để thử lại.', 'error-t');
@@ -3352,13 +3376,17 @@ function adminUnlock() {
   const pin = v('admin-pin').trim();
   if (!pin) { showToast('⚠️ Nhập mã PIN', 'error-t'); return; }
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode', 'error-t'); return; }
-  evJsonp('action=adminCheck&pin=' + encodeURIComponent(pin), (data) => {
-    if (!data || !data.ok) {
+  // v4.2: PIN đi trong BODY POST (không còn trên URL/log), đổi lấy adminToken 30'
+  showLoading(true);
+  apiPost({ action: 'adminAuth', pin: pin }).then((data) => {
+    showLoading(false);
+    if (!data || data.__unconfirmed || !data.success) {
       showToast('❌ ' + ((data && data.error) || 'Sai mã PIN'), 'error-t');
       document.getElementById('admin-pin').value = '';
       return;
     }
-    adminPin = pin;
+    adminToken = data.adminToken || '';
+    adminPin = 'session'; // cờ "đang mở khóa" — PIN thật KHÔNG còn lưu ở client
     document.getElementById('admin-pin').value = '';
     document.getElementById('admin-gate').style.display = 'none';
     document.getElementById('admin-body').style.display = 'block';
@@ -3384,7 +3412,7 @@ function escapeAttr(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/
 function adminUsersLoad() {
   if (!adminPin) return;
   document.getElementById('admin-users-list').innerHTML = '<div class="hint">Đang tải...</div>';
-  evJsonp('action=adminUsers&op=list&pin=' + encodeURIComponent(adminPin), (d) => {
+  evJsonp('action=adminUsers&op=list&adminToken=' + encodeURIComponent(adminToken) + authQ(), (d) => {
     if (!d || !d.ok) {
       document.getElementById('admin-users-list').innerHTML = '<div class="hint">⚠️ ' + escapeHtml((d && d.error) || 'Không tải được danh sách') + '</div>';
       return;
@@ -3440,7 +3468,7 @@ function adminUsersSave() {
   if (!users.some(u => u.active && u.role === 'admin')) { showToast('⚠️ Phải còn ít nhất 1 Admin đang hoạt động', 'error-t'); return; }
   const payload = encodeURIComponent(JSON.stringify(users));
   if (payload.length > 6000) { showToast('⚠️ Danh sách quá dài cho 1 lần lưu — chia bớt', 'error-t'); return; }
-  evJsonp('action=adminUsers&op=save&pin=' + encodeURIComponent(adminPin) + '&payload=' + payload, (d) => {
+  evJsonp('action=adminUsers&op=save&adminToken=' + encodeURIComponent(adminToken) + '&payload=' + payload + authQ(), (d) => {
     if (!d || !d.ok) { showToast('❌ ' + ((d && d.error) || 'Lưu thất bại'), 'error-t'); return; }
     showToast('✅ Đã lưu ' + d.saved + ' người dùng — đăng nhập mới áp dụng ngay, phiên đang mở giữ nguyên');
     adminUsersLoad();
@@ -3449,6 +3477,7 @@ function adminUsersSave() {
 
 function adminLock() {
   adminPin = null;
+  adminToken = ''; // v4.2: hủy session quản trị
   document.getElementById('admin-gate').style.display = 'block';
   document.getElementById('admin-body').style.display = 'none';
 }
@@ -3500,7 +3529,7 @@ function adminOp(entity, op, name, extra) {
   if (!adminPin) { showToast('🔒 Phiên quản trị đã khóa — nhập lại PIN', 'error-t'); adminLock(); return; }
   if (op === 'add' && !String(name || '').trim()) { showToast('⚠️ Nhập tên trước', 'error-t'); return; }
   const params = new URLSearchParams({
-    action: 'adminConfig', pin: adminPin, entity: entity, op: op,
+    action: 'adminConfig', adminToken: adminToken, token: authToken, entity: entity, op: op,
     name: String(name || '').trim(),
     oldName: (extra && extra.oldName) || '',
     phone: (extra && extra.phone) || '',
@@ -3798,7 +3827,7 @@ function jsonpRange(action, range, onData) {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-' + cbName;
-  script.src = `${APPS_SCRIPT_URL}?action=${action}&from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}&callback=${cbName}`;
+  script.src = `${APPS_SCRIPT_URL}?action=${action}&from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}&callback=${cbName}` + authQ();
   script.onerror = () => showToast('❌ Lỗi tải dữ liệu khoảng ngày. Thử lại.', 'error-t');
   document.head.appendChild(script);
 }
@@ -3941,7 +3970,7 @@ function loadCustomerList(force) {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-script-cust';
-  script.src = `${APPS_SCRIPT_URL}?action=getCustomerList${force ? '&fresh=1' : ''}&callback=_jsonpCBCust`;
+  script.src = `${APPS_SCRIPT_URL}?action=getCustomerList${force ? '&fresh=1' : ''}&callback=_jsonpCBCust` + authQ();
   script.onerror = () => {
     if (!custData) document.getElementById('cust-count-label').textContent = 'Lỗi tải dữ liệu';
     else renderCustomerList(); // vẫn còn dữ liệu cũ → hiện lại nhãn đếm bình thường
@@ -4119,7 +4148,7 @@ function openCustomerDetail(phone, name) {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-script-custd';
-  script.src = `${APPS_SCRIPT_URL}?action=getCustomerDetail&phone=${encodeURIComponent(phone)}&name=${encodeURIComponent(name)}&callback=_jsonpCBCustD`;
+  script.src = `${APPS_SCRIPT_URL}?action=getCustomerDetail&phone=${encodeURIComponent(phone)}&name=${encodeURIComponent(name)}&callback=_jsonpCBCustD` + authQ();
   script.onerror = () => showToast('❌ Lỗi tải chi tiết khách. Thử lại.', 'error-t');
   document.head.appendChild(script);
 }
@@ -4262,7 +4291,7 @@ function evJsonp(query, onData) {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-' + cbName;
-  script.src = `${APPS_SCRIPT_URL}?${query}&callback=${cbName}`;
+  script.src = `${APPS_SCRIPT_URL}?${query}&callback=${cbName}` + authQ();
   script.onerror = () => showToast('❌ Lỗi tải dữ liệu sự kiện. Thử lại.', 'error-t');
   document.head.appendChild(script);
 }
