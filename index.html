@@ -2,11 +2,15 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.2.4 | Backend tương thích: v4.2.2
+PHIÊN BẢN HIỆN TẠI: v4.3 | Backend tương thích: v4.3
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.3   — Khách cũ click QC nguồn khác: tick 🔁 mở khối "Nguồn QC lần click"
+         (bắt buộc chọn tay từ nguồn trả phí) + "Ngày click" (mặc định hôm
+         nay, lùi ≤10 ngày trong tháng — setBackdateWindow áp cả ô bổ sung).
+         Hint dẫn Sales khỏi nhầm luồng bổ sung. Nguồn gốc khách BẤT BIẾN.
 v4.2.4 — Fix ô đăng nhập chữ tàng hình khi focus ở dark mode: gỡ background
          #fff ép cứng khi focus (di sản thiết kế cũ, lây cả modal Dời lịch),
          thêm color theo theme cho input login, chặn Chrome autofill sơn nền
@@ -715,6 +719,10 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   .clickqc-box .clickqc-text b { color: var(--warn-fg); }
   .clickqc-box .clickqc-sub { display: block; color: var(--grey-4); font-size: 12px; margin-top: 2px; }
   .clickqc-box.checked { background: var(--warn-bg2); border-style: solid; }
+  /* v4.3: khối nguồn + ngày click — chỉ hiện khi tick click QC */
+  .clickqc-extra { display: none; margin: 10px 0 4px; padding: 12px 12px 4px; border: 1.5px dashed var(--warn-bd); border-radius: 10px; }
+  .clickqc-extra.visible { display: block; }
+  .hint-sub { font-size: 11.5px; color: var(--grey-4); margin-top: 4px; }
 
   .purchase-history-card {
     background: var(--white);
@@ -1146,6 +1154,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   <div class="bs-date-row" id="bs-date-row">
     <label for="bs-date">Ngày thu thập data <span class="req">*</span></label>
     <input type="date" id="bs-date">
+    <div class="hint-sub">Lùi tối đa 10 ngày, trong tháng này · Khách CŨ click lại quảng cáo? KHÔNG dùng mục này — tick 🔁 bên dưới, có ô Nguồn + Ngày click riêng</div>
   </div>
 </div>
 
@@ -1245,6 +1254,21 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
         <span class="clickqc-sub">Tick khi khách CŨ nhắn lại qua ads — kể cả khách cũ chưa có trong CRM mà giờ mới tạo hồ sơ. Khách hoàn toàn mới lần đầu biết đến Genkii, hoặc cập nhật trao đổi thường: KHÔNG tick.</span>
       </span>
     </label>
+
+    <!-- v4.3: lượt click mang NGUỒN + NGÀY riêng — khách in-house click ads Agency
+         thì mess về đúng Agency, nhập trễ thì lượt về đúng ngày click -->
+    <div class="clickqc-extra" id="clickqc-extra">
+      <div class="field">
+        <label>Nguồn quảng cáo LẦN CLICK này <span class="req">*</span></label>
+        <select id="clickqc-source"></select>
+        <div class="hint-sub">Bắt buộc chọn tay — nguồn của cú click, có thể KHÁC nguồn gốc của khách</div>
+      </div>
+      <div class="field">
+        <label>Ngày click</label>
+        <input type="date" id="clickqc-date">
+        <div class="hint-sub">Mặc định hôm nay · nhập trễ được lùi tối đa 10 ngày, trong tháng này</div>
+      </div>
+    </div>
 
     <div class="field" id="f-stage">
       <label>Giai đoạn hiện tại <span class="req">*</span></label>
@@ -1908,6 +1932,33 @@ function setClickQCVisible(visible) {
 
 function onClickQCChange(cb) {
   document.getElementById('clickqc-box').classList.toggle('checked', cb.checked);
+  // v4.3: mở khối chọn Nguồn + Ngày của lần click
+  const extra = document.getElementById('clickqc-extra');
+  extra.classList.toggle('visible', cb.checked);
+  if (cb.checked) {
+    const sel = document.getElementById('clickqc-source');
+    const paidNames = (appConfig.sources || []).filter(s => s.paid).map(s => s.name);
+    // Bắt buộc chọn tay (quyết định Thôi): không mặc định theo nguồn gốc khách —
+    // chính ca "khách in-house click Agency" chứng minh sai attribution đắt hơn 1 cú chạm
+    sel.innerHTML = '<option value="">— Chọn nguồn quảng cáo —</option>'
+      + paidNames.map(n => `<option value="${escapeAttr(n)}">${escapeHtml(n)}</option>`).join('');
+    setBackdateWindow(document.getElementById('clickqc-date'), true);
+  } else {
+    document.getElementById('clickqc-source').value = '';
+  }
+}
+
+// v4.3: khung ngày lùi dùng chung cho Ngày click + Ngày thu thập bổ sung.
+// Quy tắc: min = max(hôm nay − 10 ngày, mùng 1 tháng này); max = hôm nay.
+function setBackdateWindow(input, fillToday) {
+  if (!input) return;
+  const now = new Date();
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const min10 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 10);
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  input.min = iso(min10 > first ? min10 : first);
+  input.max = iso(now);
+  if (fillToday && !input.value) input.value = iso(now);
 }
 
 /**
@@ -2097,9 +2148,32 @@ function onSubmit(e) {
   // Cả 2 đều tính 1 lượt, thống kê xếp vào cột "Click lại QC".
   const clickLaiQC = !!document.getElementById('clickqc')?.checked;
 
+  // v4.3: click lại QC → bắt buộc có nguồn của lần click; ngày trong khung cho phép
+  let clickSource = '', clickDate = '';
+  if (clickLaiQC && !bsState.boSung) {
+    clickSource = v('clickqc-source');
+    if (!clickSource) {
+      showToast('⚠️ Chọn NGUỒN quảng cáo của lần click này (bắt buộc)', 'error-t');
+      document.getElementById('clickqc-source').focus();
+      return;
+    }
+    const cdIso = v('clickqc-date'); // yyyy-mm-dd từ input date
+    if (cdIso) {
+      const inp = document.getElementById('clickqc-date');
+      if ((inp.min && cdIso < inp.min) || (inp.max && cdIso > inp.max)) {
+        showToast('⚠️ Ngày click chỉ được lùi tối đa 10 ngày, trong tháng này', 'error-t');
+        return;
+      }
+      const [yy, mm, dd] = cdIso.split('-');
+      clickDate = dd + '/' + mm + '/' + yy;
+    }
+  }
+
   const payload = {
     action:    isUpdate ? 'update' : 'create',
     clickLaiQC: bsState.boSung ? false : clickLaiQC, // bổ sung là quá khứ, loại trừ click QC
+    clickSource: clickSource, // v4.3: nguồn QC của lần click (bắt buộc khi clickLaiQC)
+    clickDate:   clickDate,   // v4.3: dd/mm/yyyy — rỗng = hôm nay
     boSung:     bsState.boSung,
     boSungDate: bsState.boSungDate,
     allRows:   isUpdate ? lookupResult.allRows : null,
@@ -3921,11 +3995,16 @@ function onBoSungChange(cb) {
   const qcBox = document.getElementById('clickqc-box');
   const qcCb  = document.getElementById('clickqc');
   if (qcBox && qcCb) {
-    if (cb.checked) { qcCb.checked = false; qcBox.classList.remove('checked'); qcBox.classList.add('disabled'); }
+    if (cb.checked) {
+      qcCb.checked = false; qcBox.classList.remove('checked'); qcBox.classList.add('disabled');
+      // v4.3: tắt luôn khối Nguồn + Ngày click nếu đang mở (tránh khối mồ côi)
+      document.getElementById('clickqc-extra').classList.remove('visible');
+    }
     else qcBox.classList.remove('disabled');
   }
-  if (cb.checked && !document.getElementById('bs-date').value) {
-    document.getElementById('bs-date').focus();
+  if (cb.checked) {
+    setBackdateWindow(document.getElementById('bs-date'), false); // v4.3: khung lùi 10 ngày trong tháng
+    if (!document.getElementById('bs-date').value) document.getElementById('bs-date').focus();
   }
 }
 
@@ -3943,6 +4022,11 @@ function readBoSungState() {
   if (!iso) return { error: '⚠️ Đang bật "Nhập bổ sung" — vui lòng chọn Ngày thu thập data' };
   const todayISO = new Date().toISOString().split('T')[0];
   if (iso > todayISO) return { error: '⚠️ Ngày thu thập data không thể ở tương lai' };
+  // v4.3: khung lùi đồng bộ rule server — tối đa 10 ngày, không qua tháng trước
+  const inp = document.getElementById('bs-date');
+  if (inp.min && iso < inp.min) {
+    return { error: '⚠️ Ngày thu thập chỉ được lùi tối đa 10 ngày, trong tháng này' };
+  }
   return { boSung: true, boSungDate: isoToVN(iso) };
 }
 
