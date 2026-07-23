@@ -2,11 +2,17 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.3 | Backend tương thích: v4.3
+PHIÊN BẢN HIỆN TẠI: v4.4 | Backend tương thích: v4.4
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.4   — SỬA SẢN PHẨM 3 ĐIỂM (Nguồn khóa nguyên): (1) Giai đoạn = Chốt mở
+         riêng ô Sản phẩm + hint; (2) form Hoàn thành đơn thêm ô xác nhận SP
+         lần cuối (điền sẵn từ hồ sơ); (3) Quản trị thêm mục Sửa SP sau CSKH
+         (adminToken, confirm, đồng bộ 2 nơi). NHẬP BỔ SUNG bỏ giới hạn lùi
+         (chỉ chặn tương lai) — giới hạn 10-ngày-trong-tháng chỉ còn ở Ngày
+         click QC.
 v4.3   — Khách cũ click QC nguồn khác: tick 🔁 mở khối "Nguồn QC lần click"
          (bắt buộc chọn tay từ nguồn trả phí) + "Ngày click" (mặc định hôm
          nay, lùi ≤10 ngày trong tháng — setBackdateWindow áp cả ô bổ sung).
@@ -1154,7 +1160,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   <div class="bs-date-row" id="bs-date-row">
     <label for="bs-date">Ngày thu thập data <span class="req">*</span></label>
     <input type="date" id="bs-date">
-    <div class="hint-sub">Lùi tối đa 10 ngày, trong tháng này · Khách CŨ click lại quảng cáo? KHÔNG dùng mục này — tick 🔁 bên dưới, có ô Nguồn + Ngày click riêng</div>
+    <div class="hint-sub">Nhập được data từ BẤT KỲ ngày nào trước đây (kể cả trước khi có CRM) — khách xếp về đúng ngày này trong mọi thống kê · Khách CŨ click lại quảng cáo? KHÔNG dùng mục này — tick 🔁 bên dưới</div>
   </div>
 </div>
 
@@ -1273,7 +1279,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     <div class="field" id="f-stage">
       <label>Giai đoạn hiện tại <span class="req">*</span></label>
       <div class="select-wrap">
-        <select id="stage" required>
+        <select id="stage" required onchange="onStageSelectChange()">
           <option value="">— Chọn giai đoạn —</option>
           <option>Inbox</option>
           <option>SĐT - Chưa add Zalo</option>
@@ -1372,6 +1378,14 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     <div class="oi-row"><span class="oi-label">Giai đoạn hiện tại</span><span class="oi-value" id="oi-stage">—</span></div>
     <div class="oi-row"><span class="oi-label">Sản phẩm quan tâm</span><span class="oi-value" id="oi-product">—</span></div>
     <div class="oi-log" id="oi-lastlog">—</div>
+  </div>
+
+  <!-- v4.4 — ĐIỂM SỬA 2/3: xác nhận LẦN CUỐI sản phẩm thật mua trước khi vào sổ.
+       Giá trị này ghi vào cả hồ sơ + dòng lịch sử mua → banner mua hàng đúng từ gốc -->
+  <div class="field" id="f-co-product" style="display:none;">
+    <label>Sản phẩm thật sự mua (xác nhận lần cuối)</label>
+    <select id="co-product"></select>
+    <div class="hint-sub">Điền sẵn theo hồ sơ — chỉ đổi nếu khách chốt mua sản phẩm KHÁC với quan tâm ban đầu</div>
   </div>
 
   <div class="submit-area">
@@ -1666,6 +1680,16 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
       </div>
 
       <div class="ev-form-card">
+        <div class="dash-title">🔧 Sửa sản phẩm khách (sau CSKH)</div>
+        <div class="hint" style="margin-bottom:8px;">Điểm sửa cuối cùng — dùng khi phát hiện sai sót SAU khi khách đã vào CSKH. Sửa đồng bộ cả hồ sơ CRM Tổng lẫn dòng lịch sử mua gần nhất, có ghi vết vào Nhật ký bảo mật.</div>
+        <div class="gc-edit-row">
+          <input type="tel" id="adm-fix-phone" inputmode="numeric" placeholder="SĐT khách cần sửa">
+          <select id="adm-fix-product"></select>
+        </div>
+        <button type="button" class="ev-btn primary full" style="margin-top:8px;" onclick="adminFixProductRun()">🔧 Sửa sản phẩm</button>
+      </div>
+
+      <div class="ev-form-card">
         <div class="dash-title">🧑‍💼 Danh sách Sales (gán khách &amp; thống kê)</div>
         <div class="hint" style="margin-bottom:8px;">Tên trong danh sách này dùng cho ô chọn Sales, gán khách và thống kê. Đăng nhập quản lý ở mục 🔑 phía trên.</div>
         <div id="admin-sales-list"></div>
@@ -1942,7 +1966,7 @@ function onClickQCChange(cb) {
     // chính ca "khách in-house click Agency" chứng minh sai attribution đắt hơn 1 cú chạm
     sel.innerHTML = '<option value="">— Chọn nguồn quảng cáo —</option>'
       + paidNames.map(n => `<option value="${escapeAttr(n)}">${escapeHtml(n)}</option>`).join('');
-    setBackdateWindow(document.getElementById('clickqc-date'), true);
+    setBackdateWindow(document.getElementById('clickqc-date'), true, true);
   } else {
     document.getElementById('clickqc-source').value = '';
   }
@@ -1950,13 +1974,19 @@ function onClickQCChange(cb) {
 
 // v4.3: khung ngày lùi dùng chung cho Ngày click + Ngày thu thập bổ sung.
 // Quy tắc: min = max(hôm nay − 10 ngày, mùng 1 tháng này); max = hôm nay.
-function setBackdateWindow(input, fillToday) {
+// v4.4: limited=true → khung 10-ngày-trong-tháng (CHỈ cho Ngày click QC);
+// limited=false → không giới hạn lùi (Nhập bổ sung: data tiền-CRM nhập tự do)
+function setBackdateWindow(input, fillToday, limited) {
   if (!input) return;
   const now = new Date();
   const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  const min10 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 10);
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  input.min = iso(min10 > first ? min10 : first);
+  if (limited) {
+    const min10 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 10);
+    const first = new Date(now.getFullYear(), now.getMonth(), 1);
+    input.min = iso(min10 > first ? min10 : first);
+  } else {
+    input.removeAttribute('min');
+  }
   input.max = iso(now);
   if (fillToday && !input.value) input.value = iso(now);
 }
@@ -1990,7 +2020,10 @@ function renderPurchaseHistory(history) {
   card.style.display = 'block';
 }
 
+let baseUnlocked = false; // v4.4: trạng thái mở khóa GỐC từ lookup (đã Chốt 1 vòng trước)
+
 function applyLockState(isUnlocked) {
+  baseUnlocked = !!isUnlocked;
   const sourceEl   = document.getElementById('source');
   const productEl  = document.getElementById('product');
   const sourceHint = document.getElementById('source-lock-hint');
@@ -2006,6 +2039,28 @@ function applyLockState(isUnlocked) {
   sectionLbl.innerHTML = isUnlocked
     ? '2 — Nguồn lead & Sản phẩm <span style="color:var(--green)">/ Đã mở khóa — khách vừa hoàn thành 1 vòng Chốt</span>'
     : '2 — Nguồn lead & Sản phẩm <span>/ chỉ sửa được sau khi khách đã Chốt 1 vòng</span>';
+  onStageSelectChange(); // v4.4: đánh giá lại điểm mở tại Chốt sau mỗi lần lookup
+}
+
+// v4.4 — ĐIỂM SỬA 1/3: giai đoạn đích = Chốt → mở RIÊNG ô Sản phẩm (khách xuống
+// tiền là căn cứ cứng để chốt lại SP thật mua). NGUỒN không bao giờ mở ở đây —
+// nguồn là attribution quá khứ (quyết định Thôi). Đổi khỏi Chốt → khóa lại theo
+// trạng thái gốc từ lookup. Backend kiểm cùng điều kiện — đây chỉ là tầng UI.
+function onStageSelectChange() {
+  const productEl = document.getElementById('product');
+  const hint = document.getElementById('product-lock-hint');
+  if (!productEl || !hint) return;
+  const isChot = document.getElementById('stage').value === 'Chốt';
+  if (baseUnlocked) return; // đã mở gốc — không cần can thiệp
+  if (isChot) {
+    productEl.disabled = false;
+    hint.style.display = 'block';
+    hint.innerHTML = '🔓 Giai đoạn <b>Chốt</b>: được chốt lại SẢN PHẨM thật sự mua (Nguồn vẫn khóa). Hệ thống tự ghi vết [Đổi SP] nếu thay đổi.';
+  } else {
+    productEl.disabled = true;
+    hint.style.display = 'block';
+    hint.innerHTML = '🔒 Đang khóa — giữ nguyên sản phẩm của vòng hiện tại. Chỉ sửa được khi chuyển Giai đoạn sang Chốt, hoặc sau khi khách đã Chốt 1 vòng.';
+  }
 }
 
 function applyAsNewCustomer(sameNameDifferentPhone) {
@@ -2541,6 +2596,13 @@ function handleCoLookupResult(data) {
   document.getElementById('oi-name').textContent    = data.name || '—';
   document.getElementById('oi-stage').textContent    = data.stage || '—';
   document.getElementById('oi-product').textContent  = data.product || '—';
+  // v4.4: nạp + điền sẵn ô xác nhận sản phẩm
+  const coProd = document.getElementById('co-product');
+  coProd.innerHTML = (appConfig.products || []).map(p => `<option value="${escapeAttr(p)}"${p === data.product ? ' selected' : ''}>${escapeHtml(p)}</option>`).join('');
+  if (data.product && (appConfig.products || []).indexOf(data.product) === -1) {
+    coProd.innerHTML = `<option value="${escapeAttr(data.product)}" selected>${escapeHtml(data.product)}</option>` + coProd.innerHTML;
+  }
+  document.getElementById('f-co-product').style.display = data.eligible ? 'block' : 'none';
   document.getElementById('oi-lastlog').textContent  = '📝 ' + (data.lastLog || 'Chưa có lịch sử liên hệ');
   card.classList.add('show');
   updateCompleteBtn();
@@ -2582,6 +2644,7 @@ function onCompleteOrder() {
     allRows: coLookupResult.allRows,
     phone:   coLookupResult.phone || v('co-phone').replace(/\D/g, ''),
     sales:   currentSalesName || '', // Sales đang đăng nhập — dùng để gán cho nhiệm vụ CSKH vừa tạo
+    finalProduct: v('co-product') || '', // v4.4: sản phẩm xác nhận lần cuối
   };
 
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
@@ -3486,6 +3549,10 @@ function adminUnlock() {
     document.getElementById('admin-body').style.display = 'block';
     renderAdminLists();
     adminUsersLoad(); // v4.0: nạp danh sách người dùng
+    // v4.4: nạp danh sách sản phẩm cho mục Sửa SP sau CSKH
+    document.getElementById('adm-fix-product').innerHTML =
+      '<option value="">— Sản phẩm mới —</option>'
+      + (appConfig.products || []).map(p => `<option value="${escapeAttr(p)}">${escapeHtml(p)}</option>`).join('');
     showToast('🔓 Đã mở khóa Quản trị', 'success');
   });
 }
@@ -3502,6 +3569,26 @@ const ROLE_OPTIONS = [
   ['sales_leader', 'Sales — Leader'], ['sales_nv', 'Sales — Nhân viên'], ['sales_tv', 'Sales — Thử việc/TTS'],
 ];
 function escapeAttr(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+// v4.4 — ĐIỂM SỬA 3/3 (chỉ Admin): sửa SP sau CSKH qua action adminFixProduct.
+// Đi bằng phiên quản trị (adminToken) — hết phiên 30' thì báo nhập lại PIN.
+function adminFixProductRun() {
+  if (!adminToken) { showToast('🔒 Phiên quản trị đã hết — khóa rồi mở lại bằng PIN', 'error-t'); return; }
+  const phone = v('adm-fix-phone').replace(/\D/g, '');
+  const newProduct = v('adm-fix-product');
+  if (!phone || !newProduct) { showToast('⚠️ Nhập SĐT và chọn sản phẩm mới', 'error-t'); return; }
+  if (!confirm('Sửa sản phẩm của khách ' + phone + ' thành "' + newProduct + '"?\nThao tác ghi vết vào Nhật ký bảo mật.')) return;
+  showLoading(true);
+  apiPost({ action: 'adminFixProduct', phone: phone, newProduct: newProduct, adminToken: adminToken })
+    .then((r) => {
+      showLoading(false);
+      if (r.__unconfirmed) { showToast('⚠️ Không xác nhận được kết quả — kiểm tra hồ sơ khách', 'error-t'); return; }
+      if (!r.success) { showToast('❌ ' + (r.error || 'Sửa thất bại'), 'error-t'); return; }
+      showToast(r.message || '✅ Đã sửa', 'success');
+      document.getElementById('adm-fix-phone').value = '';
+    })
+    .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
+}
 
 function adminUsersLoad() {
   if (!adminPin) return;
@@ -4003,7 +4090,7 @@ function onBoSungChange(cb) {
     else qcBox.classList.remove('disabled');
   }
   if (cb.checked) {
-    setBackdateWindow(document.getElementById('bs-date'), false); // v4.3: khung lùi 10 ngày trong tháng
+    setBackdateWindow(document.getElementById('bs-date'), false, false); // v4.4: bổ sung KHÔNG giới hạn lùi
     if (!document.getElementById('bs-date').value) document.getElementById('bs-date').focus();
   }
 }
@@ -4022,12 +4109,7 @@ function readBoSungState() {
   if (!iso) return { error: '⚠️ Đang bật "Nhập bổ sung" — vui lòng chọn Ngày thu thập data' };
   const todayISO = new Date().toISOString().split('T')[0];
   if (iso > todayISO) return { error: '⚠️ Ngày thu thập data không thể ở tương lai' };
-  // v4.3: khung lùi đồng bộ rule server — tối đa 10 ngày, không qua tháng trước
-  const inp = document.getElementById('bs-date');
-  if (inp.min && iso < inp.min) {
-    return { error: '⚠️ Ngày thu thập chỉ được lùi tối đa 10 ngày, trong tháng này' };
-  }
-  return { boSung: true, boSungDate: isoToVN(iso) };
+  return { boSung: true, boSungDate: isoToVN(iso) }; // v4.4: bổ sung chỉ chặn tương lai
 }
 
 // ══════════════════════════════════════════════
