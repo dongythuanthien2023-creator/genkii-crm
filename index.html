@@ -2,11 +2,14 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.4.1 | Backend tương thích: v4.4
+PHIÊN BẢN HIỆN TẠI: v4.5 | Backend tương thích: v4.5
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.5 (HOTFIX P0) — Chống gộp nhầm khách trùng tên khác SĐT: lookupByName gửi
+         kèm SĐT đang gõ để backend thu hẹp allRows về đúng khách. (Backend
+         v4.5 có thêm chốt chặn cuối trong updateCustomer.)
 v4.4.1 — Làm lại mục Sửa SP sau CSKH theo UX đúng (góp ý Thôi): mở Quản trị
          là TỰ HIỆN danh sách khách CSKH (getCustomerList lọc stage), mỗi hàng
          tên + SĐT + SP hiện tại + select + 💾 lưu từng khách; sửa xong cập
@@ -1827,7 +1830,7 @@ function jsonpLookupByName(name) {
 
   const script = document.createElement('script');
   script.id = 'jsonp-script';
-  script.src = `${APPS_SCRIPT_URL}?action=lookupByName&name=${encodeURIComponent(name)}&callback=_jsonpCB` + authQ();
+  script.src = `${APPS_SCRIPT_URL}?action=lookupByName&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(v('phone').replace(/\D/g,''))}&callback=_jsonpCB` + authQ();
   script.onerror = () => {
     showLoading(false);
     lookupInProgress = false;
