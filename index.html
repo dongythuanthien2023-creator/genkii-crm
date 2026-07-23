@@ -2,11 +2,15 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.4 | Backend tương thích: v4.4
+PHIÊN BẢN HIỆN TẠI: v4.4.1 | Backend tương thích: v4.4
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.4.1 — Làm lại mục Sửa SP sau CSKH theo UX đúng (góp ý Thôi): mở Quản trị
+         là TỰ HIỆN danh sách khách CSKH (getCustomerList lọc stage), mỗi hàng
+         tên + SĐT + SP hiện tại + select + 💾 lưu từng khách; sửa xong cập
+         nhật tại chỗ. Bỏ luồng nhập-SĐT-tay cũ (kèm lỗi layout ô bị bóp).
 v4.4   — SỬA SẢN PHẨM 3 ĐIỂM (Nguồn khóa nguyên): (1) Giai đoạn = Chốt mở
          riêng ô Sản phẩm + hint; (2) form Hoàn thành đơn thêm ô xác nhận SP
          lần cuối (điền sẵn từ hồ sơ); (3) Quản trị thêm mục Sửa SP sau CSKH
@@ -935,6 +939,18 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   /* v3.9: số hiện tức thì — chỉ nháy nhẹ khi giá trị THAY ĐỔI so với lần tải trước */
   .num-flash { animation: numFlash .45s ease-out; }
   @keyframes numFlash { 0% { opacity: .25; } 100% { opacity: 1; } }
+  /* v4.4.1: danh sách sửa SP khách CSKH */
+  .adm-fix-reload { float: right; background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; }
+  .adm-fix-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center;
+    padding: 10px 0; border-bottom: 0.5px solid var(--grey-2); }
+  .adm-fix-info { min-width: 0; }
+  .adm-fix-name { font-size: 13.5px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .adm-fix-sub { font-size: 11.5px; color: var(--grey-4); }
+  .adm-fix-row select { max-width: 170px; padding: 7px 8px; border: 1px solid var(--grey-2); border-radius: 8px;
+    font-size: 12.5px; background: var(--white); color: var(--text); }
+  .adm-fix-save { background: var(--teal); color: #fff; border: none; border-radius: 8px; padding: 8px 10px;
+    font-size: 13px; cursor: pointer; }
+  .adm-fix-save:disabled { background: var(--grey-3); cursor: default; }
   /* v4.0: bảng Người dùng trong Quản trị */
   .adm-user-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px 0;
     border-bottom: 0.5px solid var(--grey-2); }
@@ -1680,13 +1696,11 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
       </div>
 
       <div class="ev-form-card">
-        <div class="dash-title">🔧 Sửa sản phẩm khách (sau CSKH)</div>
-        <div class="hint" style="margin-bottom:8px;">Điểm sửa cuối cùng — dùng khi phát hiện sai sót SAU khi khách đã vào CSKH. Sửa đồng bộ cả hồ sơ CRM Tổng lẫn dòng lịch sử mua gần nhất, có ghi vết vào Nhật ký bảo mật.</div>
-        <div class="gc-edit-row">
-          <input type="tel" id="adm-fix-phone" inputmode="numeric" placeholder="SĐT khách cần sửa">
-          <select id="adm-fix-product"></select>
+        <div class="dash-title">🔧 Sửa sản phẩm khách (sau CSKH)
+          <button type="button" class="adm-fix-reload" onclick="adminFixLoad(true)" title="Tải lại danh sách">🔄</button>
         </div>
-        <button type="button" class="ev-btn primary full" style="margin-top:8px;" onclick="adminFixProductRun()">🔧 Sửa sản phẩm</button>
+        <div class="hint" style="margin-bottom:8px;">Danh sách khách đang ở CSKH — chọn sản phẩm thực tế rồi bấm 💾 từng khách. Sửa đồng bộ cả hồ sơ CRM Tổng lẫn dòng lịch sử mua gần nhất, có ghi vết vào Nhật ký bảo mật.</div>
+        <div id="adm-fix-list"><div class="hint">Đang tải danh sách khách CSKH...</div></div>
       </div>
 
       <div class="ev-form-card">
@@ -3549,10 +3563,7 @@ function adminUnlock() {
     document.getElementById('admin-body').style.display = 'block';
     renderAdminLists();
     adminUsersLoad(); // v4.0: nạp danh sách người dùng
-    // v4.4: nạp danh sách sản phẩm cho mục Sửa SP sau CSKH
-    document.getElementById('adm-fix-product').innerHTML =
-      '<option value="">— Sản phẩm mới —</option>'
-      + (appConfig.products || []).map(p => `<option value="${escapeAttr(p)}">${escapeHtml(p)}</option>`).join('');
+    adminFixLoad(false); // v4.4.1: tự tải danh sách khách CSKH cho mục Sửa SP
     showToast('🔓 Đã mở khóa Quản trị', 'success');
   });
 }
@@ -3570,22 +3581,57 @@ const ROLE_OPTIONS = [
 ];
 function escapeAttr(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
-// v4.4 — ĐIỂM SỬA 3/3 (chỉ Admin): sửa SP sau CSKH qua action adminFixProduct.
-// Đi bằng phiên quản trị (adminToken) — hết phiên 30' thì báo nhập lại PIN.
-function adminFixProductRun() {
+// v4.4.1 — ĐIỂM SỬA 3/3 làm lại theo UX đúng (góp ý Thôi): mở mục là TỰ HIỆN
+// danh sách khách đang CSKH, chọn SP thực tế + 💾 từng khách — admin không phải
+// nhớ/nhập SĐT. Dữ liệu từ getCustomerList (lọc CSKH), sửa qua adminFixProduct.
+let admFixData = [];
+function adminFixLoad(fresh) {
+  const wrap = document.getElementById('adm-fix-list');
+  wrap.innerHTML = '<div class="hint">Đang tải danh sách khách CSKH...</div>';
+  evJsonp('action=getCustomerList' + (fresh ? '&fresh=1' : '') + authQ(), (d) => {
+    const all = (d && d.customers) || (Array.isArray(d) ? d : []);
+    admFixData = all.filter(c => String(c.stage || '').trim() === 'CSKH');
+    renderAdminFixList();
+  });
+}
+function renderAdminFixList() {
+  const wrap = document.getElementById('adm-fix-list');
+  if (!admFixData.length) {
+    wrap.innerHTML = '<div class="hint">Không có khách nào đang ở giai đoạn CSKH</div>';
+    return;
+  }
+  const products = appConfig.products || [];
+  wrap.innerHTML = admFixData.map((c, i) => {
+    const opts = (products.indexOf(c.product) === -1 && c.product
+        ? `<option value="${escapeAttr(c.product)}" selected>${escapeHtml(c.product)}</option>` : '')
+      + products.map(p => `<option value="${escapeAttr(p)}"${p === c.product ? ' selected' : ''}>${escapeHtml(p)}</option>`).join('');
+    return `
+    <div class="adm-fix-row" id="adm-fix-row-${i}">
+      <div class="adm-fix-info">
+        <div class="adm-fix-name">${escapeHtml(c.name || '(không tên)')}</div>
+        <div class="adm-fix-sub">${escapeHtml(c.phone || 'chưa có SĐT')} · SP hiện tại: <b>${escapeHtml(c.product || '—')}</b></div>
+      </div>
+      <select id="adm-fix-sel-${i}">${opts}</select>
+      <button type="button" class="adm-fix-save" onclick="adminFixSave(${i})" ${c.phone ? '' : 'disabled title="Khách chưa có SĐT — không định danh được"'}>💾</button>
+    </div>`;
+  }).join('');
+}
+function adminFixSave(i) {
   if (!adminToken) { showToast('🔒 Phiên quản trị đã hết — khóa rồi mở lại bằng PIN', 'error-t'); return; }
-  const phone = v('adm-fix-phone').replace(/\D/g, '');
-  const newProduct = v('adm-fix-product');
-  if (!phone || !newProduct) { showToast('⚠️ Nhập SĐT và chọn sản phẩm mới', 'error-t'); return; }
-  if (!confirm('Sửa sản phẩm của khách ' + phone + ' thành "' + newProduct + '"?\nThao tác ghi vết vào Nhật ký bảo mật.')) return;
+  const c = admFixData[i];
+  const newProduct = v('adm-fix-sel-' + i);
+  if (!c || !newProduct) return;
+  if (newProduct === c.product) { showToast('ℹ️ Sản phẩm không đổi — không cần lưu', 'error-t'); return; }
+  if (!confirm('Sửa sản phẩm của "' + (c.name || c.phone) + '":\n"' + (c.product || '—') + '" → "' + newProduct + '"?')) return;
   showLoading(true);
-  apiPost({ action: 'adminFixProduct', phone: phone, newProduct: newProduct, adminToken: adminToken })
+  apiPost({ action: 'adminFixProduct', phone: c.phone, newProduct: newProduct, adminToken: adminToken })
     .then((r) => {
       showLoading(false);
-      if (r.__unconfirmed) { showToast('⚠️ Không xác nhận được kết quả — kiểm tra hồ sơ khách', 'error-t'); return; }
+      if (r.__unconfirmed) { showToast('⚠️ Không xác nhận được kết quả — bấm 🔄 tải lại để kiểm tra', 'error-t'); return; }
       if (!r.success) { showToast('❌ ' + (r.error || 'Sửa thất bại'), 'error-t'); return; }
       showToast(r.message || '✅ Đã sửa', 'success');
-      document.getElementById('adm-fix-phone').value = '';
+      admFixData[i].product = newProduct;
+      renderAdminFixList();
     })
     .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
 }
