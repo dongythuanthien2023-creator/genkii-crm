@@ -2,11 +2,14 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.6 | Backend tương thích: v4.6
+PHIÊN BẢN HIỆN TẠI: v4.7 | Backend tương thích: v4.6
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.7   — Tab Khách hàng: thêm chip lọc NHÓM KÊNH (🏠 In-House / 🏢 Agency),
+         chọn nhiều cùng lúc, kết hợp được với lọc giai đoạn/Sales/ngày. Quy
+         tắc phân nhóm đồng bộ backend costGroupOf_. Nhãn đếm hiện nhóm đang lọc.
 v4.6   — DANH SÁCH HỒ SƠ TRÙNG TÊN: gõ tên xong hiện FULL các hồ sơ trùng
          (gộp theo khách), mỗi mục có SĐT · NGÀY VÀO PHỄU · giai đoạn · Sales
          + radio chọn. Mặc định "🆕 khách mới" — không tick gì là tạo mới.
@@ -440,6 +443,12 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     background: var(--white); color: var(--text); outline: none; font-family: inherit;
   }
   .cust-filters input[type="date"].active { border-color: var(--teal); font-weight: 700; }
+  /* v4.7: chip lọc nhóm kênh — bấm để bật/tắt, chọn được nhiều cùng lúc */
+  .cf-group { display: flex; gap: 6px; }
+  .cf-chip { padding: 7px 11px; border: 1px solid var(--grey-2); border-radius: 8px;
+    background: var(--white); color: var(--grey-4); font-size: 12.5px; font-weight: 600;
+    cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .cf-chip.on { border-color: var(--teal); background: var(--teal-lt); color: var(--teal); font-weight: 700; }
   .cf-clear {
     flex-shrink: 0; width: 34px; border: 1.5px solid var(--grey-2); border-radius: 10px;
     background: var(--grey-1); color: var(--grey-4); font-size: 13px; font-weight: 700;
@@ -1486,6 +1495,12 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
           <!-- v3.8: lọc theo NGÀY VÀO — chọn ngày là danh sách chỉ còn khách nhập lên hôm đó -->
           <input type="date" id="cust-filter-date" onchange="renderCustomerList()" aria-label="Lọc theo ngày vào">
           <button type="button" class="cf-clear" id="cust-filter-date-clear" onclick="clearCustDateFilter()" title="Bỏ lọc ngày" style="display:none">✕</button>
+          <!-- v4.7: lọc theo NHÓM KÊNH — chọn nhiều cùng lúc. Cùng quy tắc phân
+               nhóm với chi phí/phễu (tên nguồn chứa "agency" → Agency) -->
+          <div class="cf-group" id="cust-filter-group">
+            <button type="button" class="cf-chip" data-group="In-House" onclick="toggleCustGroup(this)">🏠 In-House</button>
+            <button type="button" class="cf-chip" data-group="Agency" onclick="toggleCustGroup(this)">🏢 Agency</button>
+          </div>
         </div>
       </div>
       <div class="cust-count">
@@ -4404,6 +4419,23 @@ function clearCustDateFilter() {
 // Nút 🔄 Làm mới cũng cần quên cache hoạt động — Sales vừa nhập thêm là thấy ngay
 function clearCustActivityCache() { custActivityCache = {}; }
 
+// v4.7 — Lọc theo nhóm kênh. Quy tắc phân nhóm ĐỒNG BỘ với backend
+// (costGroupOf_): tên nguồn chứa "agency" → Agency, còn lại → In-House.
+// Khách chưa có nguồn → không thuộc nhóm nào, bị ẩn khi có chip đang bật.
+let custGroupFilter = []; // rỗng = không lọc (hiện tất cả)
+
+function custGroupOf(source) {
+  return /agency/i.test(String(source || '')) ? 'Agency' : 'In-House';
+}
+
+function toggleCustGroup(btn) {
+  const g = btn.dataset.group;
+  const i = custGroupFilter.indexOf(g);
+  if (i >= 0) custGroupFilter.splice(i, 1); else custGroupFilter.push(g);
+  btn.classList.toggle('on', custGroupFilter.indexOf(g) >= 0);
+  renderCustomerList();
+}
+
 function renderCustomerList() {
   const listEl = document.getElementById('cust-list');
   const customers = (custData && custData.customers) || [];
@@ -4422,6 +4454,11 @@ function renderCustomerList() {
     if (fStage && c.stage !== fStage) return false;
     if (fSales && c.sales !== fSales) return false;
     if (fDate && c.entryDate !== fDate) return false; // khách VÀO đúng ngày đã chọn
+    // v4.7: lọc nhóm kênh — khách chưa có nguồn bị loại khi đang bật chip nào đó
+    if (custGroupFilter.length > 0) {
+      if (!c.source) return false;
+      if (custGroupFilter.indexOf(custGroupOf(c.source)) === -1) return false;
+    }
     if (q) {
       const hay = (c.name + ' ' + c.phone).toLowerCase();
       if (hay.indexOf(q) === -1) return false;
@@ -4436,6 +4473,7 @@ function renderCustomerList() {
     ? `Ngày ${fDate}` // số từng nhóm đã nằm trên badge 2 khối
     : `${filtered.length}/${customers.length} khách`
       + (fDate ? ` · ngày ${fDate}` : '')
+      + (custGroupFilter.length ? ` · ${custGroupFilter.join(' + ')}` : '')
       + (overdueCount ? ` · ${overdueCount} quá hạn` : '');
 
   if (filtered.length === 0) {
