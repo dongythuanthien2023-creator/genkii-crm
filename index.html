@@ -2,11 +2,27 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.5 | Backend tương thích: v4.5
+PHIÊN BẢN HIỆN TẠI: v4.6 | Backend tương thích: v4.6
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.6   — DANH SÁCH HỒ SƠ TRÙNG TÊN: gõ tên xong hiện FULL các hồ sơ trùng
+         (gộp theo khách), mỗi mục có SĐT · NGÀY VÀO PHỄU · giai đoạn · Sales
+         + radio chọn. Mặc định "🆕 khách mới" — không tick gì là tạo mới.
+         Tick hồ sơ chưa có SĐT → SĐT vừa gõ BỔ SUNG vào hồ sơ đó (gửi
+         confirmRows). Tick hồ sơ có SĐT khác → chặn tại chỗ. SĐT khớp đúng
+         1 hồ sơ → tự chọn + khóa danh sách. Có nút "↩ Chọn lại".
+v4.5.2 (P0) — Siết nguyên tắc: hồ sơ cũ trùng tên KHÔNG có SĐT + lần này ĐÃ có
+         SĐT = khách KHÁC, không ghi đè. Nút "✔ Đúng là khách cũ" nay tự từ
+         chối khi đã gõ SĐT (trước đây bấm được → ghi đè hồ sơ cũ); banner nói
+         rõ lý do tạo hồ sơ mới.
+v4.5.1 (HOTFIX P0 — hoàn tất) — v4.5 chưa chặn được vì lookup CHỈ chạy 1 lần
+         lúc ô SĐT còn TRỐNG (backend không có SĐT để thu hẹp), rồi mọi lần gõ
+         SĐT sau đó chỉ đánh giá lại data CŨ. Nay: khi SĐT khớp mà hồ sơ có
+         nhiều SĐT khác nhau → HỎI LẠI server kèm SĐT, nhận allRows đúng khách.
+         Banner đếm số dòng gộp theo allRows THẬT thay vì duplicateCount (đếm
+         mọi dòng trùng tên).
 v4.5 (HOTFIX P0) — Chống gộp nhầm khách trùng tên khác SĐT: lookupByName gửi
          kèm SĐT đang gõ để backend thu hẹp allRows về đúng khách. (Backend
          v4.5 có thêm chốt chặn cuối trong updateCustomer.)
@@ -942,6 +958,14 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   /* v3.9: số hiện tức thì — chỉ nháy nhẹ khi giá trị THAY ĐỔI so với lần tải trước */
   .num-flash { animation: numFlash .45s ease-out; }
   @keyframes numFlash { 0% { opacity: .25; } 100% { opacity: 1; } }
+  /* v4.6: danh sách hồ sơ trùng tên — Sales tick đích danh */
+  .prof-list { margin-top: 8px; border-top: 1px dashed rgba(255,255,255,.35); padding-top: 6px; }
+  .prof-opt { display: flex; gap: 9px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; cursor: pointer; }
+  .prof-opt:hover { background: rgba(0,0,0,.05); }
+  .prof-opt input { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--teal); flex-shrink: 0; }
+  .prof-main { font-size: 13px; font-weight: 700; line-height: 1.35; }
+  .prof-sub { font-size: 11.5px; opacity: .85; margin-top: 1px; line-height: 1.4; }
+  .prof-locked { font-size: 11.5px; opacity: .8; margin-top: 6px; font-style: italic; }
   /* v4.4.1: danh sách sửa SP khách CSKH */
   .adm-fix-reload { float: right; background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; }
   .adm-fix-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center;
@@ -1813,14 +1837,20 @@ function doLookupByName(name) {
   jsonpLookupByName(name);
 }
 
-function jsonpLookupByName(name) {
+let lookupNarrowFor = null; // v4.5.1: SĐT đang được hỏi lại server (chống gọi lặp)
+
+function jsonpLookupByName(name, phoneOverride) {
   const old = document.getElementById('jsonp-script');
   if (old) old.remove();
+  const phoneQ = phoneOverride !== undefined && phoneOverride !== null
+    ? String(phoneOverride)
+    : v('phone').replace(/\D/g, '');
 
   window._jsonpCB = function(data) {
     showLoading(false);
     lookupInProgress = false;
     lookupDoneName   = name;
+    if (data && phoneQ) data.narrowedFor = phoneQ; // v4.5.1: đánh dấu đã thu hẹp cho SĐT này
     rawNameLookup    = data; // LƯU NGUYÊN BẢN — không bị mất khi SĐT thay đổi sau này
     resolveLookupByNameResult(data);
     delete window._jsonpCB;
@@ -1830,7 +1860,7 @@ function jsonpLookupByName(name) {
 
   const script = document.createElement('script');
   script.id = 'jsonp-script';
-  script.src = `${APPS_SCRIPT_URL}?action=lookupByName&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(v('phone').replace(/\D/g,''))}&callback=_jsonpCB` + authQ();
+  script.src = `${APPS_SCRIPT_URL}?action=lookupByName&name=${encodeURIComponent(name)}&phone=${encodeURIComponent(phoneQ)}&callback=_jsonpCB` + authQ();
   script.onerror = () => {
     showLoading(false);
     lookupInProgress = false;
@@ -1885,7 +1915,21 @@ function resolveLookupByNameResult(data) {
   const existingPhones = data.existingPhones || [];
 
   if (phoneNow && existingPhones.includes(phoneNow)) {
-    // Trùng tên + trùng SĐT → chắc chắn khách cũ
+    // Trùng tên + trùng SĐT → chắc chắn khách cũ.
+    // v4.5.1 (P0) — Lần lookup đầu chạy lúc ô SĐT còn TRỐNG nên backend chưa
+    // thu hẹp được: data.allRows khi đó chứa MỌI dòng trùng tên, kể cả của
+    // khách khác số. Nếu hồ sơ có nhiều SĐT khác nhau, phải HỎI LẠI SERVER kèm
+    // SĐT để nhận allRows đúng của riêng khách này — nếu không, lưu sẽ gộp
+    // nhầm hai người trùng tên. Chỉ gọi lại đúng 1 lần cho mỗi SĐT.
+    const distinctPhones = existingPhones.filter((p, i) => existingPhones.indexOf(p) === i);
+    const needNarrow = distinctPhones.length > 1 && data.narrowedFor !== phoneNow;
+    if (needNarrow) {
+      if (lookupNarrowFor !== phoneNow) {
+        lookupNarrowFor = phoneNow;
+        jsonpLookupByName(v('name').trim(), phoneNow);
+      }
+      return; // chờ kết quả thu hẹp rồi mới dựng banner
+    }
     applyAsExistingCustomer(data);
   } else {
     // Trùng tên nhưng khác SĐT, hoặc chưa nhập SĐT → khách mới
@@ -1920,7 +1964,7 @@ function applyAsExistingCustomer(data) {
       <strong>Tìm thấy khách hàng trùng Tên + SĐT!</strong><br>
       <b>${data.name}</b> — ${data.location || 'Chưa có địa chỉ'}<br>
       Sản phẩm: ${data.product || '—'} · Vào phễu: ${data.entryDate || '—'}
-      ${data.duplicateCount > 1 ? `<br>Sẽ gộp ${data.duplicateCount} dòng trùng thành 1` : ''}
+      ${(data.allRows && data.allRows.length > 1) ? `<br>Sẽ gộp ${data.allRows.length} dòng trùng thành 1` : ''}
       <div class="last-log">📝 Lần LH cuối: ${data.lastLog || 'Chưa có'}</div>
       ${purchaseAlert}
     </div>`;
@@ -2095,7 +2139,11 @@ function applyAsNewCustomer(sameNameDifferentPhone) {
   updLbl.textContent = '3 — Cập nhật lần này';
 
   const phoneNowBanner = v('phone').replace(/\D/g, '');
-  if (sameNameDifferentPhone
+  // v4.6 — DANH SÁCH HỒ SƠ TRÙNG TÊN: Sales tick đích danh thay vì hệ thống đoán.
+  // Mặc định "🆕 khách mới" — không tick gì là tạo mới (quyết định Thôi).
+  if (sameNameDifferentPhone && (sameNameDifferentPhone.profiles || []).length > 0) {
+    renderProfilePicker(sameNameDifferentPhone, phoneNowBanner);
+  } else if (sameNameDifferentPhone
       && (sameNameDifferentPhone.existingPhones || []).length === 0
       && !phoneNowBanner) {
     // v3.7 — TRÙNG TÊN VỚI KHÁCH CŨ CHƯA CÓ SĐT (ca phổ biến: khách inbox không
@@ -2114,15 +2162,17 @@ function applyAsNewCustomer(sameNameDifferentPhone) {
         <span style="display:block; margin-top:4px; font-size:11px; opacity:.8;">Không bấm gì = tạo hồ sơ mới như bình thường.</span>
       </div>`;
   } else if (sameNameDifferentPhone) {
-    // Trùng tên nhưng hồ sơ cũ CÓ SĐT (khác hoặc chưa nhập) — cảnh báo nhẹ,
-    // vẫn xử lý là khách MỚI; muốn gộp thì phải nhập đúng SĐT cũ (căn cứ chắc)
+    // v4.5.2 — Trùng tên nhưng KHÔNG khớp SĐT (hồ sơ cũ có số khác, hoặc hồ sơ
+    // cũ không số mà lần này đã có số) → LUÔN là khách mới, không bao giờ ghi đè.
+    const oldNoPhone = (sameNameDifferentPhone.existingPhones || []).length === 0;
     banner.className = 'new';
     banner.innerHTML = `
       <div class="banner-body">
         <span class="banner-icon">⚠️</span>
         <strong>Trùng tên nhưng khác SĐT</strong> — xử lý như khách mới<br>
-        Đã có ${sameNameDifferentPhone.duplicateCount} hồ sơ tên "${sameNameDifferentPhone.name}" với SĐT khác.
-        Nếu đây thực sự là cùng 1 khách, hãy kiểm tra lại SĐT trước khi lưu.
+        ${oldNoPhone
+          ? `Đã có ${sameNameDifferentPhone.duplicateCount} hồ sơ tên "${sameNameDifferentPhone.name}" CHƯA có SĐT. Lần này đã có SĐT → đây là khách khác, hệ thống tạo hồ sơ mới (hồ sơ cũ giữ nguyên).`
+          : `Đã có ${sameNameDifferentPhone.duplicateCount} hồ sơ tên "${sameNameDifferentPhone.name}" với SĐT khác. Nếu đây thực sự là cùng 1 khách, hãy kiểm tra lại SĐT trước khi lưu.`}
       </div>`;
   } else {
     banner.className = 'new';
@@ -2137,11 +2187,114 @@ function applyAsNewCustomer(sameNameDifferentPhone) {
   updateSubmitBtn();
 }
 
+// ══════════════════════════════════════════════
+// v4.6 — DANH SÁCH HỒ SƠ TRÙNG TÊN (Sales tick đích danh)
+// Hiển thị FULL, gộp theo khách (backend đã gộp). Mỗi mục: SĐT (hoặc "chưa có
+// SĐT") · NGÀY VÀO PHỄU (khóa nhận diện) · giai đoạn · Sales. Mặc định chọn
+// "khách mới": không tick gì → tạo hồ sơ mới bình thường, kể cả khi có hồ sơ
+// trùng tên chưa có SĐT (quyết định Thôi: ngày vào phễu là căn cứ phân biệt).
+// ══════════════════════════════════════════════
+let selectedProfile = null; // hồ sơ Sales đã tick (null = khách mới)
+
+function renderProfilePicker(data, phoneNow) {
+  const banner = document.getElementById('lookup-banner');
+  const profiles = data.profiles || [];
+  // SĐT đang gõ khớp đúng 1 hồ sơ → hệ thống tự chọn, KHÓA danh sách (không cho tick sai)
+  const auto = phoneNow ? profiles.find(p => p.phone === phoneNow) : null;
+  if (auto) {
+    selectedProfile = auto;
+    const d2 = Object.assign({}, data, {
+      allRows: auto.rows, rowIndex: auto.rows[0],
+      stage: auto.stage || data.stage, location: auto.location || data.location,
+      product: auto.product || data.product, entryDate: auto.entryDate || data.entryDate,
+    });
+    applyAsExistingCustomer(d2);
+    const b = document.getElementById('lookup-banner');
+    b.insertAdjacentHTML('beforeend',
+      `<div class="prof-locked">🔒 SĐT khớp đúng hồ sơ vào phễu ${escapeHtml(auto.entryDate || '—')} — đã tự chọn hồ sơ này.</div>`);
+    return;
+  }
+  selectedProfile = null;
+  banner.className = 'new';
+  banner.innerHTML = `
+    <div class="banner-body">
+      <span class="banner-icon">⚠️</span>
+      <strong>Có ${profiles.length} hồ sơ trùng tên "${escapeHtml(data.name || '')}"</strong><br>
+      Chọn đúng khách đang chat, hoặc để nguyên "khách mới" nếu là người khác:
+      <div class="prof-list" id="prof-list">
+        <label class="prof-opt">
+          <input type="radio" name="prof-pick" value="__new__" checked onchange="onProfilePick(-1)">
+          <span><span class="prof-main">🆕 Đây là khách mới</span>
+          <span class="prof-sub">Tạo hồ sơ mới — hồ sơ cũ giữ nguyên, không ghi đè</span></span>
+        </label>
+        ${profiles.map((p, i) => `
+        <label class="prof-opt">
+          <input type="radio" name="prof-pick" value="${i}" onchange="onProfilePick(${i})">
+          <span><span class="prof-main">${escapeHtml(data.name || '')} — ${p.phone ? escapeHtml(p.phone) : '<i>chưa có SĐT</i>'}</span>
+          <span class="prof-sub">Vào phễu ${escapeHtml(p.entryDate || '—')} · ${escapeHtml(p.stage || '—')}${p.sales ? ' · Sales: ' + escapeHtml(p.sales) : ''}${p.rows.length > 1 ? ' · ' + p.rows.length + ' dòng' : ''}</span></span>
+        </label>`).join('')}
+      </div>
+    </div>`;
+  banner.style.display = 'block';
+  updateSubmitBtn();
+}
+
+// Sales tick một mục: -1 = khách mới, >=0 = index hồ sơ trong profiles
+function onProfilePick(idx) {
+  const data = rawNameLookup;
+  if (!data) return;
+  const profiles = data.profiles || [];
+  const phoneNow = v('phone').replace(/\D/g, '');
+  if (idx < 0) { // khách mới — không đụng hồ sơ cũ nào
+    selectedProfile = null;
+    lookupResult = { found: false };
+    document.getElementById('section-update-label').textContent = '3 — Cập nhật lần này';
+    applyLockState(true);
+    setClickQCVisible(false);
+    updateSubmitBtn();
+    return;
+  }
+  const p = profiles[idx];
+  if (!p) return;
+  // Chặn tại chỗ: hồ sơ có SĐT khác số đang gõ = hai người khác nhau
+  if (p.phone && phoneNow && p.phone !== phoneNow) {
+    showToast('⛔ Hồ sơ này mang SĐT ' + p.phone + ' — khác số đang nhập. Đây là khách khác.', 'error-t');
+    const radioNew = document.querySelector('input[name="prof-pick"][value="__new__"]');
+    if (radioNew) { radioNew.checked = true; onProfilePick(-1); }
+    return;
+  }
+  selectedProfile = p;
+  const d2 = Object.assign({}, data, {
+    allRows: p.rows, rowIndex: p.rows[0],
+    stage: p.stage || data.stage, location: p.location || data.location,
+    product: p.product || data.product, entryDate: p.entryDate || data.entryDate,
+  });
+  applyAsExistingCustomer(d2);
+  const b = document.getElementById('lookup-banner');
+  b.insertAdjacentHTML('beforeend',
+    `<div class="prof-locked">✔ Đã chọn hồ sơ vào phễu ${escapeHtml(p.entryDate || '—')}${!p.phone && phoneNow ? ' — SĐT ' + escapeHtml(phoneNow) + ' sẽ được BỔ SUNG vào hồ sơ này' : ''}. <button type="button" class="banner-confirm-btn" onclick="resetProfilePick()">↩ Chọn lại</button></div>`);
+}
+
+function resetProfilePick() {
+  selectedProfile = null;
+  if (rawNameLookup) resolveLookupByNameResult(rawNameLookup);
+}
+
 // v3.7 — Sales xác nhận "trùng tên không SĐT" đúng là khách cũ → chuyển sang
 // chế độ CẬP NHẬT hồ sơ cũ (dùng nguyên kết quả lookup theo tên đã lưu)
 function confirmSameNameNoPhone() {
   if (!rawNameLookup || !rawNameLookup.found) {
     showToast('⚠️ Mất kết quả tra cứu — bấm ra ngoài ô Tên để hệ thống kiểm tra lại', 'error-t');
+    return;
+  }
+  // v4.5.2 (P0) — NGUYÊN TẮC: hồ sơ cũ KHÔNG có SĐT + lần này ĐÃ có SĐT = hai
+  // khách khác nhau, không được ghi đè. Nút xác nhận chỉ dùng cho ca khách cũ
+  // không số quay lại mà lần này VẪN chưa lấy được số.
+  const phoneTyped = v('phone').replace(/\D/g, '');
+  const oldPhones = rawNameLookup.existingPhones || [];
+  if (phoneTyped && !oldPhones.includes(phoneTyped)) {
+    showToast('⛔ Hồ sơ cũ trùng tên KHÔNG có SĐT này — đây là khách khác, hệ thống sẽ tạo hồ sơ mới', 'error-t');
+    applyAsNewCustomer(rawNameLookup);
     return;
   }
   applyAsExistingCustomer(rawNameLookup);
@@ -2159,12 +2312,20 @@ function onPhoneInputAfterNameFound(e) {
   if (rawNameLookup !== null) {
     // Debounce nhẹ để không đánh giá lại liên tục khi đang gõ từng số
     phoneRecheckTimer = setTimeout(() => {
+      // v4.6: đã tick hồ sơ CHƯA có số → giữ nguyên lựa chọn, chỉ cập nhật nhãn
+      // (SĐT vừa gõ sẽ được bổ sung vào hồ sơ đó khi lưu)
+      if (selectedProfile && !selectedProfile.phone) {
+        const idx = (rawNameLookup.profiles || []).indexOf(selectedProfile);
+        if (idx >= 0) { onProfilePick(idx); return; }
+      }
       resolveLookupByNameResult(rawNameLookup);
     }, 400);
   }
 }
 
 function hideBanner() {
+  lookupNarrowFor = null; // v4.5.1: đổi tên/xóa kết quả → cho phép thu hẹp lại
+  selectedProfile = null; // v4.6: bỏ hồ sơ đã tick
   const b = document.getElementById('lookup-banner');
   b.style.display = 'none'; b.className = '';
   document.getElementById('section-update-label').textContent = '3 — Cập nhật lần này';
@@ -2249,6 +2410,9 @@ function onSubmit(e) {
     boSung:     bsState.boSung,
     boSungDate: bsState.boSungDate,
     allRows:   isUpdate ? lookupResult.allRows : null,
+    // v4.6: dòng của hồ sơ Sales TICK đích danh — cửa hợp lệ để bổ sung SĐT
+    // cho hồ sơ cũ chưa có số; server tự kiểm dòng đó có thật sự trống số
+    confirmRows: (isUpdate && selectedProfile) ? selectedProfile.rows : null,
     rowIndex:  isUpdate ? lookupResult.rowIndex : null,
     sales:     v('sales'),
     phone:     v('phone'),
