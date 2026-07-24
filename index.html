@@ -2,11 +2,15 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.7 | Backend tương thích: v4.6
+PHIÊN BẢN HIỆN TẠI: v4.8 | Backend tương thích: v4.8
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.8   — (1) CẢNH BÁO ngày bổ sung lùi quá 180 ngày — chỉ hỏi lại, KHÔNG chặn
+         quyền nhập data cũ; nêu rõ số ngày + năm để lộ ca gõ nhầm năm.
+         (2) Quản trị: công cụ SỬA NGÀY VÀO PHỄU — chọn ngày sai, tick khách,
+         nhập ngày đúng; backend sửa trọn gói + tính lại thống kê 2 ngày.
 v4.7   — Tab Khách hàng: thêm chip lọc NHÓM KÊNH (🏠 In-House / 🏢 Agency),
          chọn nhiều cùng lúc, kết hợp được với lọc giai đoạn/Sales/ngày. Quy
          tắc phân nhóm đồng bộ backend costGroupOf_. Nhãn đếm hiện nhóm đang lọc.
@@ -967,6 +971,14 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   /* v3.9: số hiện tức thì — chỉ nháy nhẹ khi giá trị THAY ĐỔI so với lần tải trước */
   .num-flash { animation: numFlash .45s ease-out; }
   @keyframes numFlash { 0% { opacity: .25; } 100% { opacity: 1; } }
+  /* v4.8: danh sách khách theo ngày trong công cụ sửa ngày */
+  .adm-date-row { display: flex; gap: 9px; align-items: flex-start; padding: 8px 4px;
+    border-bottom: 0.5px solid var(--grey-2); }
+  .adm-date-row input { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--teal); flex-shrink: 0; }
+  .adm-date-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .adm-date-sub { font-size: 11.5px; color: var(--grey-4); margin-top: 1px; }
+  .adm-date-head { display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; font-weight: 700; color: var(--grey-4); padding: 6px 0; }
   /* v4.6: danh sách hồ sơ trùng tên — Sales tick đích danh */
   .prof-list { margin-top: 8px; border-top: 1px dashed rgba(255,255,255,.35); padding-top: 6px; }
   .prof-opt { display: flex; gap: 9px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; cursor: pointer; }
@@ -1746,6 +1758,22 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
       </div>
 
       <div class="ev-form-card">
+        <div class="dash-title">📅 Sửa ngày vào phễu (nhập nhầm ngày)</div>
+        <div class="hint" style="margin-bottom:8px;">Chọn ngày SAI để xem khách đã vào phễu ngày đó → tick khách cần sửa → nhập ngày ĐÚNG. Hệ thống sửa cả CRM Tổng, lịch sử liên hệ và tính lại thống kê 2 ngày.</div>
+        <div class="gc-edit-row" style="grid-template-columns:1fr auto;">
+          <input type="date" id="adm-date-from" aria-label="Ngày sai cần sửa">
+          <button type="button" class="ev-btn ghost" onclick="adminDateLoad()">🔍 Xem</button>
+        </div>
+        <div id="adm-date-list" style="margin-top:8px;"></div>
+        <div id="adm-date-actions" style="display:none; margin-top:10px;">
+          <div class="gc-edit-row" style="grid-template-columns:1fr auto;">
+            <input type="date" id="adm-date-to" aria-label="Ngày đúng">
+            <button type="button" class="ev-btn primary" onclick="adminDateFix()">📅 Chuyển ngày</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ev-form-card">
         <div class="dash-title">🧑‍💼 Danh sách Sales (gán khách &amp; thống kê)</div>
         <div class="hint" style="margin-bottom:8px;">Tên trong danh sách này dùng cho ô chọn Sales, gán khách và thống kê. Đăng nhập quản lý ở mục 🔑 phía trên.</div>
         <div id="admin-sales-list"></div>
@@ -2377,6 +2405,9 @@ function onSubmit(e) {
   // v2.7: chế độ Nhập bổ sung — kiểm tra ngày trước, lỗi thì chặn submit ngay
   const bsState = readBoSungState();
   if (bsState.error) { showToast(bsState.error, 'error-t'); return; }
+  // v4.8 — CẢNH BÁO (không chặn) khi ngày thu thập lùi quá 180 ngày: ca gõ nhầm
+  // NĂM lộ ra ngay vì số ngày nhảy vọt. Xác nhận xong là lưu bình thường.
+  if (bsState.boSung && !confirmOldBackdate(bsState.boSungDate)) return;
 
   // v3.2 — CHẶN LỚP 1: khách chưa có SĐT chỉ được ở Inbox/Không tiềm năng.
   // Data cũ lỡ ở giai đoạn sau: cho GIỮ NGUYÊN giai đoạn (không ép lùi), chỉ chặn tiến thêm.
@@ -3818,6 +3849,81 @@ function adminFixSave(i) {
     .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
 }
 
+// ══════════════════════════════════════════════
+// v4.8 — CÔNG CỤ SỬA NGÀY VÀO PHỄU (Quản trị, cần phiên PIN)
+// ══════════════════════════════════════════════
+let admDateItems = [];
+let admDateFrom = '';
+
+function adminDateLoad() {
+  if (!adminToken) { showToast('🔒 Phiên quản trị đã hết — khóa rồi mở lại bằng PIN', 'error-t'); return; }
+  const iso = v('adm-date-from');
+  if (!iso) { showToast('⚠️ Chọn ngày cần kiểm tra', 'error-t'); return; }
+  admDateFrom = isoToVN(iso);
+  document.getElementById('adm-date-list').innerHTML = '<div class="hint">Đang tải...</div>';
+  document.getElementById('adm-date-actions').style.display = 'none';
+  evJsonp('action=adminListByDate&date=' + encodeURIComponent(admDateFrom)
+    + '&adminToken=' + encodeURIComponent(adminToken) + authQ(), (d) => {
+    if (!d || !d.ok) {
+      document.getElementById('adm-date-list').innerHTML =
+        '<div class="hint">⚠️ ' + escapeHtml((d && d.error) || 'Không tải được') + '</div>';
+      return;
+    }
+    admDateItems = d.items || [];
+    renderAdminDateList();
+  });
+}
+
+function renderAdminDateList() {
+  const wrap = document.getElementById('adm-date-list');
+  if (!admDateItems.length) {
+    wrap.innerHTML = '<div class="hint">Không có khách nào vào phễu ngày ' + escapeHtml(admDateFrom) + '</div>';
+    document.getElementById('adm-date-actions').style.display = 'none';
+    return;
+  }
+  wrap.innerHTML =
+    '<div class="adm-date-head"><span>' + admDateItems.length + ' khách vào phễu ' + escapeHtml(admDateFrom) + '</span>'
+    + '<button type="button" class="banner-confirm-btn" onclick="admDateToggleAll()">Chọn tất cả</button></div>'
+    + admDateItems.map((c, i) => `
+      <label class="adm-date-row">
+        <input type="checkbox" id="adm-date-cb-${i}">
+        <span><span class="adm-date-name">${escapeHtml(c.name)}</span>
+        <span class="adm-date-sub">${c.phone ? escapeHtml(c.phone) : 'chưa có SĐT'}${c.sales ? ' · ' + escapeHtml(c.sales) : ''}${c.source ? ' · ' + escapeHtml(c.source) : ''} · ${escapeHtml(c.stage || '—')}</span></span>
+      </label>`).join('');
+  document.getElementById('adm-date-actions').style.display = 'block';
+}
+
+function admDateToggleAll() {
+  const boxes = admDateItems.map((_, i) => document.getElementById('adm-date-cb-' + i));
+  const allOn = boxes.every(b => b && b.checked);
+  boxes.forEach(b => { if (b) b.checked = !allOn; });
+}
+
+function adminDateFix() {
+  if (!adminToken) { showToast('🔒 Phiên quản trị đã hết — khóa rồi mở lại bằng PIN', 'error-t'); return; }
+  const isoTo = v('adm-date-to');
+  if (!isoTo) { showToast('⚠️ Chọn ngày ĐÚNG', 'error-t'); return; }
+  const toVN = isoToVN(isoTo);
+  if (toVN === admDateFrom) { showToast('⚠️ Ngày mới trùng ngày cũ', 'error-t'); return; }
+  const rows = admDateItems.filter((_, i) => {
+    const cb = document.getElementById('adm-date-cb-' + i);
+    return cb && cb.checked;
+  }).map(c => c.row);
+  if (!rows.length) { showToast('⚠️ Chưa tick khách nào', 'error-t'); return; }
+  if (!confirm('Chuyển ' + rows.length + ' khách từ ' + admDateFrom + ' sang ' + toVN + '?\n\n'
+    + 'Sẽ sửa: CRM Tổng + lịch sử liên hệ + tính lại thống kê cả 2 ngày.')) return;
+  showLoading(true);
+  apiPost({ action: 'adminFixDate', rows: rows, fromDate: admDateFrom, toDate: toVN, adminToken: adminToken })
+    .then((r) => {
+      showLoading(false);
+      if (r.__unconfirmed) { showToast('⚠️ Không xác nhận được kết quả — bấm 🔍 Xem để kiểm tra lại', 'error-t'); return; }
+      if (!r.success) { showToast('❌ ' + (r.error || 'Sửa ngày thất bại'), 'error-t'); return; }
+      showToast(r.message || '✅ Đã chuyển ngày', 'success');
+      adminDateLoad(); // tải lại — danh sách ngày cũ giờ phải rỗng hoặc ít đi
+    })
+    .catch(() => { showLoading(false); showToast('❌ Lỗi kết nối. Thử lại.', 'error-t'); });
+}
+
 function adminUsersLoad() {
   if (!adminPin) return;
   document.getElementById('admin-users-list').innerHTML = '<div class="hint">Đang tải...</div>';
@@ -4330,6 +4436,26 @@ function isoToVN(iso) {
 }
 
 /** Đọc trạng thái Nhập bổ sung khi submit — trả {boSung, boSungDate} hoặc {error} */
+// v4.8 — Hỏi lại khi ngày bổ sung lùi quá 180 ngày. CHỈ cảnh báo: người dùng
+// xác nhận là tiếp tục bình thường, không giới hạn quyền nhập data cũ.
+const BACKDATE_WARN_DAYS = 180;
+function confirmOldBackdate(vnDate) {
+  const parts = String(vnDate || '').split('/');
+  if (parts.length !== 3) return true;
+  const d = new Date(+parts[2], +parts[1] - 1, +parts[0]);
+  if (isNaN(d.getTime())) return true;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const days = Math.round((today - d) / 86400000);
+  if (days <= BACKDATE_WARN_DAYS) return true;
+  return confirm(
+    '⚠️ KIỂM TRA LẠI NGÀY\n\n'
+    + 'Đang nhập data từ ' + days + ' ngày trước (' + vnDate + ').\n'
+    + 'Đây là ngày ' + (d.getFullYear() !== today.getFullYear() ? 'của NĂM ' + d.getFullYear() + ' — ' : '')
+    + 'có đúng không?\n\n'
+    + 'OK = đúng, lưu tiếp · Cancel = để tôi sửa lại'
+  );
+}
+
 function readBoSungState() {
   const checked = !!document.getElementById('bs-check')?.checked;
   if (!checked) return { boSung: false, boSungDate: '' };
