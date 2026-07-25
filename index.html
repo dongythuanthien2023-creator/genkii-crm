@@ -2,11 +2,25 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.8 | Backend tương thích: v4.8
+PHIÊN BẢN HIỆN TẠI: v4.9.2 | Backend tương thích: v4.8
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v4.9.2 — Rà soát trước xuất bản: dọn màu hardcode phá theme — header + nền
+         login chuyển sang token --grad-chrome (nay ĐỔI theo bộ màu, trước đây
+         khóa cứng teal); badge Inbox/SĐT và pill locked dùng token trạng thái.
+         Đã kiểm: cú pháp JS/CSS/HTML, cân thẻ, 65 handler đều có hàm, 0 lỗi
+         TDZ, 0 hàm trùng tên, 40 action gác cổng phủ đủ, FE↔BE khớp action.
+v4.9.1 — Heatmap bảng Sales đổi color-mix → rgba(var(--heat-rgb)) cho tương
+         thích webview cũ; thêm token --heat-rgb cho cả 8 tổ hợp bộ màu × sáng/tối.
+v4.9   — (a) Bảng Sales: conditional formatting — tô nền đậm dần theo giá trị
+         3 cột Lượt/Khách mới/Đơn (color-mix token, tự khớp theme+palette).
+         (b) HỆ BẢNG MÀU (data-palette): 4 bộ định sẵn Teal/Navy/Ocean/Terra, mỗi
+         bộ có bản sáng+tối thiết kế riêng (cân tương phản thủ công, không tự
+         đảo). Nút 🎨 cạnh nút sáng/tối; chọn là đổi cả app + vẽ lại chart.
+         Token ngữ nghĩa (green/red/gold) GIỮ nguyên qua mọi bộ. FIX lỗi màu
+         ô ngày tab Sửa ngày (Quản trị): ép nền+chữ theo token.
 v4.8   — (1) CẢNH BÁO ngày bổ sung lùi quá 180 ngày — chỉ hỏi lại, KHÔNG chặn
          quyền nhập data cũ; nêu rõ số ngày + năm để lộ ca gõ nhầm năm.
          (2) Quản trị: công cụ SỬA NGÀY VÀO PHỄU — chọn ngày sai, tick khách,
@@ -107,6 +121,10 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   var h = new Date().getHours();
   var theme = mode === 'auto' ? ((h >= 6 && h < 18) ? 'light' : 'dark') : mode;
   document.documentElement.setAttribute('data-theme', theme);
+  // v4.9: bảng màu (palette) — trục thứ 2 độc lập với sáng/tối. Áp sớm chống nháy.
+  var pal = 'teal';
+  try { pal = localStorage.getItem('genkii_palette') || 'teal'; } catch (e) {}
+  document.documentElement.setAttribute('data-palette', pal);
 })();
 </script>
 <style>
@@ -150,6 +168,8 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     --glass: rgba(255,255,255,.86);
     --nav-bg: rgba(255,255,255,.97);
     --fab-glow: 0 4px 14px rgba(2,178,169,.30);
+    --heat-rgb: 2,178,169;   /* v4.9.1: thành phần RGB của màu chủ đạo — cho rgba() heatmap */
+    --grad-chrome: linear-gradient(120deg, #0C3835 0%, #0E4B56 100%); /* v4.9.2: header + nền login */
   }
   [data-theme="dark"] {
     color-scheme: dark; /* v4.2.3: chữ ngày + icon lịch + popup lịch tự chuyển tối */
@@ -184,6 +204,88 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     --glass: rgba(22,40,38,.86);
     --nav-bg: rgba(16,26,25,.98);
     --fab-glow: 0 0 16px rgba(53,199,190,.38);
+    --heat-rgb: 53,199,190;
+    --grad-chrome: linear-gradient(120deg, #0D1526 0%, #0E3A44 100%);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     v4.9 — BẢNG MÀU (data-palette). Mỗi bộ override token THƯƠNG HIỆU
+     (teal/navy + gradient + aura + chart). GIỮ nguyên token ngữ nghĩa
+     (green=tăng, red=giảm/cảnh báo, gold=chú ý) qua mọi bộ. Mỗi bộ có
+     bản SÁNG và TỐI thiết kế riêng — đã cân tương phản chữ trên nền.
+     'teal' = mặc định logo Genkii, không cần override (đã ở :root).
+     ══════════════════════════════════════════════════════════════ */
+
+  /* ── NAVY ── nghiêm túc, hợp số liệu tài chính ── */
+  [data-palette="navy"]:root, [data-palette="navy"] {
+    --navy: #1E2E52; --heading: #1B2A4A; --teal: #3D53A0; --teal-lt: #E6E9F5;
+    --st-blue-fg: #3D53A0; --st-blue-bg: #E6E9F5;
+    --chart-main: #3D53A0; --chart-soft: #B9C2E4;
+    --grad-hero: linear-gradient(135deg, #2B3D6F, #5B6FA2);
+    --grad-fab:  linear-gradient(135deg, #2B3D6F, #5B6FA2);
+    --aur1: rgba(43,61,111,.12); --aur2: rgba(91,111,162,.10);
+    --fab-glow: 0 4px 14px rgba(43,61,111,.30);
+    --heat-rgb: 61,83,160;
+    --grad-chrome: linear-gradient(120deg, #1B2A4A 0%, #2B3D6F 100%);
+  }
+  [data-theme="dark"][data-palette="navy"] {
+    --navy: #1B2542; --heading: #EDF0FB; --teal: #8091D6; --teal-lt: rgba(128,145,214,.16);
+    --st-blue-fg: #8091D6; --st-blue-bg: rgba(128,145,214,.15);
+    --chart-main: #8091D6; --chart-soft: rgba(128,145,214,.42);
+    --grad-hero: linear-gradient(135deg, #2B3D6F, #46589A);
+    --grad-fab:  linear-gradient(135deg, #5B6FA2, #8091D6);
+    --aur1: rgba(91,111,162,.18); --aur2: rgba(128,145,214,.13);
+    --fab-glow: 0 0 16px rgba(128,145,214,.38);
+    --heat-rgb: 128,145,214;
+    --grad-chrome: linear-gradient(120deg, #131B33 0%, #1E2E52 100%);
+  }
+
+  /* ── OCEAN ── xanh biển trầm, dịu mắt cho phiên dài ── */
+  [data-palette="ocean"]:root, [data-palette="ocean"] {
+    --navy: #164654; --heading: #143C48; --teal: #2C7A9E; --teal-lt: #DEF0F7;
+    --st-blue-fg: #2C7A9E; --st-blue-bg: #DEF0F7;
+    --chart-main: #367EA2; --chart-soft: #B1DFF6;
+    --grad-hero: linear-gradient(135deg, #164654, #367EA2);
+    --grad-fab:  linear-gradient(135deg, #164654, #367EA2);
+    --aur1: rgba(54,126,162,.12); --aur2: rgba(177,223,246,.14);
+    --fab-glow: 0 4px 14px rgba(54,126,162,.30);
+    --heat-rgb: 44,122,158;
+    --grad-chrome: linear-gradient(120deg, #123642 0%, #1E5F78 100%);
+  }
+  [data-theme="dark"][data-palette="ocean"] {
+    --navy: #123642; --heading: #E7F3F9; --teal: #5FB3D6; --teal-lt: rgba(95,179,214,.16);
+    --st-blue-fg: #5FB3D6; --st-blue-bg: rgba(95,179,214,.15);
+    --chart-main: #5FB3D6; --chart-soft: rgba(95,179,214,.42);
+    --grad-hero: linear-gradient(135deg, #164654, #2E6E8C);
+    --grad-fab:  linear-gradient(135deg, #367EA2, #5FB3D6);
+    --aur1: rgba(54,126,162,.18); --aur2: rgba(95,179,214,.13);
+    --fab-glow: 0 0 16px rgba(95,179,214,.38);
+    --heat-rgb: 95,179,214;
+    --grad-chrome: linear-gradient(120deg, #0E2A33 0%, #164654 100%);
+  }
+
+  /* ── TERRA ── cam đất ấm, đổi không khí ── */
+  [data-palette="terra"]:root, [data-palette="terra"] {
+    --navy: #9A4E38; --heading: #8A4530; --teal: #D2664A; --teal-lt: #FBE7E0;
+    --st-blue-fg: #C15A3F; --st-blue-bg: #FBE7E0;
+    --chart-main: #D2664A; --chart-soft: #F3C3B4;
+    --grad-hero: linear-gradient(135deg, #A95C4A, #E27A5F);
+    --grad-fab:  linear-gradient(135deg, #A95C4A, #E27A5F);
+    --aur1: rgba(226,122,95,.13); --aur2: rgba(245,200,186,.14);
+    --fab-glow: 0 4px 14px rgba(226,122,95,.30);
+    --heat-rgb: 210,102,74;
+    --grad-chrome: linear-gradient(120deg, #8A4530 0%, #C15A3F 100%);
+  }
+  [data-theme="dark"][data-palette="terra"] {
+    --navy: #6E3627; --heading: #FBEBE4; --teal: #E89478; --teal-lt: rgba(232,148,120,.16);
+    --st-blue-fg: #E89478; --st-blue-bg: rgba(232,148,120,.15);
+    --chart-main: #E89478; --chart-soft: rgba(232,148,120,.42);
+    --grad-hero: linear-gradient(135deg, #A95C4A, #C96B52);
+    --grad-fab:  linear-gradient(135deg, #E27A5F, #E89478);
+    --aur1: rgba(226,122,95,.18); --aur2: rgba(232,148,120,.13);
+    --fab-glow: 0 0 16px rgba(232,148,120,.38);
+    --heat-rgb: 232,148,120;
+    --grad-chrome: linear-gradient(120deg, #46231A 0%, #6E3627 100%);
   }
 
   /* ─── RESET ─── */
@@ -300,7 +402,10 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     transition: background-color 99999s ease-out 0s;
   }
   /* v4.2.3: mọi ô ngày/giờ dùng chữ theo theme — hết cảnh chữ đen trên nền tối */
-  input[type="date"], input[type="time"] { color: var(--text); }
+  input[type="date"], input[type="time"] { color: var(--text); background: var(--white); }
+  /* v4.9: ô ngày trong khối Quản trị (.gc-edit-row) — ép nền + chữ theo token,
+     hết cảnh nền trắng/chữ tối lệch theme (khối 📅 Sửa ngày vào phễu) */
+  .gc-edit-row input[type="date"] { background: var(--white); color: var(--text); border: 1px solid var(--grey-2); border-radius: 8px; padding: 8px 10px; }
   .field input.filled { background: var(--teal-lt); border-color: var(--teal); color: var(--heading); }
   .field .hint { font-size: 11.5px; color: var(--grey-3); margin-top: 5px; }
   .field.error input,
@@ -479,8 +584,8 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     padding: 2px 9px; border-radius: 999px; white-space: nowrap;
     background: var(--grey-1); color: var(--grey-4);
   }
-  .stage-badge.st-inbox   { background: #e8f0fb; color: #2f6bb5; }
-  .stage-badge.st-sdt     { background: #e8f0fb; color: #2f6bb5; }
+  .stage-badge.st-inbox   { background: var(--st-blue-bg); color: var(--st-blue-fg); }
+  .stage-badge.st-sdt     { background: var(--st-blue-bg); color: var(--st-blue-fg); }
   .stage-badge.st-tuvan   { background: var(--gold-lt); color: var(--gold); }
   .stage-badge.st-chot    { background: var(--navy); color: #fff; }
   .stage-badge.st-cskh    { background: var(--teal-lt); color: var(--teal); }
@@ -611,7 +716,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   .gc-pills { display: flex; gap: 6px; }
   .gc-pill { flex: 1; text-align: center; font-size: 10.5px; font-weight: 700; padding: 7px 3px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; -webkit-tap-highlight-color: transparent; user-select: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gc-pill.empty { background: var(--grey-1); color: var(--grey-3); border: 1px dashed var(--grey-2); font-weight: 600; }
-  .gc-pill.locked { background: var(--st-red-bg); color: #E8A0A0; cursor: not-allowed; }
+  .gc-pill.locked { background: var(--st-red-bg); color: var(--red); cursor: not-allowed; }
   .gc-pill.picking { background: var(--white); color: var(--heading); border: 1.5px solid var(--navy); }
   .gc-picker { border: 1.5px solid var(--grey-2); border-radius: 10px; overflow: hidden; margin-top: 8px; }
   .gc-picker-opt { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; border-bottom: 1px solid var(--grey-1); -webkit-tap-highlight-color: transparent; }
@@ -896,8 +1001,10 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
 
   /* ═══ v3.1 PREMIUM LAYER ═══ */
   /* Header gradient + nút theme */
-  .app-header { background: linear-gradient(120deg, #0C3835 0%, #0E4B56 100%); }
-  [data-theme="dark"] .app-header { background: linear-gradient(120deg, #0D1526 0%, #0E3A44 100%); border-bottom: 1px solid rgba(45,212,191,.18); }
+  /* v4.9.2: header đọc token → đổi theo BỘ MÀU (trước đây khóa cứng teal, chọn
+     Navy/Ocean/Terra mà header vẫn xanh teal → lệch nhận diện) */
+  .app-header { background: var(--grad-chrome); }
+  [data-theme="dark"] .app-header { border-bottom: 1px solid rgba(255,255,255,.10); }
   .theme-btn {
     background: var(--grey-1); border: 1px solid var(--grey-2);
     color: var(--grey-4); border-radius: 999px; padding: 5px 12px; font-size: 11.5px; font-weight: 700;
@@ -946,7 +1053,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     background:
       radial-gradient(520px 420px at 12% 8%, var(--aur1), transparent 60%),
       radial-gradient(460px 380px at 90% 88%, var(--aur2), transparent 60%),
-      linear-gradient(160deg, #0C3835, #0E4B56) !important;
+      var(--grad-chrome) !important;
   }
   #login-screen .login-card { background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.25); box-shadow: 0 20px 60px rgba(5,15,30,.4); }
   #login-screen .login-logo { background: var(--grad-fab) !important; box-shadow: var(--fab-glow); }
@@ -1164,6 +1271,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
 <div class="logged-in-bar">
   <span>👋 <span id="greeting-time">Chào</span>, <b id="logged-in-name">—</b></span>
   <button type="button" class="theme-btn" id="theme-btn" onclick="cycleTheme()">🌗 Auto</button>
+  <button type="button" class="theme-btn" id="palette-btn" onclick="cyclePalette()" title="Đổi bảng màu giao diện">🎨 Teal</button>
   <button type="button" class="theme-btn" onclick="switchTab('admin')" title="Quản trị hệ thống (cần mã PIN)"><svg class="i"><use href="#i-gear"/></svg></button>
   <button type="button" onclick="doLogout()">Đăng xuất</button>
 </div>
@@ -2971,6 +3079,32 @@ function applyTheme() {
     try { renderDashboard(dashLastData); } catch (e) {}
   }
 }
+// v4.9 — Bảng màu: 4 bộ định sẵn (không cho tự chọn màu — mỗi bộ đã cân
+// tương phản sáng/tối thủ công). Chọn là đổi cả app + vẽ lại chart theo token.
+const PALETTES = ['teal', 'navy', 'ocean', 'terra'];
+const PALETTE_LABELS = { teal: '🎨 Teal', navy: '🎨 Navy', ocean: '🎨 Ocean', terra: '🎨 Terra' };
+const PALETTE_KEY = 'genkii_palette';
+let paletteMode = 'teal';
+try { paletteMode = localStorage.getItem(PALETTE_KEY) || 'teal'; } catch (e) {}
+
+function applyPalette() {
+  document.documentElement.setAttribute('data-palette', paletteMode);
+  const btn = document.getElementById('palette-btn');
+  if (btn) btn.textContent = PALETTE_LABELS[paletteMode] || '🎨 Teal';
+  // Vẽ lại chart để màu series khớp bộ mới (chart đọc token lúc vẽ)
+  if (typeof dashLastData !== 'undefined' && dashLastData && typeof renderDashboard === 'function') {
+    try { renderDashboard(dashLastData); } catch (e) {}
+  }
+}
+function cyclePalette() {
+  const i = PALETTES.indexOf(paletteMode);
+  paletteMode = PALETTES[(i + 1) % PALETTES.length];
+  try { localStorage.setItem(PALETTE_KEY, paletteMode); } catch (e) {}
+  applyPalette();
+  const names = { teal: 'Teal — mặc định Genkii', navy: 'Navy — nghiêm túc', ocean: 'Ocean — dịu mắt', terra: 'Terra — ấm' };
+  showToast('🎨 ' + names[paletteMode], 'success');
+}
+
 function cycleTheme() {
   themeMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
   try { localStorage.setItem(THEME_KEY, themeMode); } catch (e) {}
@@ -2991,6 +3125,7 @@ document.addEventListener('click', (e) => {
   }
 });
 document.addEventListener('DOMContentLoaded', applyTheme);
+document.addEventListener('DOMContentLoaded', applyPalette); // v4.9: áp bảng màu đã lưu
 
 // Lời chào theo buổi trên thanh đăng nhập
 function updateGreeting() {
@@ -3686,14 +3821,26 @@ function renderDashboard(d) {
   // ── Bảng Sales ──
   const tbody = document.querySelector('#sales-table tbody');
   const sales = d.sales || [];
+  // v4.9 — Conditional formatting: tô nền đậm dần theo giá trị (cao = đậm) cho
+  // 3 cột hiệu suất. Dùng token màu chủ đạo qua alpha → tự khớp theme + palette.
+  const maxOf = k => Math.max(1, ...sales.map(s => s[k] || 0));
+  const mx = { luot: maxOf('luot'), khachMoi: maxOf('khachMoi'), don: maxOf('don') };
+  const heat = (v, k) => {
+    const r = (v || 0) / mx[k];
+    if (r <= 0) return '';
+    // nền teal (token) alpha 0.08→0.34 theo tỉ lệ — nhạt vẫn đọc rõ chữ
+    // v4.9.1: dùng rgba(var(--heat-rgb)) thay color-mix — color-mix cần Chrome
+    // 111+/Safari 16.2+, webview cũ trên máy Sales sẽ mất nền. rgba() chạy mọi nơi.
+    return ` style="background:rgba(var(--heat-rgb), ${(0.08 + r * 0.26).toFixed(3)})"`;
+  };
   tbody.innerHTML = sales.length === 0
     ? '<tr><td colspan="6" class="dash-empty">Chưa có hoạt động nào trong tháng</td></tr>'
     : sales.map(s => `
       <tr>
         <td>${escapeHtml(s.name)}</td>
-        <td>${s.luot}</td>
-        <td>${s.khachMoi}</td>
-        <td>${s.don}</td>
+        <td${heat(s.luot, 'luot')}>${s.luot}</td>
+        <td${heat(s.khachMoi, 'khachMoi')}>${s.khachMoi}</td>
+        <td${heat(s.don, 'don')}>${s.don}</td>
         <td class="${s.quaHan > 0 ? 'oh' : ''}">${s.quaHan}</td>
         <td class="${(s.viPham || 0) > 0 ? 'oh' : ''}">${s.viPham || 0}</td>
       </tr>`).join('');
