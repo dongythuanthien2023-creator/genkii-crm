@@ -2,11 +2,14 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v6.3.1 | Backend tương thích: v6.3
+PHIÊN BẢN HIỆN TẠI: v6.3.2 | Backend tương thích: v6.3
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v6.3.2 — Thông báo lỗi nêu ĐÚNG request nào hỏng (trước đây mọi lỗi evJsonp đều
+         ghi "dữ liệu sự kiện" dù đang tải cấu hình/khách/nhiệm vụ — không truy
+         được nguyên nhân). Thêm thời gian chờ 25 giây để không treo im lặng.
 v6.3.1 (HOTFIX) — Thanh lọc chung không chạy: v6.3 XÓA HẲN khối chứa 2 ô ẩn
          luot-from/luot-to (thay vì ẩn như src/cost), nên applyDashRange gán
          .value vào null → TypeError, dừng toàn bộ. Nay khôi phục 2 ô ở dạng ẩn
@@ -4961,7 +4964,7 @@ function jsonpRange(action, range, onData) {
   const script = document.createElement('script');
   script.id = 'jsonp-' + cbName;
   script.src = `${APPS_SCRIPT_URL}?action=${action}&from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}&callback=${cbName}` + authQ();
-  script.onerror = () => showToast('❌ Lỗi tải dữ liệu khoảng ngày. Thử lại.', 'error-t');
+  script.onerror = () => showToast('❌ Không tải được: ' + action + '. Kiểm tra mạng rồi thử lại.', 'error-t');
   document.head.appendChild(script);
 }
 
@@ -5591,19 +5594,39 @@ let evAddOpen = false;        // form thêm khách đang mở
 let evOthersOpen = false;     // nhóm "khách khác" trong điểm danh đang mở
 let evJsonpSeq = 0;
 
+// v6.3.2 — evJsonp dùng CHUNG cho 11 loại request, nhưng thông báo lỗi luôn ghi
+// "dữ liệu sự kiện" bất kể hỏng cái gì → không truy được nguyên nhân. Nay nêu
+// đúng tên action, và thêm THỜI GIAN CHỜ 25 giây để không treo im lặng khi
+// Apps Script không phản hồi (trước đây chỉ bắt lỗi mạng, không bắt treo).
 function evJsonp(query, onData) {
   const cbName = '_jsonpCBEvent' + (++evJsonpSeq);
-  window[cbName] = function(data) {
-    onData(data);
+  const actName = (String(query).match(/action=(\w+)/) || [])[1] || 'dữ liệu';
+  let done = false;
+  const cleanup = () => {
     delete window[cbName];
     const s = document.getElementById('jsonp-' + cbName);
     if (s) s.remove();
   };
+  window[cbName] = function(data) {
+    done = true;
+    onData(data);
+    cleanup();
+  };
   const script = document.createElement('script');
   script.id = 'jsonp-' + cbName;
   script.src = `${APPS_SCRIPT_URL}?${query}&callback=${cbName}` + authQ();
-  script.onerror = () => showToast('❌ Lỗi tải dữ liệu sự kiện. Thử lại.', 'error-t');
+  script.onerror = () => {
+    done = true;
+    showToast('❌ Không tải được: ' + actName + '. Kiểm tra mạng rồi thử lại.', 'error-t');
+    cleanup();
+  };
   document.head.appendChild(script);
+  setTimeout(() => {
+    if (!done) {
+      showToast('⏱️ Quá lâu không phản hồi: ' + actName + '. Thử lại.', 'error-t');
+      cleanup();
+    }
+  }, 25000);
 }
 
 function evPost(payload, onDone) {
