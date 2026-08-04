@@ -2,11 +2,17 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v5.2.1 | Backend tương thích: v5.2
+PHIÊN BẢN HIỆN TẠI: v6.1 | Backend tương thích: v6.1
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v6.1   — QUY TRÌNH 7 BẬC trên giao diện: (a) dropdown giai đoạn + 5 dropdown
+         trường phụ NẠP TỪ getConfig, hết hardcode (đổi quy trình chỉ sửa
+         QUY_TRINH ở Code.gs). (b) Trường phụ thuộc: Trạng thái gọi/Zalo hiện
+         từ bậc Có SĐT, Kết quả trải nghiệm ở bậc 4-5, Giá trị đơn + Affiliate
+         từ Chốt, Lý do dừng bắt buộc khi Không thành. (c) Cảnh báo nhảy cóc
+         bậc (chỉ cảnh báo, không chặn). (d) Màu phễu + nhãn cho 7 bậc mới.
 v5.2.1 — (a) Thẻ NHIỆM VỤ rộng 860px trên máy tính như thẻ khách. Gốc lỗi:
          khối @media 900px đặt TRƯỚC @media 480px nên bị rule 520px ghi đè —
          nay dời xuống sau. (b) Tab Nhiệm vụ: nút "Xem" xác nhận rồi mới tải
@@ -624,6 +630,12 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
       border-bottom: 0.5px solid var(--grey-2) !important; }
     .dash-table.stack-mobile td.sm-head::before { content: none; }
   }
+  /* v6.1: trường phụ thuộc giai đoạn + cảnh báo nhảy cóc bậc */
+  .dep-field { animation: depIn .18s ease-out; }
+  @keyframes depIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  .stage-warn { margin-top: 6px; padding: 8px 10px; border-radius: 8px;
+    background: var(--warn-bg); border: 1px solid var(--warn-bd);
+    color: var(--warn-fg); font-size: 12px; line-height: 1.45; }
   /* v5.2: thanh chọn khoảng ngày tab Nhiệm vụ */
   .task-daterange { display: flex; gap: 8px; align-items: center; padding: 12px 16px 0;
     max-width: 860px; margin: 0 auto; }
@@ -696,6 +708,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   .stage-badge.st-chot    { background: var(--navy); color: #fff; }
   .stage-badge.st-cskh    { background: var(--teal-lt); color: var(--teal); }
   .stage-badge.st-khachcu { background: var(--green-lt); color: var(--green); }
+  .stage-badge.st-special { background: var(--st-blue-bg); color: #8C6BC8; }
   .stage-badge.st-ktn     { background: var(--grey-2); color: var(--grey-3); }
   .cust-card .cc-mid { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--grey-4); margin-bottom: 6px; flex-wrap: wrap; }
   .cust-card .cc-next { font-size: 12px; color: var(--grey-4); background: var(--grey-1); border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; gap: 8px; }
@@ -1578,18 +1591,42 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     <div class="field" id="f-stage">
       <label>Giai đoạn hiện tại <span class="req">*</span></label>
       <div class="select-wrap">
+        <!-- v6.1: danh sách nạp từ getConfig (QUY_TRINH ở backend) — không còn
+             hardcode, đổi quy trình chỉ sửa 1 nơi duy nhất -->
         <select id="stage" required onchange="onStageSelectChange()">
           <option value="">— Chọn giai đoạn —</option>
-          <option>Inbox</option>
-          <option>SĐT - Chưa add Zalo</option>
-          <option>Đã add Zalo - Tư vấn</option>
-          <option>Chốt</option>
-          <option>Không tiềm năng</option>
-          <option>Khách cũ</option>
-          <option>Khách yêu cầu đặc biệt</option>
         </select>
       </div>
       <div class="err-msg">Vui lòng chọn giai đoạn</div>
+      <div class="stage-warn" id="stage-warn" style="display:none"></div>
+    </div>
+
+    <!-- v6.1: các trường PHỤ THUỘC giai đoạn — chỉ hiện khi liên quan -->
+    <div class="field dep-field" id="f-ttgoi" style="display:none">
+      <label>Trạng thái gọi</label>
+      <select id="ttGoi"></select>
+    </div>
+    <div class="field dep-field" id="f-ttzalo" style="display:none">
+      <label>Trạng thái Zalo</label>
+      <select id="ttZalo"></select>
+    </div>
+    <div class="field dep-field" id="f-kqtn" style="display:none">
+      <label>Kết quả trải nghiệm</label>
+      <select id="kqTraiNghiem"></select>
+    </div>
+    <div class="field dep-field" id="f-lydo" style="display:none">
+      <label>Lý do dừng <span class="req">*</span></label>
+      <select id="lyDoDung"></select>
+      <div class="hint-sub">Bắt buộc chọn — cơ sở phân tích nguyên nhân mất khách</div>
+    </div>
+    <div class="field dep-field" id="f-giatri" style="display:none">
+      <label>Giá trị đơn hàng (đ)</label>
+      <input type="text" id="giaTri" inputmode="numeric" placeholder="VD: 60000000">
+      <div class="hint-sub">Dùng tính hiệu quả chi phí quảng cáo (ROAS)</div>
+    </div>
+    <div class="field dep-field" id="f-affiliate" style="display:none">
+      <label>Vai trò Affiliate</label>
+      <select id="affiliate"></select>
     </div>
 
     <div class="field" id="f-temp">
@@ -2387,9 +2424,14 @@ function renderPurchaseHistory(history) {
 }
 
 let baseUnlocked = false; // v4.4: trạng thái mở khóa GỐC từ lookup (đã Chốt 1 vòng trước)
+// v6.1 — Bậc hiện tại của khách đang mở (từ lookup) — để cảnh báo nhảy cóc.
+// Khai báo TẠI ĐÂY vì applyLockState() phía trên dùng nó; để dưới sẽ vướng TDZ.
+let stageHienTai = '';
 
 function applyLockState(isUnlocked) {
   baseUnlocked = !!isUnlocked;
+  // v6.1: nhớ bậc HIỆN TẠI của khách để so khi Sales chọn bậc mới
+  stageHienTai = (typeof lookupResult === 'object' && lookupResult && lookupResult.stage) || '';
   const sourceEl   = document.getElementById('source');
   const productEl  = document.getElementById('product');
   const sourceHint = document.getElementById('source-lock-hint');
@@ -2412,7 +2454,47 @@ function applyLockState(isUnlocked) {
 // tiền là căn cứ cứng để chốt lại SP thật mua). NGUỒN không bao giờ mở ở đây —
 // nguồn là attribution quá khứ (quyết định Thôi). Đổi khỏi Chốt → khóa lại theo
 // trạng thái gốc từ lookup. Backend kiểm cùng điều kiện — đây chỉ là tầng UI.
+/** Vị trí bậc trên trục chính (1..7); nhánh/tên lạ = 0. Đọc từ QUY_TRINH backend. */
+function bacIndex(ten) {
+  const bac = (appConfig && appConfig.quyTrinh && appConfig.quyTrinh.bac) || [];
+  for (let i = 0; i < bac.length; i++) if (bac[i].ten === ten) return i + 1;
+  return 0;
+}
+
+/** v6.1 — Hiện/ẩn các trường theo giai đoạn đang chọn + cảnh báo nhảy cóc bậc. */
+function capNhatTruongPhuThuoc() {
+  const st = document.getElementById('stage').value;
+  const i = bacIndex(st);
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+  // Trạng thái gọi + Zalo: từ bậc "Có SĐT" (2) trở đi
+  show('f-ttgoi',  i >= 2);
+  show('f-ttzalo', i >= 2);
+  // Kết quả trải nghiệm: bậc Hẹn trải nghiệm (4) và Đã trải nghiệm (5)
+  show('f-kqtn', i === 4 || i === 5);
+  // Giá trị đơn: từ bậc Chốt (6) trở đi
+  show('f-giatri', i >= 6);
+  // Affiliate: từ Chốt trở đi, hoặc nhánh Chuyển Affiliate
+  show('f-affiliate', i >= 6 || st === 'Chuyển Affiliate');
+  // Lý do dừng: bắt buộc khi Không thành
+  show('f-lydo', st === 'Không thành');
+
+  // ── Cảnh báo nhảy cóc (chỉ cảnh báo, KHÔNG chặn — quyết định đã chốt) ──
+  const warn = document.getElementById('stage-warn');
+  const cu = bacIndex(stageHienTai);
+  if (warn) {
+    if (i > 0 && cu > 0 && i - cu > 1) {
+      const bac = appConfig.quyTrinh.bac;
+      const boQua = bac.slice(cu, i - 1).map(b => b.ten).join(', ');
+      warn.style.display = 'block';
+      warn.innerHTML = `⚠️ Đang bỏ qua bậc: <b>${escapeHtml(boQua)}</b>.<br>Vẫn lưu được — hệ thống ghi lại việc bỏ qua để đối chiếu sau.`;
+    } else {
+      warn.style.display = 'none';
+    }
+  }
+}
+
 function onStageSelectChange() {
+  capNhatTruongPhuThuoc(); // v6.1
   const productEl = document.getElementById('product');
   const hint = document.getElementById('product-lock-hint');
   if (!productEl || !hint) return;
@@ -2687,6 +2769,18 @@ function onSubmit(e) {
   // - UPDATE khách có trong CRM  → backend ghi 'update_click_qc'
   // - CREATE hồ sơ mới (khách cũ ngoài hệ thống quay lại qua ads) → 'create_click_qc'
   // Cả 2 đều tính 1 lượt, thống kê xếp vào cột "Click lại QC".
+  // v6.1: chỉ lấy giá trị của ô ĐANG HIỆN — ô ẩn coi như không nhập
+  const vIf = (wrapId, inputId) => {
+    const w = document.getElementById(wrapId);
+    if (!w || w.style.display === 'none') return '';
+    return v(inputId) || '';
+  };
+  // Bắt buộc chọn lý do khi chuyển sang Không thành
+  if (v('stage') === 'Không thành' && !vIf('f-lydo', 'lyDoDung')) {
+    showToast('⚠️ Chọn LÝ DO DỪNG trước khi chuyển sang "Không thành"', 'error-t');
+    document.getElementById('lyDoDung').focus();
+    return;
+  }
   const clickLaiQC = !!document.getElementById('clickqc')?.checked;
 
   // v4.3: click lại QC → bắt buộc có nguồn của lần click; ngày trong khung cho phép
@@ -2713,6 +2807,14 @@ function onSubmit(e) {
   const payload = {
     action:    isUpdate ? 'update' : 'create',
     clickLaiQC: bsState.boSung ? false : clickLaiQC, // bổ sung là quá khứ, loại trừ click QC
+    // v6.1: 6 trường quy trình mới — chỉ gửi khi ô đang hiện (tránh ghi rỗng
+    // đè lên giá trị cũ; backend cũng có lớp giữ nguyên nếu payload trống)
+    ttGoi:        vIf('f-ttgoi', 'ttGoi'),
+    ttZalo:       vIf('f-ttzalo', 'ttZalo'),
+    kqTraiNghiem: vIf('f-kqtn', 'kqTraiNghiem'),
+    lyDoDung:     vIf('f-lydo', 'lyDoDung'),
+    giaTri:       vIf('f-giatri', 'giaTri').replace(/\D/g, ''),
+    affiliate:    vIf('f-affiliate', 'affiliate'),
     clickSource: clickSource, // v4.3: nguồn QC của lần click (bắt buộc khi clickLaiQC)
     clickDate:   clickDate,   // v4.3: dd/mm/yyyy — rỗng = hôm nay
     boSung:     bsState.boSung,
@@ -3208,6 +3310,20 @@ function populateConfigSelects() {
   // v3.5: ô nhập chi phí chỉ còn 2 NHÓM kênh — mọi nguồn có chữ "Agency"
   // trong tên gộp vào Agency, toàn bộ còn lại là In-House (khớp quy tắc backend)
   fill('ads-source', ['In-House', 'Agency'], '');
+  // v6.1 — Giai đoạn + 4 trường phụ nạp từ backend (QUY_TRINH / TRUONG_PHU).
+  // Không hardcode nữa: đổi quy trình chỉ sửa QUY_TRINH ở Code.gs.
+  if (appConfig.stages && appConfig.stages.length) {
+    fill('stage', appConfig.stages, '— Chọn giai đoạn —');
+  }
+  const tp = appConfig.truongPhu;
+  if (tp) {
+    fill('ttGoi',        tp.ttGoi        || [], '— Chưa xác định —');
+    fill('ttZalo',       tp.ttZalo       || [], '— Chưa xác định —');
+    fill('kqTraiNghiem', tp.kqTraiNghiem || [], '— Chưa xác định —');
+    fill('lyDoDung',     tp.lyDoDung     || [], '— Chọn lý do —');
+    fill('affiliate',    (tp.affiliate || []).filter(Boolean), '— Không —');
+  }
+  capNhatTruongPhuThuoc();
 }
 document.addEventListener('DOMContentLoaded', () => { populateConfigSelects(); loadAppConfig(); });
 
@@ -4021,7 +4137,14 @@ function renderDashboard(d) {
     });
   } else {
     fLegend.innerHTML = '';
-    const FUNNEL_COLORS = { 'Inbox': '#AFD9E8', 'SĐT - Chưa add Zalo': '#64B7D3', 'Đã add Zalo - Tư vấn': '#297E9B', 'Chốt': '#02B2A9', 'CSKH': '#018A83', 'Khách cũ': '#99E0DC', 'Khách yêu cầu đặc biệt': '#C8922A', 'Không tiềm năng': '#B9C4C1' };
+    // v6.1: màu 7 bậc mới — nhạt→đậm theo tiến trình phễu, nhánh dùng tông riêng
+    const FUNNEL_COLORS = {
+      'Data mới': '#AFD9E8', 'Có SĐT': '#7FC6DE', 'Tư vấn': '#4E9EBE',
+      'Hẹn trải nghiệm': '#297E9B', 'Đã trải nghiệm': '#12657F',
+      'Chốt': '#02B2A9', 'CSKH': '#018A83',
+      'Chăm sóc nuôi dưỡng': '#99E0DC', 'Chuyển Affiliate': '#8C6BC8',
+      'Khách yêu cầu đặc biệt': '#C8922A', 'Không thành': '#B9C4C1',
+    };
     drawChart('funnel', 'chart-funnel', {
       type: 'bar',
       data: {
@@ -4917,6 +5040,15 @@ let custCurrentDetail = null; // {name, phone} khách đang mở chi tiết
 
 const STAGE_BADGE_CLASS = {
   'Inbox': 'st-inbox',
+  // v6.1 — nhãn cho quy trình 7 bậc (tên cũ giữ lại để hồ sơ chưa di trú không mất màu)
+  'Data mới': 'st-inbox',
+  'Có SĐT': 'st-sdt',
+  'Tư vấn': 'st-tuvan',
+  'Hẹn trải nghiệm': 'st-tuvan',
+  'Đã trải nghiệm': 'st-tuvan',
+  'Chăm sóc nuôi dưỡng': 'st-khachcu',
+  'Chuyển Affiliate': 'st-special',
+  'Không thành': 'st-ktn',
   'SĐT - Chưa add Zalo': 'st-sdt',
   'Đã add Zalo - Tư vấn': 'st-tuvan',
   'Chốt': 'st-chot',
