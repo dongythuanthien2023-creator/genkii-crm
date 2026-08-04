@@ -2,11 +2,24 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v4.9.2 | Backend tương thích: v4.8
+PHIÊN BẢN HIỆN TẠI: v5.0 | Backend tương thích: v4.8
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v5.0   — Tab Khách hàng: (1) LỌC KHOẢNG NGÀY — thêm ô "đến ngày"; điền cả 2 ô
+         = xem khách vào phễu trong khoảng (tự hoán đổi nếu nhập ngược), chỉ
+         điền ô đầu = giữ nguyên chế độ xem hoạt động 1 ngày như cũ. (2) DẢI
+         THỐNG KÊ GIAI ĐOẠN — chip hiện số khách từng giai đoạn TRONG phạm vi
+         bộ lọc hiện tại (ngày/Sales/kênh/tìm kiếm), bấm chip = lọc nhanh.
+         Backend không đổi.
+v4.9.3 — THEME KHÁC BIỆT RÕ RỆT (phản hồi Thôi: 4 bộ nhìn gần như giống nhau):
+         nguyên nhân là nền trang/nền thẻ/viền/chữ — chiếm ~85% diện tích —
+         KHÔNG đổi theo bộ, vẫn giữ tông teal. Nay mỗi bộ có nền/viền/chữ hòa
+         tông riêng cho cả sáng+tối. Sửa thêm 3 chỗ khóa cứng teal: hero dark
+         (viền+glow+số), icon KPI trong HTML, shadow hero.
+         CẤU TRÚC THỐNG KÊ: KPI card Khách mới + Click lại QC có sparkline nền
+         mờ 14 ngày (hàm drawMiniSpark tách riêng, dùng lại được).
 v4.9.2 — Rà soát trước xuất bản: dọn màu hardcode phá theme — header + nền
          login chuyển sang token --grad-chrome (nay ĐỔI theo bộ màu, trước đây
          khóa cứng teal); badge Inbox/SĐT và pill locked dùng token trạng thái.
@@ -227,6 +240,11 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     --fab-glow: 0 4px 14px rgba(43,61,111,.30);
     --heat-rgb: 61,83,160;
     --grad-chrome: linear-gradient(120deg, #1B2A4A 0%, #2B3D6F 100%);
+    /* v4.9.3: nền/thẻ/viền hòa tông navy — trước đây giữ tông teal nên đổi bộ
+       màu mà 85% diện tích vẫn xanh teal → cảm giác "không khác gì" */
+    --grey-1: #F2F4FA; --white: #FFFFFF; --grey-2: #DDE2F0;
+    --grey-3: #8A93AE; --grey-4: #59617D; --text: #1B2138;
+    --glass: rgba(255,255,255,.88); --nav-bg: rgba(255,255,255,.97);
   }
   [data-theme="dark"][data-palette="navy"] {
     --navy: #1B2542; --heading: #EDF0FB; --teal: #8091D6; --teal-lt: rgba(128,145,214,.16);
@@ -238,6 +256,9 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     --fab-glow: 0 0 16px rgba(128,145,214,.38);
     --heat-rgb: 128,145,214;
     --grad-chrome: linear-gradient(120deg, #131B33 0%, #1E2E52 100%);
+    --grey-1: #0C1020; --white: #191F35; --grey-2: #333C5C;
+    --grey-3: #7F89AC; --grey-4: #B8C0D8; --text: #E9ECF7;
+    --glass: rgba(22,28,48,.86); --nav-bg: rgba(14,18,32,.98);
   }
 
   /* ── OCEAN ── xanh biển trầm, dịu mắt cho phiên dài ── */
@@ -251,6 +272,9 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     --fab-glow: 0 4px 14px rgba(54,126,162,.30);
     --heat-rgb: 44,122,158;
     --grad-chrome: linear-gradient(120deg, #123642 0%, #1E5F78 100%);
+    --grey-1: #EFF7FA; --white: #FFFFFF; --grey-2: #D6E7EE;
+    --grey-3: #84A0AB; --grey-4: #526B76; --text: #16303A;
+    --glass: rgba(255,255,255,.88); --nav-bg: rgba(255,255,255,.97);
   }
   [data-theme="dark"][data-palette="ocean"] {
     --navy: #123642; --heading: #E7F3F9; --teal: #5FB3D6; --teal-lt: rgba(95,179,214,.16);
@@ -262,6 +286,9 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     --fab-glow: 0 0 16px rgba(95,179,214,.38);
     --heat-rgb: 95,179,214;
     --grad-chrome: linear-gradient(120deg, #0E2A33 0%, #164654 100%);
+    --grey-1: #081A20; --white: #142B34; --grey-2: #2C4E5C;
+    --grey-3: #7BA3B2; --grey-4: #B4CDD8; --text: #E6F2F7;
+    --glass: rgba(18,38,46,.86); --nav-bg: rgba(10,24,30,.98);
   }
 
   /* ── TERRA ── cam đất ấm, đổi không khí ── */
@@ -275,6 +302,9 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     --fab-glow: 0 4px 14px rgba(226,122,95,.30);
     --heat-rgb: 210,102,74;
     --grad-chrome: linear-gradient(120deg, #8A4530 0%, #C15A3F 100%);
+    --grey-1: #FBF4F1; --white: #FFFFFF; --grey-2: #EEDCD4;
+    --grey-3: #AD9188; --grey-4: #7A5B50; --text: #33211C;
+    --glass: rgba(255,255,255,.88); --nav-bg: rgba(255,255,255,.97);
   }
   [data-theme="dark"][data-palette="terra"] {
     --navy: #6E3627; --heading: #FBEBE4; --teal: #E89478; --teal-lt: rgba(232,148,120,.16);
@@ -286,6 +316,9 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     --fab-glow: 0 0 16px rgba(232,148,120,.38);
     --heat-rgb: 232,148,120;
     --grad-chrome: linear-gradient(120deg, #46231A 0%, #6E3627 100%);
+    --grey-1: #170D0A; --white: #291812; --grey-2: #4E3227;
+    --grey-3: #A8837A; --grey-4: #D6BBB0; --text: #F7EAE4;
+    --glass: rgba(38,22,17,.86); --nav-bg: rgba(20,11,8,.98);
   }
 
   /* ─── RESET ─── */
@@ -552,6 +585,19 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     background: var(--white); color: var(--text); outline: none; font-family: inherit;
   }
   .cust-filters input[type="date"].active { border-color: var(--teal); font-weight: 700; }
+  /* v5.0: dải thống kê theo giai đoạn + mũi tên khoảng ngày */
+  .cf-arrow { align-self: center; color: var(--grey-4); font-size: 13px; }
+  .stage-stats { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .stage-stats::-webkit-scrollbar { display: none; }
+  .ss-chip { display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    padding: 6px 10px; border: 1px solid var(--grey-2); border-radius: 999px;
+    background: var(--white); cursor: pointer; font-family: inherit; }
+  .ss-chip.on { border-color: var(--teal); background: var(--teal-lt); }
+  .ss-name { font-size: 11.5px; font-weight: 600; color: var(--grey-4); white-space: nowrap; }
+  .ss-chip.on .ss-name { color: var(--teal); }
+  .ss-num { font-size: 13px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .ss-chip.on .ss-num { color: var(--teal); }
   /* v4.7: chip lọc nhóm kênh — bấm để bật/tắt, chọn được nhiều cùng lúc */
   .cf-group { display: flex; gap: 6px; }
   .cf-chip { padding: 7px 11px; border: 1px solid var(--grey-2); border-radius: 8px;
@@ -1078,6 +1124,10 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   /* v3.9: số hiện tức thì — chỉ nháy nhẹ khi giá trị THAY ĐỔI so với lần tải trước */
   .num-flash { animation: numFlash .45s ease-out; }
   @keyframes numFlash { 0% { opacity: .25; } 100% { opacity: 1; } }
+  /* v4.9.3: sparkline nền mờ trong KPI card — xu hướng 14 ngày, đặt dưới cùng,
+     không tranh chấp với số liệu (theo cấu trúc các mẫu dashboard) */
+  .stat-chip { position: relative; overflow: hidden; }
+  .sc-spark { display: block; margin-top: 6px; opacity: .55; }
   /* v4.8: danh sách khách theo ngày trong công cụ sửa ngày */
   .adm-date-row { display: flex; gap: 9px; align-items: flex-start; padding: 8px 4px;
     border-bottom: 0.5px solid var(--grey-2); }
@@ -1139,12 +1189,13 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     display: flex; align-items: center; gap: 14px;
     border-radius: 18px; padding: 16px; margin-bottom: 12px;
     background: var(--grad-hero);
-    box-shadow: 0 6px 20px rgba(2,178,169,.22);
+    box-shadow: 0 6px 20px rgba(var(--heat-rgb), .22);
   }
+  /* v4.9.3: hero dark đọc token → đổi theo bộ màu (trước khóa cứng teal) */
   [data-theme="dark"] .dash-hero {
-    background: linear-gradient(150deg, rgba(24,38,62,.92), rgba(13,24,42,.95));
-    border: 1px solid rgba(53,199,190,.30);
-    box-shadow: 0 0 24px rgba(53,199,190,.10), inset 0 1px 0 rgba(255,255,255,.05);
+    background: var(--grad-hero);
+    border: 1px solid rgba(var(--heat-rgb), .32);
+    box-shadow: 0 0 24px rgba(var(--heat-rgb), .12), inset 0 1px 0 rgba(255,255,255,.05);
   }
   .dash-hero .dh-left { flex: 1; min-width: 0; }
   .dash-hero .dh-label {
@@ -1154,8 +1205,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   [data-theme="dark"] .dash-hero .dh-label { color: var(--grey-3); }
   .dash-hero .dh-value { font-size: 36px; font-weight: 800; letter-spacing: -1px; line-height: 1.15; color: #fff; }
   [data-theme="dark"] .dash-hero .dh-value {
-    background: linear-gradient(90deg, #35C7BE, #64B7D3);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+    color: var(--teal); /* v4.9.3: số hero theo bộ màu (trước gradient teal cứng) */
   }
   .dash-hero .dh-delta { font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,.9); }
   [data-theme="dark"] .dash-hero .dh-delta { color: var(--teal); }
@@ -1613,7 +1663,11 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
             <option value="">Tất cả Sales</option>
           </select>
           <!-- v3.8: lọc theo NGÀY VÀO — chọn ngày là danh sách chỉ còn khách nhập lên hôm đó -->
-          <input type="date" id="cust-filter-date" onchange="renderCustomerList()" aria-label="Lọc theo ngày vào">
+          <input type="date" id="cust-filter-date" onchange="renderCustomerList()" aria-label="Từ ngày">
+          <!-- v5.0: ô ĐẾN NGÀY — điền cả hai ô = xem khoảng ngày; chỉ điền ô đầu
+               = giữ nguyên chế độ xem hoạt động 1 ngày như cũ -->
+          <span class="cf-arrow" id="cust-date-arrow">→</span>
+          <input type="date" id="cust-filter-date-to" onchange="renderCustomerList()" aria-label="Đến ngày">
           <button type="button" class="cf-clear" id="cust-filter-date-clear" onclick="clearCustDateFilter()" title="Bỏ lọc ngày" style="display:none">✕</button>
           <!-- v4.7: lọc theo NHÓM KÊNH — chọn nhiều cùng lúc. Cùng quy tắc phân
                nhóm với chi phí/phễu (tên nguồn chứa "agency" → Agency) -->
@@ -1627,6 +1681,9 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
         <span id="cust-count-label">Đang tải...</span>
         <button type="button" onclick="clearCustActivityCache(); loadCustomerList(true)">🔄 Làm mới</button>
       </div>
+      <!-- v5.0: dải thống kê theo GIAI ĐOẠN — đếm trong phạm vi bộ lọc hiện tại
+           (ngày/Sales/nhóm kênh/tìm kiếm), bấm 1 chip = lọc nhanh giai đoạn đó -->
+      <div class="stage-stats" id="stage-stats"></div>
       <div id="cust-list"></div>
     </div>
 
@@ -1678,15 +1735,18 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     </div>
     <div class="stat-chips">
       <div class="stat-chip">
-        <div class="sc-ico" style="background: #02B2A9;"><svg class="i"><use href="#i-userplus"/></svg></div>
+        <div class="sc-ico" style="background: var(--teal);"><svg class="i"><use href="#i-userplus"/></svg></div>
         <div class="sc-value" id="kpi-moi">–</div>
         <div class="sc-label">Khách mới</div>
+        <!-- v4.9.3: sparkline nền mờ 14 ngày (theo mẫu dashboard) -->
+        <svg class="sc-spark" id="spark-moi" width="100%" height="26" viewBox="0 0 120 26" preserveAspectRatio="none"></svg>
       </div>
       <div class="stat-chip">
-        <div class="sc-ico" style="background: #C8922A;"><svg class="i"><use href="#i-refresh"/></svg></div>
+        <div class="sc-ico" style="background: var(--gold);"><svg class="i"><use href="#i-refresh"/></svg></div>
         <div class="sc-value" id="kpi-qc">–</div>
         <div class="sc-label">Click lại QC</div>
         <div class="sc-sub" id="kpi-qc-uniq">–</div>
+        <svg class="sc-spark" id="spark-qc" width="100%" height="26" viewBox="0 0 120 26" preserveAspectRatio="none"></svg>
       </div>
       <div class="stat-chip danger" onclick="switchTab('tasks')" title="Bấm để mở tab Nhiệm vụ">
         <div class="sc-ico" style="background: #E8604C;"><svg class="i"><use href="#i-alert"/></svg></div>
@@ -3856,6 +3916,29 @@ function renderDashboard(d) {
  */
 const LUOT_TARGET = 0;
 
+// v4.9.3 — Sparkline nhỏ cho KPI card. Tách hàm để mọi card dùng lại được khi
+// thêm chỉ số mới; gradId phải khác nhau giữa các svg (id trùng = fill biến mất).
+function drawMiniSpark(elId, vals, gradId) {
+  const svg = document.getElementById(elId);
+  if (!svg || !vals || vals.length === 0) return;
+  const max = Math.max(...vals, 1);
+  const W = 120, H = 26, PAD = 2;
+  const pts = vals.map((v, i) => {
+    const x = vals.length > 1 ? (i / (vals.length - 1)) * W : W;
+    const y = H - PAD - (v / max) * (H - PAD * 2);
+    return [Math.round(x * 10) / 10, Math.round(y * 10) / 10];
+  });
+  const line = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0] + ',' + p[1]).join(' ');
+  const area = line + ` L${W},${H} L0,${H} Z`;
+  svg.innerHTML = `
+    <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="currentColor" stop-opacity=".30"/>
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#${gradId})"/>
+    <path d="${line}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
 function renderHeroExtras(d) {
   const daily = d.daily || [];
   // ── Sparkline: tổng lượt (mới + QC) từng ngày, chuẩn hóa vào khung 160×36 ──
@@ -3879,6 +3962,11 @@ function renderHeroExtras(d) {
       <path d="${area}" fill="url(#spk)"/>
       <path d="${line}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
+  // ── v4.9.3: sparkline nền mờ cho KPI card (Khách mới / Click lại QC) ──
+  // Dùng chung thuật toán hero, khung nhỏ hơn; màu theo currentColor nên tự
+  // khớp bộ màu đang chọn. Mỗi svg cần id gradient RIÊNG (trùng id → mất fill).
+  drawMiniSpark('spark-moi', daily.map(x => x.khachMoi || 0), 'spkm');
+  drawMiniSpark('spark-qc', daily.map(x => x.clickQC || 0), 'spkq');
   // ── Vòng %: hôm nay so với mốc (mục tiêu cứng hoặc TB 7 ngày trước) ──
   const ring = document.getElementById('hero-ring');
   if (ring) {
@@ -4577,6 +4665,47 @@ function onBoSungChange(cb) {
 }
 
 /** ISO "yyyy-mm-dd" (input date) → "dd/mm/yyyy"; sai → '' */
+// v5.0 — dd/mm/yyyy → yyyy-mm-dd để so sánh khoảng ngày bằng chuỗi
+function vnToISO(vn) {
+  const m = String(vn || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+}
+
+// v5.0 — Dải thống kê theo giai đoạn. Đếm trên tập ĐÃ lọc ngày/Sales/kênh/tìm
+// kiếm nhưng CHƯA lọc giai đoạn, nên mỗi chip luôn hiện đúng tổng của giai đoạn
+// đó trong phạm vi đang xem. Bấm chip = lọc nhanh, bấm lại = bỏ lọc.
+function renderStageStats(inScope, activeStage) {
+  const wrap = document.getElementById('stage-stats');
+  if (!wrap) return;
+  const counts = {};
+  inScope.forEach(c => {
+    const s = String(c.stage || '').trim() || '(chưa rõ)';
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  // Thứ tự phễu chuẩn — lấy từ chính dropdown giai đoạn (đã nạp từ Cấu hình
+  // server), nên thêm/đổi giai đoạn ở Cấu hình là dải này tự theo, không sửa code
+  const sel = document.getElementById('cust-filter-stage');
+  const order = Array.from(sel ? sel.options : [])
+    .map(o => o.value).filter(v => v);
+  Object.keys(counts).forEach(s => { if (order.indexOf(s) === -1) order.push(s); });
+  const shown = order.filter(s => counts[s]);
+  if (shown.length === 0) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML =
+    `<button type="button" class="ss-chip${!activeStage ? ' on' : ''}" onclick="pickStageStat('')">
+       <span class="ss-name">Tất cả</span><span class="ss-num">${inScope.length}</span>
+     </button>`
+    + shown.map(s => `
+      <button type="button" class="ss-chip${activeStage === s ? ' on' : ''}" onclick="pickStageStat('${escapeAttr(s)}')">
+        <span class="ss-name">${escapeHtml(s)}</span><span class="ss-num">${counts[s]}</span>
+      </button>`).join('');
+}
+
+function pickStageStat(stage) {
+  const sel = document.getElementById('cust-filter-stage');
+  sel.value = (sel.value === stage) ? '' : stage; // bấm lại chip đang chọn = bỏ lọc
+  renderCustomerList();
+}
+
 function isoToVN(iso) {
   const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
@@ -4686,6 +4815,7 @@ function buildCustomerFilters() {
 // v3.8: bỏ lọc ngày bằng 1 chạm (input date trên mobile khó xóa tay)
 function clearCustDateFilter() {
   document.getElementById('cust-filter-date').value = '';
+  document.getElementById('cust-filter-date-to').value = ''; // v5.0: xóa cả khoảng
   renderCustomerList();
 }
 
@@ -4717,16 +4847,32 @@ function renderCustomerList() {
   const fStage = document.getElementById('cust-filter-stage').value;
   const fSales = document.getElementById('cust-filter-sales').value;
   // v3.8: lọc theo Ngày vào — input trả ISO (yyyy-mm-dd), đổi sang dd/mm/yyyy để so
+  // v5.0: hỗ trợ KHOẢNG NGÀY. Chỉ ô đầu = chế độ 1 ngày (giữ nguyên xem hoạt
+  // động created/updated như cũ); điền cả 2 ô = lọc theo Ngày vào trong khoảng.
   const fDateISO = document.getElementById('cust-filter-date').value;
+  const fDateToISO = document.getElementById('cust-filter-date-to').value;
   const fDate = fDateISO ? isoToVN(fDateISO) : '';
+  const fDateTo = fDateToISO ? isoToVN(fDateToISO) : '';
+  const isRange = !!(fDateISO && fDateToISO);
   const dateEl = document.getElementById('cust-filter-date');
+  const dateToEl = document.getElementById('cust-filter-date-to');
   dateEl.classList.toggle('active', !!fDate);
-  document.getElementById('cust-filter-date-clear').style.display = fDate ? '' : 'none';
+  dateToEl.classList.toggle('active', !!fDateTo);
+  document.getElementById('cust-filter-date-clear').style.display = (fDate || fDateTo) ? '' : 'none';
+  // Khoảng ngược (từ > đến) → tự hoán đổi để Sales không phải nhớ thứ tự
+  let rFrom = fDateISO, rTo = fDateToISO;
+  if (isRange && rFrom > rTo) { const t = rFrom; rFrom = rTo; rTo = t; }
 
-  const filtered = customers.filter(c => {
-    if (fStage && c.stage !== fStage) return false;
+  // Bộ lọc CHUNG (không gồm giai đoạn) — dùng cho cả danh sách lẫn dải thống kê,
+  // để mỗi chip giai đoạn hiện đúng số khách trong phạm vi ngày/Sales/kênh đang xem
+  const matchBase = (c) => {
     if (fSales && c.sales !== fSales) return false;
-    if (fDate && c.entryDate !== fDate) return false; // khách VÀO đúng ngày đã chọn
+    if (isRange) {
+      const iso = vnToISO(c.entryDate);
+      if (!iso || iso < rFrom || iso > rTo) return false;
+    } else if (fDate && c.entryDate !== fDate) {
+      return false; // khách VÀO đúng ngày đã chọn
+    }
     // v4.7: lọc nhóm kênh — khách chưa có nguồn bị loại khi đang bật chip nào đó
     if (custGroupFilter.length > 0) {
       if (!c.source) return false;
@@ -4737,15 +4883,19 @@ function renderCustomerList() {
       if (hay.indexOf(q) === -1) return false;
     }
     return true;
-  });
+  };
+  const inScope = customers.filter(matchBase);        // trước khi lọc giai đoạn
+  const filtered = inScope.filter(c => !fStage || c.stage === fStage);
+  renderStageStats(inScope, fStage);
 
   const overdueCount = filtered.filter(c => c.overdue).length;
-  const actCached = fDate ? custActivityCache[fDate] : null;
+  // Chế độ xem hoạt động 1 ngày CHỈ áp khi không phải khoảng ngày
+  const actCached = (!isRange && fDate) ? custActivityCache[fDate] : null;
   const twoListReady = actCached && actCached !== 'loading' && !actCached.error;
   document.getElementById('cust-count-label').textContent = twoListReady
     ? `Ngày ${fDate}` // số từng nhóm đã nằm trên badge 2 khối
     : `${filtered.length}/${customers.length} khách`
-      + (fDate ? ` · ngày ${fDate}` : '')
+      + (isRange ? ` · ${isoToVN(rFrom)} → ${isoToVN(rTo)}` : (fDate ? ` · ngày ${fDate}` : ''))
       + (custGroupFilter.length ? ` · ${custGroupFilter.join(' + ')}` : '')
       + (overdueCount ? ` · ${overdueCount} quá hạn` : '');
 
@@ -4754,7 +4904,7 @@ function renderCustomerList() {
     return;
   }
 
-  listEl.innerHTML = renderActivityView(filtered, fDate);
+  listEl.innerHTML = renderActivityView(filtered, isRange ? '' : fDate);
 }
 
 // v3.8: thẻ 1 khách — tách hàm để dùng chung cho list thường và 2 list theo ngày
