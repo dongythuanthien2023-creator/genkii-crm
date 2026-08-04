@@ -2,11 +2,16 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v5.2 | Backend tương thích: v5.2
+PHIÊN BẢN HIỆN TẠI: v5.2.1 | Backend tương thích: v5.2
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v5.2.1 — (a) Thẻ NHIỆM VỤ rộng 860px trên máy tính như thẻ khách. Gốc lỗi:
+         khối @media 900px đặt TRƯỚC @media 480px nên bị rule 520px ghi đè —
+         nay dời xuống sau. (b) Tab Nhiệm vụ: nút "Xem" xác nhận rồi mới tải
+         (nút nhấp nháy khi ngày vừa đổi mà chưa bấm), trong lúc chờ hiện
+         "⏳ Đang tải dữ liệu" ở cả 3 khối + khóa nút.
 v5.2   — (a) GỠ chia cột trên máy tính (sửa v5.1): mỗi khách/nhiệm vụ MỘT DÒNG,
          chỉ nới khung 860px cho thẻ dài ra — chia cột làm mắt quét ngang-dọc,
          rối hơn. (b) Tab Nhiệm vụ thêm chọn KHOẢNG NGÀY (backend v5.2 nhận
@@ -628,6 +633,13 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   .tdr-preset { flex-shrink: 0; padding: 8px 11px; border: 1.5px solid var(--grey-2); border-radius: 10px;
     background: var(--white); color: var(--grey-4); font-size: 12.5px; font-weight: 600;
     cursor: pointer; font-family: inherit; white-space: nowrap; }
+  /* v5.2.1: nút Xem — nổi lên khi ngày vừa đổi mà chưa tải, để mắt biết cần bấm */
+  .tdr-apply { flex-shrink: 0; padding: 8px 14px; border: 1.5px solid var(--teal); border-radius: 10px;
+    background: var(--teal); color: #fff; font-size: 12.5px; font-weight: 700;
+    cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .tdr-apply.dirty { animation: tdrPulse 1.1s ease-in-out infinite; }
+  @keyframes tdrPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  .tdr-apply:disabled { opacity: .6; cursor: default; animation: none; }
   .task-range-note { max-width: 860px; margin: 8px auto 0; padding: 0 16px;
     font-size: 12px; color: var(--teal); font-weight: 600; }
   /* v5.1: hàng lọc theo lưới — mỗi hàng tự chia đều, không rớt dòng lệch */
@@ -1085,16 +1097,6 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
      chỉ là một dải hẹp giữa màn hình, bỏ phí không gian hai bên. Nay nới dần
      theo bề rộng: ≥900px cho khung rộng hơn + danh sách khách 2 cột;
      ≥1400px cho 3 cột. Dưới 900px giữ nguyên hoàn toàn (điện thoại không đổi). */
-  /* v5.2 (sửa v5.1): MỖI KHÁCH / NHIỆM VỤ MỘT DÒNG kể cả trên máy tính — chia
-     cột làm mắt phải quét ngang-dọc, rối hơn dù chứa được nhiều hơn. Chỉ nới
-     khung rộng vừa phải để thẻ dài ra, thông tin trong thẻ dễ thở hơn. */
-  @media (min-width: 900px) {
-    .cust-wrap, .dash-wrap, .ev-wrap, .vp-page-body { max-width: 860px; padding-left: 24px; padding-right: 24px; }
-    .task-card { max-width: none; margin: 0 0 10px; }
-    .task-section-title { max-width: none; }
-    #chart-daily { min-height: 260px; }
-  }
-
   /* ─── RESPONSIVE ─── */
   @media (min-width: 480px) {
     .form-card { max-width: 520px; margin: 20px auto; }
@@ -1106,6 +1108,18 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     .purchase-history-card { max-width: 520px; margin: 16px auto; }
     .task-card { max-width: 520px; margin: 0 auto 10px; }
     .task-section-title { max-width: 520px; margin: 0 auto; padding-top: 16px; }
+  }
+
+  /* v5.2.1 — MÀN HÌNH LỚN. Khối này PHẢI đứng SAU @media 480px: hai rule cùng
+     độ ưu tiên, cái sau thắng — trước đây đặt trước nên thẻ nhiệm vụ vẫn bị
+     khóa 520px trong khi thẻ khách đã rộng 860px (lệch như Thôi thấy).
+     Mỗi khách / nhiệm vụ vẫn MỘT DÒNG, chỉ kéo dài ngang cho dễ đọc. */
+  @media (min-width: 900px) {
+    .cust-wrap, .dash-wrap, .ev-wrap, .vp-page-body { max-width: 860px; padding-left: 24px; padding-right: 24px; }
+    .task-card { max-width: 860px; margin: 0 auto 10px; }
+    .task-section-title { max-width: 860px; margin: 0 auto; padding-top: 16px; }
+    #list-vipham, #list-nextstep, #list-cskh { padding: 0 16px; }
+    #chart-daily { min-height: 260px; }
   }
 
   /* ═══ v3.1 PREMIUM LAYER ═══ */
@@ -1689,9 +1703,12 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
        xong). Để trống = hành vi mặc định: đến hạn hôm nay + quá hạn. -->
   <div class="task-daterange">
     <button type="button" class="tdr-preset" onclick="setTaskRangePreset('today')">Hôm nay</button>
-    <input type="date" id="task-date-from" onchange="loadTodayTasks()" aria-label="Từ ngày">
+    <input type="date" id="task-date-from" onchange="markTaskRangeDirty()" aria-label="Từ ngày">
     <span class="cf-arrow">→</span>
-    <input type="date" id="task-date-to" onchange="loadTodayTasks()" aria-label="Đến ngày">
+    <input type="date" id="task-date-to" onchange="markTaskRangeDirty()" aria-label="Đến ngày">
+    <!-- v5.2.1: XÁC NHẬN rồi mới tải — chọn ngày là 2 thao tác (from + to),
+         tự tải sau mỗi lần đổi sẽ gọi server 2 lần và nháy màn hình giữa chừng -->
+    <button type="button" class="tdr-apply" id="task-date-apply" onclick="loadTodayTasks()">Xem</button>
     <button type="button" class="cf-clear" id="task-date-clear" onclick="clearTaskRange()" title="Bỏ lọc khoảng ngày" style="display:none">✕</button>
   </div>
   <div class="task-range-note" id="task-range-note" style="display:none"></div>
@@ -3404,6 +3421,19 @@ function applyLoggedInState() {
 // ══════════════════════════════════════════════
 // TAB 3: NHIỆM VỤ HÔM NAY (Giai đoạn 3)
 // ══════════════════════════════════════════════
+// v5.2.1 — Ngày vừa đổi nhưng CHƯA tải: làm nổi nút Xem để không ai tưởng
+// danh sách đã cập nhật theo ngày mới.
+function markTaskRangeDirty() {
+  const btn = document.getElementById('task-date-apply');
+  if (btn) btn.classList.add('dirty');
+  const clr = document.getElementById('task-date-clear');
+  if (clr) {
+    const f = document.getElementById('task-date-from').value;
+    const t = document.getElementById('task-date-to').value;
+    clr.style.display = (f || t) ? '' : 'none';
+  }
+}
+
 // v5.2 — Điều khiển khoảng ngày tab Nhiệm vụ
 function setTaskRangePreset(kind) {
   const now = new Date();
@@ -3425,8 +3455,16 @@ function loadTodayTasks() {
   // v2.4: xóa cache thông tin khách mỗi lần tải lại danh sách — khách vừa được
   // cập nhật giai đoạn/SĐT thì lần sổ tiếp theo hiển thị đúng dữ liệu mới
   for (const k in taskInfoCache) delete taskInfoCache[k];
-  document.getElementById('list-nextstep').innerHTML = '<div class="task-empty">Đang tải...</div>';
-  document.getElementById('list-cskh').innerHTML = '<div class="task-empty">Đang tải...</div>';
+  // v5.2.1: báo ĐANG TẢI rõ ràng ở cả 3 khối + khóa nút Xem trong lúc chờ
+  const loadingHtml = '<div class="task-empty">⏳ Đang tải dữ liệu...</div>';
+  document.getElementById('list-nextstep').innerHTML = loadingHtml;
+  document.getElementById('list-cskh').innerHTML = loadingHtml;
+  const vpList = document.getElementById('list-vipham');
+  if (vpList && vpList.innerHTML.trim()) vpList.innerHTML = loadingHtml;
+  const applyBtn = document.getElementById('task-date-apply');
+  if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = '⏳'; applyBtn.classList.remove('dirty'); }
+  const noteEl = document.getElementById('task-range-note');
+  if (noteEl) { noteEl.style.display = 'block'; noteEl.textContent = '⏳ Đang truy xuất dữ liệu từ máy chủ...'; }
 
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
     simulateTodayTasks();
@@ -3450,7 +3488,19 @@ function loadTodayTasks() {
     ? `&from=${encodeURIComponent(isoToVN(tf < tt ? tf : tt))}&to=${encodeURIComponent(isoToVN(tf < tt ? tt : tf))}`
     : '';
   script.src = `${APPS_SCRIPT_URL}?action=getTodayTasks&sales=${encodeURIComponent(currentSalesName)}${rangeQ}&callback=_jsonpCBTasks` + authQ();
-  script.onerror = () => showToast('❌ Lỗi tải nhiệm vụ. Bấm Làm mới để thử lại.', 'error-t');
+  script.onerror = () => {
+    showToast('❌ Lỗi tải nhiệm vụ. Bấm Xem để thử lại.', 'error-t');
+    // v5.2.1: MỞ KHÓA nút + xóa trạng thái chờ khi lỗi mạng — nếu không, nút
+    // kẹt ở "⏳" vĩnh viễn và người dùng tưởng app treo
+    const b = document.getElementById('task-date-apply');
+    if (b) { b.disabled = false; b.textContent = 'Xem'; }
+    const n = document.getElementById('task-range-note');
+    if (n) { n.textContent = '❌ Không tải được — kiểm tra mạng rồi bấm Xem'; }
+    const l1 = document.getElementById('list-nextstep');
+    const l2 = document.getElementById('list-cskh');
+    if (l1) l1.innerHTML = '<div class="task-empty">❌ Không tải được dữ liệu</div>';
+    if (l2) l2.innerHTML = '<div class="task-empty">❌ Không tải được dữ liệu</div>';
+  };
   document.head.appendChild(script);
   // v3.9.6: trang Lịch sử vi phạm đang mở → làm tươi trang đó song song
   // (các nút xử lý bù gọi loadTodayTasks sau khi lưu — trang tự cập nhật theo)
@@ -3473,6 +3523,8 @@ function renderTodayTasks(data) {
   const nsTasks = data.nextStepTasks || [];
   const cskhTasks = data.cskhTasks || [];
   // v5.2: báo rõ đang xem khoảng ngày nào — tránh hiểu nhầm là việc hôm nay
+  const applyBtn2 = document.getElementById('task-date-apply');
+  if (applyBtn2) { applyBtn2.disabled = false; applyBtn2.textContent = 'Xem'; applyBtn2.classList.remove('dirty'); }
   const note = document.getElementById('task-range-note');
   const fromEl = document.getElementById('task-date-from');
   const toEl = document.getElementById('task-date-to');
