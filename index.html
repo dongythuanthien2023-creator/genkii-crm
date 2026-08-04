@@ -2,11 +2,17 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v5.1 | Backend tương thích: v4.8
+PHIÊN BẢN HIỆN TẠI: v5.2 | Backend tương thích: v5.2
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v5.2   — (a) GỠ chia cột trên máy tính (sửa v5.1): mỗi khách/nhiệm vụ MỘT DÒNG,
+         chỉ nới khung 860px cho thẻ dài ra — chia cột làm mắt quét ngang-dọc,
+         rối hơn. (b) Tab Nhiệm vụ thêm chọn KHOẢNG NGÀY (backend v5.2 nhận
+         from/to, trả nhiệm vụ có deadline trong khoảng, gồm cả đã hoàn thành)
+         + nút "Hôm nay" và ghi chú chế độ đang xem. (c) Bảng hiệu quả kênh
+         trên ĐIỆN THOẠI xếp thành THẺ (nhãn-giá trị) thay vì nhồi 7 cột.
 v5.1   — (a) BỎ dropdown "Tất cả giai đoạn" — dải chip thống kê đã vừa hiện số
          vừa lọc được (select giữ dạng ẩn để mọi hàm cũ chạy nguyên). (b) Hàng
          lọc xếp lưới 2 hàng cân đối, hết cảnh ô ngày rớt dòng lệch. (c) Chip
@@ -591,6 +597,39 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     background: var(--white); color: var(--text); outline: none; font-family: inherit;
   }
   .cust-filters input[type="date"].active { border-color: var(--teal); font-weight: 700; }
+  /* v5.2 — Bảng nhiều cột trên ĐIỆN THOẠI: xếp thành THẺ thay vì nhồi 7 cột
+     vào 380px (chữ dính nhau, số đọc nhầm cột). Mỗi dòng thành 1 khối có tiêu
+     đề kênh + các cặp nhãn-giá trị. Máy tính giữ nguyên dạng bảng. */
+  @media (max-width: 640px) {
+    .dash-table.stack-mobile thead { display: none; }
+    .dash-table.stack-mobile, .dash-table.stack-mobile tbody,
+    .dash-table.stack-mobile tr, .dash-table.stack-mobile td { display: block; width: 100%; }
+    .dash-table.stack-mobile tr {
+      border: 1px solid var(--grey-2); border-radius: 10px; padding: 10px 12px;
+      margin-bottom: 8px; background: var(--white); }
+    .dash-table.stack-mobile td { border: none !important; padding: 4px 0 !important;
+      display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+      font-size: 12.5px; text-align: right !important; }
+    .dash-table.stack-mobile td::before {
+      content: attr(data-label); color: var(--grey-4); font-weight: 600;
+      font-size: 11.5px; text-align: left; flex-shrink: 0; }
+    .dash-table.stack-mobile td.sm-head {
+      display: block; text-align: left !important; font-size: 13.5px; font-weight: 800 !important;
+      color: var(--heading); padding-bottom: 8px !important; margin-bottom: 6px;
+      border-bottom: 0.5px solid var(--grey-2) !important; }
+    .dash-table.stack-mobile td.sm-head::before { content: none; }
+  }
+  /* v5.2: thanh chọn khoảng ngày tab Nhiệm vụ */
+  .task-daterange { display: flex; gap: 8px; align-items: center; padding: 12px 16px 0;
+    max-width: 860px; margin: 0 auto; }
+  .task-daterange input[type="date"] { flex: 1; min-width: 0; padding: 8px 10px; font-size: 12.5px;
+    border: 1.5px solid var(--grey-2); border-radius: 10px; background: var(--white); color: var(--text); }
+  .task-daterange input[type="date"].active { border-color: var(--teal); font-weight: 700; }
+  .tdr-preset { flex-shrink: 0; padding: 8px 11px; border: 1.5px solid var(--grey-2); border-radius: 10px;
+    background: var(--white); color: var(--grey-4); font-size: 12.5px; font-weight: 600;
+    cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .task-range-note { max-width: 860px; margin: 8px auto 0; padding: 0 16px;
+    font-size: 12px; color: var(--teal); font-weight: 600; }
   /* v5.1: hàng lọc theo lưới — mỗi hàng tự chia đều, không rớt dòng lệch */
   .cf-row { display: flex; gap: 8px; align-items: center; }
   .cf-row-date input[type="date"] { flex: 1; min-width: 0; }
@@ -1046,28 +1085,14 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
      chỉ là một dải hẹp giữa màn hình, bỏ phí không gian hai bên. Nay nới dần
      theo bề rộng: ≥900px cho khung rộng hơn + danh sách khách 2 cột;
      ≥1400px cho 3 cột. Dưới 900px giữ nguyên hoàn toàn (điện thoại không đổi). */
+  /* v5.2 (sửa v5.1): MỖI KHÁCH / NHIỆM VỤ MỘT DÒNG kể cả trên máy tính — chia
+     cột làm mắt phải quét ngang-dọc, rối hơn dù chứa được nhiều hơn. Chỉ nới
+     khung rộng vừa phải để thẻ dài ra, thông tin trong thẻ dễ thở hơn. */
   @media (min-width: 900px) {
-    .cust-wrap, .dash-wrap, .ev-wrap { max-width: 1080px; padding-left: 24px; padding-right: 24px; }
-    /* Danh sách khách chia cột — thẻ tự xếp, không cần sửa JS render */
-    #cust-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: start; }
-    #cust-list > .dash-empty { grid-column: 1 / -1; }
-    /* Nhiệm vụ + trang vi phạm cũng 2 cột */
-    #list-nextstep, #list-cskh, #list-vipham, #vipham-page-body {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: start; }
-    #list-nextstep > .task-empty, #list-cskh > .task-empty,
-    #list-vipham > .task-empty, #vipham-page-body > .task-empty,
-    #vipham-page-body > .vp-sec-title { grid-column: 1 / -1; }
-    .task-card { max-width: none; margin: 0; }
-    .vp-page-body { max-width: 1080px; }
-    /* Chỉ nâng biểu đồ 14 ngày (chiều cao tĩnh). KHÔNG đụng phễu và nguồn lead —
-       hai cái đó có chiều cao TÍNH ĐỘNG theo số dòng dữ liệu, đè bằng
-       !important sẽ làm cột chồng lên nhau hoặc thừa khoảng trắng. */
+    .cust-wrap, .dash-wrap, .ev-wrap, .vp-page-body { max-width: 860px; padding-left: 24px; padding-right: 24px; }
+    .task-card { max-width: none; margin: 0 0 10px; }
+    .task-section-title { max-width: none; }
     #chart-daily { min-height: 260px; }
-  }
-  @media (min-width: 1400px) {
-    .cust-wrap, .dash-wrap, .ev-wrap, .vp-page-body { max-width: 1400px; }
-    #cust-list, #list-nextstep, #list-cskh, #list-vipham, #vipham-page-body {
-      grid-template-columns: repeat(3, 1fr); }
   }
 
   /* ─── RESPONSIVE ─── */
@@ -1659,6 +1684,17 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
 
 <!-- ══════════════ TAB 3: NHIỆM VỤ HÔM NAY ══════════════ -->
 <div class="tab-panel" id="tab-panel-tasks">
+
+  <!-- v5.2: xem nhiệm vụ theo KHOẢNG NGÀY (deadline trong khoảng, gồm cả đã
+       xong). Để trống = hành vi mặc định: đến hạn hôm nay + quá hạn. -->
+  <div class="task-daterange">
+    <button type="button" class="tdr-preset" onclick="setTaskRangePreset('today')">Hôm nay</button>
+    <input type="date" id="task-date-from" onchange="loadTodayTasks()" aria-label="Từ ngày">
+    <span class="cf-arrow">→</span>
+    <input type="date" id="task-date-to" onchange="loadTodayTasks()" aria-label="Đến ngày">
+    <button type="button" class="cf-clear" id="task-date-clear" onclick="clearTaskRange()" title="Bỏ lọc khoảng ngày" style="display:none">✕</button>
+  </div>
+  <div class="task-range-note" id="task-range-note" style="display:none"></div>
 
   <div style="padding:14px 16px 0; text-align:right;">
     <button type="button" onclick="loadTodayTasks()" style="background:none;border:none;color:var(--teal);font-size:12.5px;font-weight:700;cursor:pointer;">🔄 Làm mới danh sách</button>
@@ -3368,6 +3404,22 @@ function applyLoggedInState() {
 // ══════════════════════════════════════════════
 // TAB 3: NHIỆM VỤ HÔM NAY (Giai đoạn 3)
 // ══════════════════════════════════════════════
+// v5.2 — Điều khiển khoảng ngày tab Nhiệm vụ
+function setTaskRangePreset(kind) {
+  const now = new Date();
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  if (kind === 'today') {
+    document.getElementById('task-date-from').value = iso(now);
+    document.getElementById('task-date-to').value = iso(now);
+  }
+  loadTodayTasks();
+}
+function clearTaskRange() {
+  document.getElementById('task-date-from').value = '';
+  document.getElementById('task-date-to').value = '';
+  loadTodayTasks();
+}
+
 function loadTodayTasks() {
   if (!currentSalesName) return;
   // v2.4: xóa cache thông tin khách mỗi lần tải lại danh sách — khách vừa được
@@ -3391,7 +3443,13 @@ function loadTodayTasks() {
   };
   const script = document.createElement('script');
   script.id = 'jsonp-script-tasks';
-  script.src = `${APPS_SCRIPT_URL}?action=getTodayTasks&sales=${encodeURIComponent(currentSalesName)}&callback=_jsonpCBTasks` + authQ();
+  // v5.2: kèm khoảng ngày nếu Sales đã chọn cả hai ô
+  const tf = document.getElementById('task-date-from').value;
+  const tt = document.getElementById('task-date-to').value;
+  const rangeQ = (tf && tt)
+    ? `&from=${encodeURIComponent(isoToVN(tf < tt ? tf : tt))}&to=${encodeURIComponent(isoToVN(tf < tt ? tt : tf))}`
+    : '';
+  script.src = `${APPS_SCRIPT_URL}?action=getTodayTasks&sales=${encodeURIComponent(currentSalesName)}${rangeQ}&callback=_jsonpCBTasks` + authQ();
   script.onerror = () => showToast('❌ Lỗi tải nhiệm vụ. Bấm Làm mới để thử lại.', 'error-t');
   document.head.appendChild(script);
   // v3.9.6: trang Lịch sử vi phạm đang mở → làm tươi trang đó song song
@@ -3414,6 +3472,21 @@ function simulateTodayTasks() {
 function renderTodayTasks(data) {
   const nsTasks = data.nextStepTasks || [];
   const cskhTasks = data.cskhTasks || [];
+  // v5.2: báo rõ đang xem khoảng ngày nào — tránh hiểu nhầm là việc hôm nay
+  const note = document.getElementById('task-range-note');
+  const fromEl = document.getElementById('task-date-from');
+  const toEl = document.getElementById('task-date-to');
+  const inRange = !!(data.rangeMode && data.rangeFrom && data.rangeTo);
+  if (note) {
+    note.style.display = inRange ? 'block' : 'none';
+    note.textContent = inRange
+      ? `📅 Đang xem nhiệm vụ có hạn từ ${data.rangeFrom} đến ${data.rangeTo} (gồm cả đã hoàn thành)`
+      : '';
+  }
+  if (fromEl) fromEl.classList.toggle('active', inRange);
+  if (toEl) toEl.classList.toggle('active', inRange);
+  const clr = document.getElementById('task-date-clear');
+  if (clr) clr.style.display = (fromEl.value || toEl.value) ? '' : 'none';
 
   // v3.2.2: badge chỉ đếm việc CHƯA hoàn thành — thẻ ✅ xong-hôm-nay vẫn nằm
   // trong danh sách để đối chiếu nhưng không được tính vào số việc cần xử lý.
@@ -3432,12 +3505,12 @@ function renderTodayTasks(data) {
 
   const listNS = document.getElementById('list-nextstep');
   listNS.innerHTML = nsTasks.length === 0
-    ? '<div class="task-empty">🎉 Không có Next Step nào cần xử lý hôm nay</div>'
+    ? `<div class="task-empty">🎉 Không có Next Step nào ${inRange ? 'trong khoảng ngày này' : 'cần xử lý hôm nay'}</div>`
     : nsTasks.map(t => taskCardHtml(t, 'next_step')).join('');
 
   const listCSKH = document.getElementById('list-cskh');
   listCSKH.innerHTML = cskhTasks.length === 0
-    ? '<div class="task-empty">🎉 Không có nhắc hỏi thăm nào đến hạn hôm nay</div>'
+    ? `<div class="task-empty">🎉 Không có nhắc hỏi thăm nào ${inRange ? 'trong khoảng ngày này' : 'đến hạn hôm nay'}</div>`
     : cskhTasks.map(t => taskCardHtml(t, 'cskh')).join('');
 
   // v3.2: khối "Sales không hoàn thành" — chỉ hiện khi có nhiệm vụ mang dấu
@@ -4477,18 +4550,18 @@ function loadCostStats() {
       </div>
       ${missingNote}
       <div style="font-size:12px; font-weight:700; color:var(--heading); margin:12px 0 4px;">📡 Hiệu quả từng kênh trả phí</div>
-      <table class="dash-table">
+      <table class="dash-table stack-mobile">
         <thead><tr><th style="text-align:left;">Kênh</th><th>Chi phí</th><th>Mess</th><th>SĐT</th><th>Giá/mess</th><th>Giá/SĐT</th><th>Ra số</th></tr></thead>
         <tbody>
           ${(data.channels || []).map(c => `
             <tr>
-              <td style="text-align:left; font-weight:600;">💰 ${escapeHtml(c.name)}</td>
-              <td>${c.cost > 0 ? fmtMoneyStr(c.cost) : '<span style="color:var(--grey-3)">chưa nhập</span>'}</td>
-              <td>${c.mess}</td>
-              <td>${c.sdt}</td>
-              <td>${c.costPerMess > 0 ? fmtMoneyStr(c.costPerMess) : '—'}</td>
-              <td>${c.costPerSdt > 0 ? fmtMoneyStr(c.costPerSdt) : '—'}</td>
-              <td style="font-weight:700; color:${c.convRate >= 50 ? 'var(--teal)' : 'var(--warn-fg)'};">${c.convRate}%</td>
+              <td class="sm-head" style="text-align:left; font-weight:600;">💰 ${escapeHtml(c.name)}</td>
+              <td data-label="Chi phí">${c.cost > 0 ? fmtMoneyStr(c.cost) : '<span style="color:var(--grey-3)">chưa nhập</span>'}</td>
+              <td data-label="Mess">${c.mess}</td>
+              <td data-label="SĐT">${c.sdt}</td>
+              <td data-label="Giá/mess">${c.costPerMess > 0 ? fmtMoneyStr(c.costPerMess) : '—'}</td>
+              <td data-label="Giá/SĐT">${c.costPerSdt > 0 ? fmtMoneyStr(c.costPerSdt) : '—'}</td>
+              <td data-label="Ra số" style="font-weight:700; color:${c.convRate >= 50 ? 'var(--teal)' : 'var(--warn-fg)'};">${c.convRate}%</td>
             </tr>`).join('') || '<tr><td colspan="7" class="dash-empty">Chưa cấu hình kênh trả phí nào</td></tr>'}
         </tbody>
       </table>
