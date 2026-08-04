@@ -2,11 +2,21 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v6.1 | Backend tương thích: v6.1
+PHIÊN BẢN HIỆN TẠI: v6.3 | Backend tương thích: v6.3
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v6.3   — (mục 1) THANH LỌC CHUNG: gom 3 khối chọn ngày rời rạc ở Thống kê về
+         MỘT thanh dính đầu trang (kèm preset 7/14/30 ngày/tháng này), lái cả
+         biểu đồ lượt + nguồn lead + hiệu quả chi phí; tab Khách hàng và Nhiệm
+         vụ dùng chung dáng .filter-bar. Hero + 4 chip KPI ghi rõ "không theo
+         bộ lọc". (mục 3) Căn chỉnh thẻ đồng nhất: chung bán kính, khoảng đệm,
+         khoảng cách; chip KPI cùng chiều cao. (mục 4) Sparkline chip "Không
+         hoàn thành" từ dữ liệu THẬT (viPhamDaily) — chip "Quá hạn" cố ý KHÔNG
+         có vì không tồn tại chuỗi lịch sử. (mục 5) Máy tính ≥900px: dashboard
+         rộng 1100px, 4 chip một hàng, phễu ‖ nguồn lead và bảng Sales ‖ hiệu
+         quả chi phí xếp cạnh nhau — danh sách khách/nhiệm vụ vẫn một dòng.
 v6.1   — QUY TRÌNH 7 BẬC trên giao diện: (a) dropdown giai đoạn + 5 dropdown
          trường phụ NẠP TỪ getConfig, hết hardcode (đổi quy trình chỉ sửa
          QUY_TRINH ở Code.gs). (b) Trường phụ thuộc: Trạng thái gọi/Zalo hiện
@@ -630,6 +640,49 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
       border-bottom: 0.5px solid var(--grey-2) !important; }
     .dash-table.stack-mobile td.sm-head::before { content: none; }
   }
+  /* ══ v6.3 — THANH LỌC CHUNG cho cả 3 tab: cùng vị trí, cùng dáng, DÍNH khi
+     cuộn. Trước đây mỗi tab một kiểu ở một chỗ khác nhau, mắt phải tìm lại. ══ */
+  .filter-bar { position: sticky; top: 0; z-index: 12; background: var(--glass);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 0.5px solid var(--grey-2); padding: 10px 0 8px;
+    display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+  .fb-row { display: flex; gap: 7px; align-items: center; }
+  .fb-row input[type="date"] { flex: 1; min-width: 0; padding: 8px 10px; font-size: 12.5px;
+    border: 1.5px solid var(--grey-2); border-radius: 10px;
+    background: var(--white); color: var(--text); }
+  .fb-row input[type="date"].active { border-color: var(--teal); font-weight: 700; }
+  .fb-row select { flex: 1; min-width: 0; padding: 8px 10px; font-size: 12.5px;
+    border: 1.5px solid var(--grey-2); border-radius: 10px;
+    background: var(--white); color: var(--text); }
+  .fb-arrow { flex-shrink: 0; color: var(--grey-4); font-size: 13px; }
+  .fb-apply { flex-shrink: 0; padding: 8px 14px; border: 1.5px solid var(--teal);
+    border-radius: 10px; background: var(--teal); color: #fff;
+    font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .fb-apply.dirty { animation: tdrPulse 1.1s ease-in-out infinite; }
+  .fb-apply:disabled { opacity: .6; cursor: default; animation: none; }
+  .fb-presets { flex-wrap: wrap; }
+  .fb-preset { flex: 1; min-width: 62px; padding: 6px 8px; border: 1px solid var(--grey-2);
+    border-radius: 8px; background: var(--white); color: var(--grey-4);
+    font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .fb-preset.on { border-color: var(--teal); background: var(--teal-lt); color: var(--teal); }
+  .fb-clear { flex-shrink: 0; padding: 8px 10px; border: 1px solid var(--grey-2);
+    border-radius: 10px; background: var(--white); color: var(--grey-4);
+    font-size: 13px; cursor: pointer; font-family: inherit; }
+  .dh-fixed { font-size: 10.5px; font-weight: 500; opacity: .7; }
+
+  /* ══ v6.3 (mục 3) — CĂN CHỈNH THẺ ĐỒNG NHẤT: mọi thẻ dùng chung một bán kính,
+     một khoảng đệm, một khoảng cách. Trước đây thẻ KPI, chip và khối biểu đồ
+     lệch nhau nên nhìn thiếu chỉn chu. ══ */
+  .dash-card, .stat-chip, .ev-form-card, .order-info-card, .purchase-history-card {
+    border-radius: var(--radius);
+  }
+  .dash-card { padding: 14px; margin-bottom: 12px; }
+  .stat-chips { gap: 10px; margin-bottom: 12px; }
+  .stat-chip { padding: 12px 14px; min-height: 104px; display: flex;
+    flex-direction: column; justify-content: flex-start; }
+  .dash-hero { margin-bottom: 12px; }
+  .dash-title { margin-bottom: 10px; }
+
   /* v6.1: trường phụ thuộc giai đoạn + cảnh báo nhảy cóc bậc */
   .dep-field { animation: depIn .18s ease-out; }
   @keyframes depIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
@@ -637,11 +690,12 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     background: var(--warn-bg); border: 1px solid var(--warn-bd);
     color: var(--warn-fg); font-size: 12px; line-height: 1.45; }
   /* v5.2: thanh chọn khoảng ngày tab Nhiệm vụ */
-  .task-daterange { display: flex; gap: 8px; align-items: center; padding: 12px 16px 0;
-    max-width: 860px; margin: 0 auto; }
+  .task-daterange { flex-direction: row; gap: 8px; align-items: center;
+    padding: 10px 16px 8px; max-width: 860px; margin: 0 auto; }
   .task-daterange input[type="date"] { flex: 1; min-width: 0; padding: 8px 10px; font-size: 12.5px;
     border: 1.5px solid var(--grey-2); border-radius: 10px; background: var(--white); color: var(--text); }
   .task-daterange input[type="date"].active { border-color: var(--teal); font-weight: 700; }
+  .task-daterange .fb-preset { flex: 0 0 auto; }
   .tdr-preset { flex-shrink: 0; padding: 8px 11px; border: 1.5px solid var(--grey-2); border-radius: 10px;
     background: var(--white); color: var(--grey-4); font-size: 12.5px; font-weight: 600;
     cursor: pointer; font-family: inherit; white-space: nowrap; }
@@ -1128,11 +1182,18 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
      khóa 520px trong khi thẻ khách đã rộng 860px (lệch như Thôi thấy).
      Mỗi khách / nhiệm vụ vẫn MỘT DÒNG, chỉ kéo dài ngang cho dễ đọc. */
   @media (min-width: 900px) {
-    .cust-wrap, .dash-wrap, .ev-wrap, .vp-page-body { max-width: 860px; padding-left: 24px; padding-right: 24px; }
+    .cust-wrap, .ev-wrap, .vp-page-body { max-width: 860px; padding-left: 24px; padding-right: 24px; }
     .task-card { max-width: 860px; margin: 0 auto 10px; }
     .task-section-title { max-width: 860px; margin: 0 auto; padding-top: 16px; }
     #list-vipham, #list-nextstep, #list-cskh { padding: 0 16px; }
     #chart-daily { min-height: 260px; }
+    /* v6.3 (mục 5) — Dashboard rộng hơn + BIỂU ĐỒ hai cột. Chỉ áp cho biểu đồ
+       và bảng: danh sách khách/nhiệm vụ vẫn MỘT DÒNG (bài học v5.1). Bốn chip
+       KPI xếp một hàng ngang khi có chỗ. */
+    .dash-wrap { max-width: 1100px; padding-left: 24px; padding-right: 24px; }
+    .stat-chips { grid-template-columns: repeat(4, 1fr); }
+    .dash-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+    .dash-pair > .dash-card { margin-bottom: 0; }
   }
 
   /* ═══ v3.1 PREMIUM LAYER ═══ */
@@ -1738,15 +1799,15 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
 
   <!-- v5.2: xem nhiệm vụ theo KHOẢNG NGÀY (deadline trong khoảng, gồm cả đã
        xong). Để trống = hành vi mặc định: đến hạn hôm nay + quá hạn. -->
-  <div class="task-daterange">
-    <button type="button" class="tdr-preset" onclick="setTaskRangePreset('today')">Hôm nay</button>
+  <div class="task-daterange filter-bar">
+    <button type="button" class="fb-preset" onclick="setTaskRangePreset('today')">Hôm nay</button>
     <input type="date" id="task-date-from" onchange="markTaskRangeDirty()" aria-label="Từ ngày">
     <span class="cf-arrow">→</span>
     <input type="date" id="task-date-to" onchange="markTaskRangeDirty()" aria-label="Đến ngày">
     <!-- v5.2.1: XÁC NHẬN rồi mới tải — chọn ngày là 2 thao tác (from + to),
          tự tải sau mỗi lần đổi sẽ gọi server 2 lần và nháy màn hình giữa chừng -->
-    <button type="button" class="tdr-apply" id="task-date-apply" onclick="loadTodayTasks()">Xem</button>
-    <button type="button" class="cf-clear" id="task-date-clear" onclick="clearTaskRange()" title="Bỏ lọc khoảng ngày" style="display:none">✕</button>
+    <button type="button" class="fb-apply" id="task-date-apply" onclick="loadTodayTasks()">Xem</button>
+    <button type="button" class="fb-clear" id="task-date-clear" onclick="clearTaskRange()" title="Bỏ lọc khoảng ngày" style="display:none">✕</button>
   </div>
   <div class="task-range-note" id="task-range-note" style="display:none"></div>
 
@@ -1790,14 +1851,14 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
         <select id="cust-filter-stage" onchange="renderCustomerList()" hidden>
           <option value="">Tất cả giai đoạn</option>
         </select>
-        <div class="cust-filters">
-          <div class="cf-row cf-row-date">
+        <div class="cust-filters filter-bar">
+          <div class="fb-row cf-row-date">
             <input type="date" id="cust-filter-date" onchange="renderCustomerList()" aria-label="Từ ngày">
             <span class="cf-arrow">→</span>
             <input type="date" id="cust-filter-date-to" onchange="renderCustomerList()" aria-label="Đến ngày">
             <button type="button" class="cf-clear" id="cust-filter-date-clear" onclick="clearCustDateFilter()" title="Bỏ lọc ngày" style="display:none">✕</button>
           </div>
-          <div class="cf-row cf-row-sel">
+          <div class="fb-row cf-row-sel">
             <select id="cust-filter-sales" onchange="renderCustomerList()">
               <option value="">Tất cả Sales</option>
             </select>
@@ -1844,6 +1905,25 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
 <div class="tab-panel" id="tab-panel-dash">
   <div class="dash-wrap">
 
+    <!-- v6.3 — THANH LỌC CHUNG: gom 3 khối chọn ngày rời rạc (biểu đồ lượt,
+         nguồn lead, hiệu quả chi phí) về MỘT chỗ cố định đầu trang. Bấm Xem
+         một lần là cả ba khối cùng đổi theo khoảng. Hero + 4 chip KPI KHÔNG
+         theo khoảng — luôn là "hôm nay" (quyết định đã chốt). -->
+    <div class="filter-bar" id="dash-filter-bar">
+      <div class="fb-row">
+        <input type="date" id="dash-from" aria-label="Từ ngày" onchange="dashRangeDirty()">
+        <span class="fb-arrow">→</span>
+        <input type="date" id="dash-to" aria-label="Đến ngày" onchange="dashRangeDirty()">
+        <button type="button" class="fb-apply" id="dash-apply" onclick="applyDashRange()">Xem</button>
+      </div>
+      <div class="fb-row fb-presets">
+        <button type="button" class="fb-preset" onclick="dashPreset(7)">7 ngày</button>
+        <button type="button" class="fb-preset" onclick="dashPreset(14)">14 ngày</button>
+        <button type="button" class="fb-preset" onclick="dashPreset(30)">30 ngày</button>
+        <button type="button" class="fb-preset" onclick="dashPresetMonth()">Tháng này</button>
+      </div>
+    </div>
+
     <div class="dash-meta">
       <span class="dash-time" id="dash-time">Chưa tải dữ liệu</span>
       <button type="button" onclick="loadDashboard(true)">🔄 Làm mới</button>
@@ -1852,7 +1932,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     <!-- v3.1.1: Hero KPI + 3 chip chỉ số — theo mockup premium đã duyệt -->
     <div class="dash-hero">
       <div class="dh-left">
-        <div class="dh-label">Tổng lượt hôm nay</div>
+        <div class="dh-label">Tổng lượt hôm nay <span class="dh-fixed">· không theo bộ lọc</span></div>
         <div class="dh-value" id="kpi-tong">–</div>
         <div class="dh-delta" id="kpi-delta">so với hôm qua</div>
         <svg class="dh-spark" id="hero-spark" width="100%" height="36" viewBox="0 0 160 36" preserveAspectRatio="none" role="img" aria-label="Xu hướng lượt nhập 14 ngày"></svg>
@@ -1880,26 +1960,20 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
         <svg class="sc-spark" id="spark-qc" width="100%" height="26" viewBox="0 0 120 26" preserveAspectRatio="none"></svg>
       </div>
       <div class="stat-chip danger" onclick="switchTab('tasks')" title="Bấm để mở tab Nhiệm vụ">
-        <div class="sc-ico" style="background: #E8604C;"><svg class="i"><use href="#i-alert"/></svg></div>
+        <div class="sc-ico" style="background: var(--red);"><svg class="i"><use href="#i-alert"/></svg></div>
         <div class="sc-value" id="kpi-overdue">–</div>
         <div class="sc-label">Quá hạn →</div>
       </div>
       <div class="stat-chip danger" onclick="openViPhamAll()" title="Bấm để xem TOÀN BỘ nhiệm vụ từng bị đóng dấu Sales không hoàn thành (kể cả đã bù)">
-        <div class="sc-ico" style="background: #8C2F1F;"><svg class="i"><use href="#i-ban"/></svg></div>
+        <div class="sc-ico" style="background: var(--warn-fg);"><svg class="i"><use href="#i-ban"/></svg></div>
         <div class="sc-value" id="kpi-vipham">–</div>
         <div class="sc-label">Không hoàn thành →</div>
+        <svg class="sc-spark" id="spark-vipham" width="100%" height="26" viewBox="0 0 120 26" preserveAspectRatio="none"></svg>
       </div>
     </div>
 
     <div class="dash-card">
       <div class="dash-title" id="luot-title">Lượt nhập 14 ngày gần nhất</div>
-      <div class="dash-range">
-        <input type="date" id="luot-from" aria-label="Từ ngày">
-        <span class="dr-arrow">→</span>
-        <input type="date" id="luot-to" aria-label="Đến ngày">
-        <button type="button" onclick="applyLuotRange()">Xem</button>
-        <button type="button" class="ghost" onclick="resetLuotRange()">14 ngày</button>
-      </div>
       <div class="dash-legend">
         <span><i style="background:var(--chart-main)"></i>Khách mới</span>
         <span><i style="background:var(--chart-soft)"></i>Click lại quảng cáo</span>
@@ -1907,15 +1981,17 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
       <div class="chart-box" style="height:210px;"><canvas id="chart-daily"></canvas></div>
     </div>
 
+    <!-- v6.3: cặp biểu đồ xếp cạnh nhau trên máy tính, xếp dọc trên điện thoại -->
+    <div class="dash-pair">
     <div class="dash-card">
-      <div class="dash-title">Phễu giai đoạn — toàn bộ khách hiện tại</div>
+      <div class="dash-title">Phễu giai đoạn — toàn bộ khách hiện tại <span class="dh-fixed">· ảnh chụp hiện tại</span></div>
       <div class="dash-legend" id="funnel-legend"></div>
       <div class="chart-box" id="chart-funnel-box" style="height:230px;"><canvas id="chart-funnel"></canvas></div>
     </div>
 
     <div class="dash-card">
       <div class="dash-title" id="src-title">Nguồn lead tháng này</div>
-      <div class="dash-range">
+      <div class="dash-range" style="display:none">
         <input type="date" id="src-from" aria-label="Từ ngày">
         <span class="dr-arrow">→</span>
         <input type="date" id="src-to" aria-label="Đến ngày">
@@ -1925,9 +2001,11 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
       <div class="dash-legend" id="src-legend"></div>
       <div class="chart-box" id="chart-src-box" style="height:190px;"><canvas id="chart-src"></canvas></div>
     </div>
+    </div><!-- /dash-pair -->
 
+    <div class="dash-pair">
     <div class="dash-card">
-      <div class="dash-title">Hoạt động theo Sales — tháng này</div>
+      <div class="dash-title">Hoạt động theo Sales — tháng này <span class="dh-fixed">· không theo bộ lọc</span></div>
       <table class="dash-table" id="sales-table">
         <thead><tr><th>Sales</th><th>Lượt</th><th>Khách mới</th><th>Đơn</th><th>Quá hạn</th><th>Vi phạm</th></tr></thead>
         <tbody><tr><td colspan="6" class="dash-empty">Đang tải...</td></tr></tbody>
@@ -1960,15 +2038,16 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     <!-- v3.2: HIỆU QUẢ CHI PHÍ — mess/SĐT theo nguồn, giá tính trên nguồn trả phí -->
     <div class="dash-card">
       <div class="dash-title" id="cost-title">🎯 Hiệu quả chi phí</div>
-      <div class="dash-range">
+      <div class="dash-range" style="display:none">
         <input type="date" id="cost-from" aria-label="Từ ngày">
         <span class="dr-arrow">→</span>
         <input type="date" id="cost-to" aria-label="Đến ngày">
         <button type="button" onclick="loadCostStats()">Xem</button>
         <button type="button" class="ghost" onclick="setCostRangeThisMonth()">Tháng này</button>
       </div>
-      <div id="cost-result"><div class="dash-empty">Chọn khoảng ngày và bấm Xem</div></div>
+      <div id="cost-result"><div class="dash-empty">Chọn khoảng ngày ở đầu trang rồi bấm Xem</div></div>
     </div>
+    </div><!-- /dash-pair -->
 
   </div>
 </div> <!-- /tab-panel-dash -->
@@ -4256,6 +4335,10 @@ function renderHeroExtras(d) {
   // khớp bộ màu đang chọn. Mỗi svg cần id gradient RIÊNG (trùng id → mất fill).
   drawMiniSpark('spark-moi', daily.map(x => x.khachMoi || 0), 'spkm');
   drawMiniSpark('spark-qc', daily.map(x => x.clickQC || 0), 'spkq');
+  // v6.3: chip "Không hoàn thành" — chuỗi vi phạm bị đóng dấu mỗi ngày (thật).
+  // Chip "Quá hạn" cố ý KHÔNG có sparkline: là số tồn tại thời điểm, không có
+  // lịch sử để dựng lại — thà thiếu còn hơn vẽ đường không đúng sự thật.
+  if (d.viPhamDaily && d.viPhamDaily.length) drawMiniSpark('spark-vipham', d.viPhamDaily, 'spkv');
   // ── Vòng %: hôm nay so với mốc (mục tiêu cứng hoặc TB 7 ngày trước) ──
   const ring = document.getElementById('hero-ring');
   if (ring) {
@@ -4869,6 +4952,62 @@ function jsonpRange(action, range, onData) {
   script.src = `${APPS_SCRIPT_URL}?action=${action}&from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}&callback=${cbName}` + authQ();
   script.onerror = () => showToast('❌ Lỗi tải dữ liệu khoảng ngày. Thử lại.', 'error-t');
   document.head.appendChild(script);
+}
+
+// ══════════════════════════════════════════════
+// v6.3 — THANH LỌC CHUNG tab Thống kê: một khoảng ngày lái CẢ BA khối
+// (biểu đồ lượt · nguồn lead · hiệu quả chi phí). Hero + 4 chip KPI KHÔNG
+// đổi theo khoảng — luôn là hôm nay, đúng vai trò "xem nhanh tình hình".
+// Ba ô ngày cũ vẫn còn trong DOM (đã ẩn) để mọi hàm sẵn có chạy nguyên vẹn.
+// ══════════════════════════════════════════════
+function dashRangeDirty() {
+  const b = document.getElementById('dash-apply');
+  if (b) b.classList.add('dirty');
+  document.querySelectorAll('#dash-filter-bar .fb-preset').forEach(p => p.classList.remove('on'));
+}
+
+function applyDashRange() {
+  const f = v('dash-from'), t = v('dash-to');
+  if (!f || !t) { showToast('⚠️ Chọn cả hai ngày rồi bấm Xem', 'error-t'); return; }
+  const from = f <= t ? f : t, to = f <= t ? t : f;
+  // Đổ xuống 3 ô ẩn rồi gọi lại đúng các hàm sẵn có — không viết lại logic tải
+  document.getElementById('luot-from').value = from; document.getElementById('luot-to').value = to;
+  document.getElementById('src-from').value  = from; document.getElementById('src-to').value  = to;
+  document.getElementById('cost-from').value = from; document.getElementById('cost-to').value = to;
+  const b = document.getElementById('dash-apply');
+  if (b) { b.classList.remove('dirty'); b.disabled = true; b.textContent = '⏳'; }
+  document.getElementById('dash-from').classList.add('active');
+  document.getElementById('dash-to').classList.add('active');
+  applyLuotRange();
+  applySrcRange();
+  loadCostStats();
+  setTimeout(() => { if (b) { b.disabled = false; b.textContent = 'Xem'; } }, 1200);
+}
+
+function dashPreset(days) {
+  const now = new Date();
+  const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1));
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('dash-from').value = iso(from);
+  document.getElementById('dash-to').value = iso(now);
+  applyDashRange();
+  markDashPreset(String(days));
+}
+
+function dashPresetMonth() {
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('dash-from').value = iso(first);
+  document.getElementById('dash-to').value = iso(now);
+  applyDashRange();
+  markDashPreset('month');
+}
+
+function markDashPreset(key) {
+  const map = { '7': 0, '14': 1, '30': 2, 'month': 3 };
+  const btns = document.querySelectorAll('#dash-filter-bar .fb-preset');
+  btns.forEach((b, i) => b.classList.toggle('on', i === map[key]));
 }
 
 function applyLuotRange() {
