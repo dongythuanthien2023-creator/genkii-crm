@@ -2,11 +2,17 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v5.0 | Backend tương thích: v4.8
+PHIÊN BẢN HIỆN TẠI: v5.1 | Backend tương thích: v4.8
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v5.1   — (a) BỎ dropdown "Tất cả giai đoạn" — dải chip thống kê đã vừa hiện số
+         vừa lọc được (select giữ dạng ẩn để mọi hàm cũ chạy nguyên). (b) Hàng
+         lọc xếp lưới 2 hàng cân đối, hết cảnh ô ngày rớt dòng lệch. (c) Chip
+         giai đoạn XUỐNG DÒNG thay vì cuộn ngang — thấy hết trong 1 khung.
+         (d) MÀN HÌNH LỚN: ≥900px khung rộng 1080px + danh sách 2 cột;
+         ≥1400px rộng 1400px + 3 cột. Dưới 900px (điện thoại) giữ nguyên.
 v5.0   — Tab Khách hàng: (1) LỌC KHOẢNG NGÀY — thêm ô "đến ngày"; điền cả 2 ô
          = xem khách vào phễu trong khoảng (tự hoán đổi nếu nhập ngược), chỉ
          điền ô đầu = giữ nguyên chế độ xem hoạt động 1 ngày như cũ. (2) DẢI
@@ -585,11 +591,14 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     background: var(--white); color: var(--text); outline: none; font-family: inherit;
   }
   .cust-filters input[type="date"].active { border-color: var(--teal); font-weight: 700; }
-  /* v5.0: dải thống kê theo giai đoạn + mũi tên khoảng ngày */
-  .cf-arrow { align-self: center; color: var(--grey-4); font-size: 13px; }
-  .stage-stats { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px;
-    -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .stage-stats::-webkit-scrollbar { display: none; }
+  /* v5.1: hàng lọc theo lưới — mỗi hàng tự chia đều, không rớt dòng lệch */
+  .cf-row { display: flex; gap: 8px; align-items: center; }
+  .cf-row-date input[type="date"] { flex: 1; min-width: 0; }
+  .cf-row-sel select { flex: 1; min-width: 0; }
+  .cf-row-sel .cf-group { display: flex; gap: 6px; flex-shrink: 0; }
+  .cf-arrow { flex-shrink: 0; color: var(--grey-4); font-size: 13px; }
+  /* v5.1: dải giai đoạn XUỐNG DÒNG thay vì cuộn ngang — thấy hết trong 1 khung */
+  .stage-stats { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 10px; }
   .ss-chip { display: flex; align-items: center; gap: 6px; flex-shrink: 0;
     padding: 6px 10px; border: 1px solid var(--grey-2); border-radius: 999px;
     background: var(--white); cursor: pointer; font-family: inherit; }
@@ -1031,6 +1040,35 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   .postpone-card .pc-actions { display: flex; gap: 8px; margin-top: 8px; }
   .pc-cancel { flex: 1; padding: 11px; border-radius: 8px; border: 1.5px solid var(--grey-2); background: var(--grey-1); font-weight: 700; cursor: pointer; }
   .pc-confirm { flex: 1; padding: 11px; border-radius: 8px; border: none; background: var(--gold); color: #fff; font-weight: 700; cursor: pointer; }
+
+  /* ═══ v5.1 — MÀN HÌNH LỚN ═══
+     App vốn thiết kế mobile-first, mọi khung khóa 520-560px nên trên máy tính
+     chỉ là một dải hẹp giữa màn hình, bỏ phí không gian hai bên. Nay nới dần
+     theo bề rộng: ≥900px cho khung rộng hơn + danh sách khách 2 cột;
+     ≥1400px cho 3 cột. Dưới 900px giữ nguyên hoàn toàn (điện thoại không đổi). */
+  @media (min-width: 900px) {
+    .cust-wrap, .dash-wrap, .ev-wrap { max-width: 1080px; padding-left: 24px; padding-right: 24px; }
+    /* Danh sách khách chia cột — thẻ tự xếp, không cần sửa JS render */
+    #cust-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: start; }
+    #cust-list > .dash-empty { grid-column: 1 / -1; }
+    /* Nhiệm vụ + trang vi phạm cũng 2 cột */
+    #list-nextstep, #list-cskh, #list-vipham, #vipham-page-body {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: start; }
+    #list-nextstep > .task-empty, #list-cskh > .task-empty,
+    #list-vipham > .task-empty, #vipham-page-body > .task-empty,
+    #vipham-page-body > .vp-sec-title { grid-column: 1 / -1; }
+    .task-card { max-width: none; margin: 0; }
+    .vp-page-body { max-width: 1080px; }
+    /* Chỉ nâng biểu đồ 14 ngày (chiều cao tĩnh). KHÔNG đụng phễu và nguồn lead —
+       hai cái đó có chiều cao TÍNH ĐỘNG theo số dòng dữ liệu, đè bằng
+       !important sẽ làm cột chồng lên nhau hoặc thừa khoảng trắng. */
+    #chart-daily { min-height: 260px; }
+  }
+  @media (min-width: 1400px) {
+    .cust-wrap, .dash-wrap, .ev-wrap, .vp-page-body { max-width: 1400px; }
+    #cust-list, #list-nextstep, #list-cskh, #list-vipham, #vipham-page-body {
+      grid-template-columns: repeat(3, 1fr); }
+  }
 
   /* ─── RESPONSIVE ─── */
   @media (min-width: 480px) {
@@ -1655,25 +1693,28 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     <div id="cust-list-view">
       <div class="cust-toolbar">
         <input type="search" id="cust-search" placeholder="🔍 Tìm theo tên hoặc SĐT..." oninput="renderCustomerList()">
+        <!-- v5.1: bố cục lọc theo LƯỚI cố định — hết cảnh ô ngày rớt dòng lệch.
+             Dropdown giai đoạn đã BỎ: dải chip thống kê phía dưới vừa hiện số
+             vừa lọc được, giữ cả hai là thừa và tốn một dòng. Bộ lọc giai đoạn
+             vẫn tồn tại dưới dạng input ẩn để mọi hàm cũ chạy nguyên vẹn. -->
+        <select id="cust-filter-stage" onchange="renderCustomerList()" hidden>
+          <option value="">Tất cả giai đoạn</option>
+        </select>
         <div class="cust-filters">
-          <select id="cust-filter-stage" onchange="renderCustomerList()">
-            <option value="">Tất cả giai đoạn</option>
-          </select>
-          <select id="cust-filter-sales" onchange="renderCustomerList()">
-            <option value="">Tất cả Sales</option>
-          </select>
-          <!-- v3.8: lọc theo NGÀY VÀO — chọn ngày là danh sách chỉ còn khách nhập lên hôm đó -->
-          <input type="date" id="cust-filter-date" onchange="renderCustomerList()" aria-label="Từ ngày">
-          <!-- v5.0: ô ĐẾN NGÀY — điền cả hai ô = xem khoảng ngày; chỉ điền ô đầu
-               = giữ nguyên chế độ xem hoạt động 1 ngày như cũ -->
-          <span class="cf-arrow" id="cust-date-arrow">→</span>
-          <input type="date" id="cust-filter-date-to" onchange="renderCustomerList()" aria-label="Đến ngày">
-          <button type="button" class="cf-clear" id="cust-filter-date-clear" onclick="clearCustDateFilter()" title="Bỏ lọc ngày" style="display:none">✕</button>
-          <!-- v4.7: lọc theo NHÓM KÊNH — chọn nhiều cùng lúc. Cùng quy tắc phân
-               nhóm với chi phí/phễu (tên nguồn chứa "agency" → Agency) -->
-          <div class="cf-group" id="cust-filter-group">
-            <button type="button" class="cf-chip" data-group="In-House" onclick="toggleCustGroup(this)">🏠 In-House</button>
-            <button type="button" class="cf-chip" data-group="Agency" onclick="toggleCustGroup(this)">🏢 Agency</button>
+          <div class="cf-row cf-row-date">
+            <input type="date" id="cust-filter-date" onchange="renderCustomerList()" aria-label="Từ ngày">
+            <span class="cf-arrow">→</span>
+            <input type="date" id="cust-filter-date-to" onchange="renderCustomerList()" aria-label="Đến ngày">
+            <button type="button" class="cf-clear" id="cust-filter-date-clear" onclick="clearCustDateFilter()" title="Bỏ lọc ngày" style="display:none">✕</button>
+          </div>
+          <div class="cf-row cf-row-sel">
+            <select id="cust-filter-sales" onchange="renderCustomerList()">
+              <option value="">Tất cả Sales</option>
+            </select>
+            <div class="cf-group" id="cust-filter-group">
+              <button type="button" class="cf-chip" data-group="In-House" onclick="toggleCustGroup(this)">🏠 In-House</button>
+              <button type="button" class="cf-chip" data-group="Agency" onclick="toggleCustGroup(this)">🏢 Agency</button>
+            </div>
           </div>
         </div>
       </div>
