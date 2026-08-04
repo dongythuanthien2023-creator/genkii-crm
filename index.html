@@ -2,11 +2,15 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v6.3 | Backend tương thích: v6.3
+PHIÊN BẢN HIỆN TẠI: v6.3.1 | Backend tương thích: v6.3
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v6.3.1 (HOTFIX) — Thanh lọc chung không chạy: v6.3 XÓA HẲN khối chứa 2 ô ẩn
+         luot-from/luot-to (thay vì ẩn như src/cost), nên applyDashRange gán
+         .value vào null → TypeError, dừng toàn bộ. Nay khôi phục 2 ô ở dạng ẩn
+         + gán qua hàm an toàn (thiếu ô nào cũng không vỡ).
 v6.3   — (mục 1) THANH LỌC CHUNG: gom 3 khối chọn ngày rời rạc ở Thống kê về
          MỘT thanh dính đầu trang (kèm preset 7/14/30 ngày/tháng này), lái cả
          biểu đồ lượt + nguồn lead + hiệu quả chi phí; tab Khách hàng và Nhiệm
@@ -1974,6 +1978,13 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
 
     <div class="dash-card">
       <div class="dash-title" id="luot-title">Lượt nhập 14 ngày gần nhất</div>
+      <!-- v6.3.1: hai ô ẩn — thanh lọc chung đầu trang đổ giá trị xuống đây rồi
+           gọi applyLuotRange(). Ở v6.3 tôi XÓA hẳn khối này nên applyDashRange
+           gán vào phần tử null → lỗi JS, cả thanh lọc ngừng hoạt động. -->
+      <div class="dash-range" style="display:none">
+        <input type="date" id="luot-from" aria-label="Từ ngày">
+        <input type="date" id="luot-to" aria-label="Đến ngày">
+      </div>
       <div class="dash-legend">
         <span><i style="background:var(--chart-main)"></i>Khách mới</span>
         <span><i style="background:var(--chart-soft)"></i>Click lại quảng cáo</span>
@@ -4971,9 +4982,11 @@ function applyDashRange() {
   if (!f || !t) { showToast('⚠️ Chọn cả hai ngày rồi bấm Xem', 'error-t'); return; }
   const from = f <= t ? f : t, to = f <= t ? t : f;
   // Đổ xuống 3 ô ẩn rồi gọi lại đúng các hàm sẵn có — không viết lại logic tải
-  document.getElementById('luot-from').value = from; document.getElementById('luot-to').value = to;
-  document.getElementById('src-from').value  = from; document.getElementById('src-to').value  = to;
-  document.getElementById('cost-from').value = from; document.getElementById('cost-to').value = to;
+  // v6.3.1: gán an toàn — thiếu 1 ô ẩn cũng không làm vỡ cả thanh lọc
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  setVal('luot-from', from); setVal('luot-to', to);
+  setVal('src-from', from);  setVal('src-to', to);
+  setVal('cost-from', from); setVal('cost-to', to);
   const b = document.getElementById('dash-apply');
   if (b) { b.classList.remove('dirty'); b.disabled = true; b.textContent = '⏳'; }
   document.getElementById('dash-from').classList.add('active');
