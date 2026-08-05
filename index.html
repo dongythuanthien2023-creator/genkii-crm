@@ -2,11 +2,18 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v6.5 | Backend tương thích: v6.5
+PHIÊN BẢN HIỆN TẠI: v6.6 | Backend tương thích: v6.6
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v6.6   — SỬA 3 LỖI từ phản hồi: (a) Biểu đồ 14 ngày TRÀN đè khối phễu/nguồn
+         lead — v6.3 ép min-height lên chính CANVAS trong khung cao 210px cố
+         định; nay nâng chiều cao KHUNG CHỨA (#chart-daily-box). (b) Thanh lọc
+         dính TRÈO LÊN header khi cuộn — cả hai cùng top:0, thanh lọc z-index
+         cao hơn; nay z-index thấp hơn header và top = --header-h đo thật lúc
+         chạy. (c) Tab Nhiệm vụ TẢI LẠI sau mỗi thao tác — nay gỡ đúng thẻ vừa
+         xử lý khỏi DOM + trừ badge, Sales tick liên tiếp không phải chờ.
 v6.5   — (a) Thanh lọc dính: nền ĐẶC + tràn hết chiều ngang (trước dùng nền
          bán trong suốt không padding ngang → nội dung cuộn phía sau lộ ra ở
          mép, nhìn như chữ đè nhau). (b) Bố cục phương án B: CHỈ ghép phễu ‖
@@ -664,7 +671,10 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   /* v6.5 — Thanh dính: nền ĐẶC (không trong suốt) và tràn hết chiều ngang.
      Trước dùng --glass bán trong suốt + không có padding ngang → nội dung cuộn
      phía sau lộ ra ở mép trái/phải, nhìn như chữ đè lên nhau. */
-  .filter-bar { position: sticky; top: 0; z-index: 12;
+  /* v6.6 — Thanh lọc dính PHẢI nằm DƯỚI header (header cũng sticky top:0
+     z-index:10). Trước để top:0 + z-index:12 nên nó trèo lên che header khi
+     cuộn (ảnh phản hồi). Nay z-index thấp hơn header và top = chiều cao header. */
+  .filter-bar { position: sticky; top: var(--header-h, 64px); z-index: 8;
     background: var(--grey-1); border-bottom: 1px solid var(--grey-2);
     padding: 10px 16px 10px; margin: 0 -16px 14px;
     display: flex; flex-direction: column; gap: 7px;
@@ -1209,7 +1219,11 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     .task-card { max-width: 860px; margin: 0 auto 10px; }
     .task-section-title { max-width: 860px; margin: 0 auto; padding-top: 16px; }
     #list-vipham, #list-nextstep, #list-cskh { padding: 0 16px; }
-    #chart-daily { min-height: 260px; }
+    /* v6.6 — SỬA LỖI TRÀN: #chart-daily là CANVAS nằm trong .chart-box cao
+       210px cố định. Ép min-height 260px lên canvas làm nó CAO HƠN khung chứa
+       → tràn ra ngoài, đè lên khối phễu/nguồn lead phía dưới (ảnh phản hồi).
+       Phải nâng chiều cao KHUNG CHỨA, canvas tự giãn theo. */
+    #chart-daily-box { height: 300px !important; }
     /* v6.3 (mục 5) — Dashboard rộng hơn + BIỂU ĐỒ hai cột. Chỉ áp cho biểu đồ
        và bảng: danh sách khách/nhiệm vụ vẫn MỘT DÒNG (bài học v5.1). Bốn chip
        KPI xếp một hàng ngang khi có chỗ. */
@@ -2020,7 +2034,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
         <span><i style="background:var(--chart-main)"></i>Khách mới</span>
         <span><i style="background:var(--chart-soft)"></i>Click lại quảng cáo</span>
       </div>
-      <div class="chart-box" style="height:210px;"><canvas id="chart-daily"></canvas></div>
+      <div class="chart-box" id="chart-daily-box" style="height:210px;"><canvas id="chart-daily"></canvas></div>
     </div>
 
     <!-- v6.5: cặp DUY NHẤT được ghép — hai biểu đồ chiều cao tương đương -->
@@ -3518,6 +3532,16 @@ document.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', applyTheme);
 document.addEventListener('DOMContentLoaded', applyPalette); // v4.9: áp bảng màu đã lưu
 
+// v6.6 — Đo chiều cao header THẬT rồi gán vào biến CSS --header-h. Thanh lọc
+// dính dùng biến này làm mốc top, nên không bao giờ trèo lên che header dù
+// header đổi chiều cao theo cỡ màn hình hay cỡ chữ.
+function capNhatChieuCaoHeader() {
+  const h = document.querySelector('.app-header');
+  if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+}
+document.addEventListener('DOMContentLoaded', capNhatChieuCaoHeader);
+window.addEventListener('resize', capNhatChieuCaoHeader);
+
 // Lời chào theo buổi trên thanh đăng nhập
 function updateGreeting() {
   const el = document.getElementById('greeting-time');
@@ -3922,7 +3946,7 @@ function closeTaskKTN(t) {
     sales: currentSalesName,
   }, () => {
     showToast('🚫 Đã đóng khách về Không tiềm năng', 'success');
-    loadTodayTasks();
+    if (!goThe_(t.type === 'next_step' ? 'next_step' : 'cskh', t.phone, t.rowIndex)) loadTodayTasks();
   });
 }
 
@@ -4072,7 +4096,8 @@ function markTaskDone(t, taskType) {
     salesName: currentSalesName || '', // ai tick Hoàn thành — ghi vào cột DONE_BY
   }, () => {
     showToast('✅ Đã đánh dấu hoàn thành', 'success');
-    loadTodayTasks();
+    // v6.6: gỡ thẻ tại chỗ — không tải lại cả trang, Sales tick liên tiếp được
+    if (!goThe_(taskType, t.phone, t.rowIndex)) loadTodayTasks();
   });
 }
 
@@ -4131,8 +4156,51 @@ function confirmPostpone() {
   submitTaskUpdate(payload, () => {
     showToast('✅ Đã dời lịch', 'success');
     closePostponeModal();
-    loadTodayTasks();
+    // v6.6: dời lịch = nhiệm vụ rời khỏi danh sách hôm nay → gỡ thẻ tại chỗ
+    if (!goThe_(postponeTarget.taskType, postponeTarget.phone, postponeTarget.rowIndex)) loadTodayTasks();
   });
+}
+
+// v6.6 — XỬ LÝ LIÊN TIẾP: trước đây mỗi lần tick là gọi loadTodayTasks() tải
+// lại CẢ BA khối. Sales xử lý một loạt sẽ phải chờ tải lại sau mỗi thẻ — rất
+// khó chịu (phản hồi của Thôi). Nay gỡ ĐÚNG thẻ vừa xử lý khỏi DOM, trừ badge,
+// và chỉ tải lại thật khi hết thẻ hoặc khi người dùng chủ động bấm Làm mới.
+// escId dựng theo mẫu `${loại}-${sđt}-${rowIndex}` rồi lọc ký tự đặc biệt,
+// nên phải dựng lại y hệt mới tìm đúng thẻ (thử cả tiền tố vp- của khu vi phạm).
+function goThe_(taskType, phone, rowIndex) {
+  const mk = (pre) => 'card-' + `${pre}-${phone}-${rowIndex || ''}`.replace(/[^a-zA-Z0-9-]/g, '');
+  const card = document.getElementById(mk(taskType)) || document.getElementById(mk('vp'));
+  if (card) {
+    card.style.transition = 'opacity .18s, transform .18s';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(12px)';
+    setTimeout(() => {
+      const wrap = card.parentElement;
+      card.remove();
+      capNhatBadgeNhiemVu_(wrap);
+    }, 180);
+    return true;
+  }
+  return false;
+}
+
+/** Trừ badge của khối chứa thẻ vừa gỡ; khối rỗng thì hiện lời chúc. */
+function capNhatBadgeNhiemVu_(wrap) {
+  if (!wrap) return;
+  const map = { 'list-nextstep': 'badge-nextstep', 'list-cskh': 'badge-cskh', 'list-vipham': 'badge-vipham' };
+  const badgeId = map[wrap.id];
+  if (badgeId) {
+    const b = document.getElementById(badgeId);
+    const con = wrap.querySelectorAll('.task-card').length;
+    if (b) { b.textContent = con; b.classList.toggle('zero', con === 0); }
+    if (con === 0) {
+      wrap.innerHTML = '<div class="task-empty">🎉 Đã xử lý hết</div>';
+      if (wrap.id === 'list-vipham') {
+        const t = document.getElementById('vipham-title');
+        if (t) t.style.display = 'none';
+      }
+    }
+  }
 }
 
 function submitTaskUpdate(payload, onSuccess) {
