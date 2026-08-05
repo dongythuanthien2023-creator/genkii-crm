@@ -2,11 +2,16 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v6.3.2 | Backend tương thích: v6.3
+PHIÊN BẢN HIỆN TẠI: v6.4 | Backend tương thích: v6.4
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v6.4   — TỐC ĐỘ thanh lọc khoảng ngày: bấm Xem nay gửi MỘT request gộp
+         (getDashRange) thay vì ba song song — backend chạy 1 lần, đọc mỗi
+         sheet 1 lần, cache 5 phút theo khoảng. applyLuotRange/applySrcRange/
+         loadCostStats nhận thêm tham số preData để vẽ từ dữ liệu có sẵn;
+         không truyền gì thì vẫn tự gọi server như cũ.
 v6.3.2 — Thông báo lỗi nêu ĐÚNG request nào hỏng (trước đây mọi lỗi evJsonp đều
          ghi "dữ liệu sự kiện" dù đang tải cấu hình/khách/nhiệm vụ — không truy
          được nguyên nhân). Thêm thời gian chờ 25 giây để không treo im lặng.
@@ -4797,12 +4802,8 @@ function setCostRangeThisMonth() {
   loadCostStats();
 }
 
-function loadCostStats() {
-  const range = readRangeInputs('cost-from', 'cost-to');
-  if (!range) return;
-  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode', 'error-t'); return; }
-  document.getElementById('cost-result').innerHTML = '<div class="dash-empty">Đang tính...</div>';
-  jsonpRange('getCostStats', range, (data) => {
+function loadCostStats(preData) {
+  const render = (data) => {
     const box = document.getElementById('cost-result');
     if (!data || data.error) { box.innerHTML = `<div class="dash-empty">⚠️ ${(data && data.error) || 'Lỗi tải dữ liệu'}</div>`; return; }
     document.getElementById('cost-title').textContent = `🎯 Hiệu quả chi phí ${data.from} → ${data.to}`;
@@ -4850,7 +4851,13 @@ function loadCostStats() {
         </tbody>
       </table>
       <div style="font-size:10.5px; color:var(--grey-3); margin-top:6px;">💰 = nguồn trả phí. Giá mess/SĐT chỉ chia trên nguồn trả phí — tiền Meta chia lead Meta.</div>`;
-  });
+  };
+  if (preData) { render(preData); return; }
+  const range = readRangeInputs('cost-from', 'cost-to');
+  if (!range) return;
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode', 'error-t'); return; }
+  document.getElementById('cost-result').innerHTML = '<div class="dash-empty">Đang tính...</div>';
+  jsonpRange('getCostStats', range, render);
 }
 
 // v3.9.2: màu biểu đồ đọc từ CSS variables TẠI THỜI ĐIỂM VẼ — light/dark tự khớp,
@@ -4994,10 +5001,21 @@ function applyDashRange() {
   if (b) { b.classList.remove('dirty'); b.disabled = true; b.textContent = '⏳'; }
   document.getElementById('dash-from').classList.add('active');
   document.getElementById('dash-to').classList.add('active');
-  applyLuotRange();
-  applySrcRange();
-  loadCostStats();
-  setTimeout(() => { if (b) { b.disabled = false; b.textContent = 'Xem'; } }, 1200);
+  // v6.4 — MỘT request thay vì ba. Trước đây bắn song song getLuotRange +
+  // getSourceRange + getCostStats = 3 lần khởi động Apps Script, CRM Tổng đọc
+  // lặp → chậm rõ. Nay backend gộp trong 1 lần chạy, có cache 5 phút.
+  const done = () => { if (b) { b.disabled = false; b.textContent = 'Xem'; } };
+  jsonpRange('getDashRange', { from: from, to: to }, (data) => {
+    done();
+    if (!data || data.error) {
+      showToast('❌ ' + ((data && data.error) || 'Không tải được dữ liệu khoảng ngày'), 'error-t');
+      return;
+    }
+    if (data.luot)    applyLuotRange(data.luot);
+    if (data.sources) applySrcRange(data.sources);
+    if (data.cost)    loadCostStats(data.cost);
+  });
+  setTimeout(done, 30000); // lưới an toàn nếu request không về
 }
 
 function dashPreset(days) {
@@ -5026,16 +5044,20 @@ function markDashPreset(key) {
   btns.forEach((b, i) => b.classList.toggle('on', i === map[key]));
 }
 
-function applyLuotRange() {
+// v6.4: nhận preData → vẽ luôn, không gọi server (dùng khi thanh lọc chung đã
+// lấy sẵn cả 3 khối trong 1 request). Không truyền gì → hành vi cũ nguyên vẹn.
+function applyLuotRange(preData) {
+  const render = (data) => {
+    if (data && data.error) { showToast('⚠️ ' + data.error, 'error-t'); document.getElementById('luot-title').textContent = 'Lượt nhập'; return; }
+    drawLuotChart(data.daily || [],
+      `Lượt nhập ${data.from} → ${data.to} · Tổng ${data.totalLuot} (${data.totalKhachMoi} mới + ${data.totalClickQC} QC)`);
+  };
+  if (preData) { render(preData); return; }
   const range = readRangeInputs('luot-from', 'luot-to');
   if (!range) return;
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode — chưa cấu hình URL', 'error-t'); return; }
   document.getElementById('luot-title').textContent = 'Đang tải...';
-  jsonpRange('getLuotRange', range, (data) => {
-    if (data && data.error) { showToast('⚠️ ' + data.error, 'error-t'); document.getElementById('luot-title').textContent = 'Lượt nhập'; return; }
-    drawLuotChart(data.daily || [],
-      `Lượt nhập ${data.from} → ${data.to} · Tổng ${data.totalLuot} (${data.totalKhachMoi} mới + ${data.totalClickQC} QC)`);
-  });
+  jsonpRange('getLuotRange', range, render);
 }
 
 function resetLuotRange() {
@@ -5044,15 +5066,17 @@ function resetLuotRange() {
   loadDashboard(true); // vẽ lại toàn bộ theo mặc định 14 ngày với số liệu tươi
 }
 
-function applySrcRange() {
+function applySrcRange(preData) {
+  const render = (data) => {
+    if (data && data.error) { showToast('⚠️ ' + data.error, 'error-t'); document.getElementById('src-title').textContent = 'Nguồn lead'; return; }
+    drawSrcChart(data.items || [], `Nguồn lead ${data.from} → ${data.to} · ${data.total} khách vào phễu`);
+  };
+  if (preData) { render(preData); return; }
   const range = readRangeInputs('src-from', 'src-to');
   if (!range) return;
   if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') { showToast('Demo mode — chưa cấu hình URL', 'error-t'); return; }
   document.getElementById('src-title').textContent = 'Đang tải...';
-  jsonpRange('getSourceRange', range, (data) => {
-    if (data && data.error) { showToast('⚠️ ' + data.error, 'error-t'); document.getElementById('src-title').textContent = 'Nguồn lead'; return; }
-    drawSrcChart(data.items || [], `Nguồn lead ${data.from} → ${data.to} · ${data.total} khách vào phễu`);
-  });
+  jsonpRange('getSourceRange', range, render);
 }
 
 function resetSrcRange() {
