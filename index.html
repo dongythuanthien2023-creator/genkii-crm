@@ -2,11 +2,22 @@
 <!--
 ═══════════════════════════════════════════════════════════════════════════
 GENKII CRM — FRONTEND (GitHub Pages, single-file)
-PHIÊN BẢN HIỆN TẠI: v6.6 | Backend tương thích: v6.6
+PHIÊN BẢN HIỆN TẠI: v7.0 | Backend tương thích: v7.0
 
 QUY ƯỚC: mọi thay đổi phiên bản ghi vào danh sách dưới đây, BẢN MỚI NHẤT
 LUÔN Ở TRÊN CÙNG.
 ───────────────────────────────────────────────────────────────────────────
+v7.0   — LUẬT HIỂN THỊ (đọc khối "LUẬT HIỂN THỊ GENKII CRM" ở đầu <style>).
+         Lập ra sau khi ĐO được 71 giá trị padding, 12 margin, 10 bo góc khác
+         nhau trong file — đó là lý do giao diện nhìn lệch dù không chỉ ra được
+         cụ thể. Bảy điều luật: khoảng cách chỉ 4 nấc (8/16/24/32) · một
+         padding thẻ duy nhất (20px máy tính, 14px điện thoại) · ba bán kính bo
+         góc · biểu đồ hai bậc chiều cao đặt lên KHUNG không lên canvas · thẻ
+         cùng hàng cùng chiều cao và chỉ ghép khối tương đương · màu qua token
+         và delta theo tốt/xấu · thanh dính dưới header nền đặc.
+         Áp dụng: mọi khối lớn dùng token; biểu đồ 210/230/190px → hai bậc
+         240/320px; dashboard máy tính rộng 1360px; thêm dòng so sánh kỳ trước
+         cho thẻ Khách mới và Click lại QC (backend v7.0 trả deltaMoi/deltaQC).
 v6.6   — SỬA 3 LỖI từ phản hồi: (a) Biểu đồ 14 ngày TRÀN đè khối phễu/nguồn
          lead — v6.3 ép min-height lên chính CANVAS trong khung cao 210px cố
          định; nay nâng chiều cao KHUNG CHỨA (#chart-daily-box). (b) Thanh lọc
@@ -204,8 +215,52 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   /* ═══ v3.1 DESIGN TOKENS — 2 theme, cùng tên biến ═══
      Giữ nguyên TÊN mọi biến cũ nên toàn bộ CSS phía dưới không phải sửa;
      dark mode chỉ là đổi GIÁ TRỊ qua [data-theme="dark"]. */
+  /* ══════════════════════════════════════════════════════════════════════
+     ║  LUẬT HIỂN THỊ GENKII CRM — ĐỌC TRƯỚC KHI SỬA BẤT KỲ KHOẢNG CÁCH NÀO
+     ║  (v7.0 — lập ra sau khi đo được 71 giá trị padding khác nhau trong file)
+     ╠══════════════════════════════════════════════════════════════════════
+     ║ 1. KHOẢNG CÁCH chỉ dùng 4 nấc, KHÔNG đặt số lẻ:
+     ║      --sp-1  8px   khoảng cách trong một cụm (icon ↔ chữ)
+     ║      --sp-2 16px   giữa các phần trong một thẻ
+     ║      --sp-3 24px   giữa các THẺ với nhau
+     ║      --sp-4 32px   giữa các KHU (KPI / biểu đồ / bảng)
+     ║    Cần 20px? → chọn 16 hoặc 24. Không thêm nấc mới.
+     ║
+     ║ 2. PADDING THẺ: mọi thẻ lớn dùng --pad-card. Máy tính 20px, điện thoại
+     ║    14px — tự đổi theo màn hình, KHÔNG ghi số trực tiếp vào từng thẻ.
+     ║
+     ║ 3. BO GÓC: --radius (thẻ lớn) · --radius-sm (nút, ô nhập) · 999px (chip
+     ║    tròn). Ba giá trị, không có giá trị thứ tư.
+     ║
+     ║ 4. BIỂU ĐỒ chỉ có HAI bậc chiều cao: --h-chart-sm 240px, --h-chart-lg
+     ║    320px. Đặt vào KHUNG CHỨA (.chart-box), TUYỆT ĐỐI không đặt lên thẻ
+     ║    <canvas> — canvas cao hơn khung sẽ tràn đè khối dưới (lỗi thật đã gặp
+     ║    ở v6.3, xem changelog). Phễu là ngoại lệ: chiều cao tính động theo số
+     ║    bậc, chỉ áp min-height.
+     ║
+     ║ 5. CÁC THẺ CÙNG MỘT HÀNG phải CÙNG CHIỀU CAO (align-items: stretch).
+     ║    Chỉ ghép cạnh nhau những khối có chiều cao TƯƠNG ĐƯƠNG. Khối cao và
+     ║    co giãn theo dữ liệu (bảng) để full width — ghép cặp sẽ sinh so le.
+     ║
+     ║ 6. MÀU: mọi màu qua token. Cấm ghi mã màu trực tiếp trong rule, trừ chữ
+     ║    trắng trên nền đậm. Màu delta theo TỐT/XẤU chứ không theo tăng/giảm:
+     ║    quá hạn tăng = đỏ, khách mới tăng = xanh.
+     ║
+     ║ 7. THANH DÍNH: top = var(--header-h) đo lúc chạy, z-index THẤP HƠN
+     ║    header (header 10, thanh lọc 8). Nền ĐẶC, không bán trong suốt.
+     ╚══════════════════════════════════════════════════════════════════════ */
   :root, [data-theme="light"] {
-    color-scheme: light; /* v4.2.3: widget gốc (date picker, select) theo theme */
+    color-scheme: light;
+    /* ── Nấc khoảng cách (luật 1) ── */
+    --sp-1: 8px; --sp-2: 16px; --sp-3: 24px; --sp-4: 32px;
+    /* ── Padding thẻ (luật 2) — điện thoại; máy tính ghi đè ở @media 900px ── */
+    --pad-card: 14px;
+    /* ── Bo góc (luật 3) ── */
+    --radius-sm: 10px;
+    /* ── Chiều cao biểu đồ (luật 4) ── */
+    --h-chart-sm: 240px; --h-chart-lg: 320px;
+    /* ── Bề rộng tối đa vùng nội dung ── */
+    --maxw: 1360px; /* v4.2.3: widget gốc (date picker, select) theo theme */
     --navy:    #0C3835;
     --heading: #123A37;           /* chữ tiêu đề — tách khỏi --navy vì navy còn dùng làm nền */
     --teal:    #02B2A9;
@@ -709,12 +764,20 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   .dash-card, .stat-chip, .ev-form-card, .order-info-card, .purchase-history-card {
     border-radius: var(--radius);
   }
-  .dash-card { padding: 14px; margin-bottom: 12px; }
-  .stat-chips { gap: 10px; margin-bottom: 12px; }
-  .stat-chip { padding: 12px 14px; min-height: 104px; display: flex;
-    flex-direction: column; justify-content: flex-start; }
-  .dash-hero { margin-bottom: 12px; }
-  .dash-title { margin-bottom: 10px; }
+  /* v7.0 — ÁP LUẬT 1,2,3,5 cho khối lớn. Trước đây mỗi khối một giá trị lẻ
+     (đo được 71 padding, 12 margin khác nhau) nên nhìn lệch dù không chỉ ra
+     được cụ thể. Nay tất cả đi qua token. */
+  .dash-card, .ev-form-card, .order-info-card, .purchase-history-card {
+    padding: var(--pad-card); border-radius: var(--radius); margin-bottom: var(--sp-3);
+  }
+  .stat-chips { gap: var(--sp-2); margin-bottom: var(--sp-3); align-items: stretch; }
+  .stat-chip { padding: var(--pad-card); border-radius: var(--radius);
+    min-height: 116px; display: flex; flex-direction: column; justify-content: space-between; }
+  .dash-hero { margin-bottom: var(--sp-3); padding: var(--pad-card); border-radius: var(--radius); }
+  .dash-title { margin-bottom: var(--sp-2); }
+  /* Khu vực: cách nhau 1 nấc lớn hơn thẻ (luật 1) */
+  .dash-wrap > .dash-card + .dash-title,
+  .dash-wrap > .dash-pair + .dash-card { margin-top: var(--sp-4); }
 
   /* v6.1: trường phụ thuộc giai đoạn + cảnh báo nhảy cóc bậc */
   .dep-field { animation: depIn .18s ease-out; }
@@ -1045,7 +1108,10 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   .dash-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11.5px; color: var(--grey-4); margin-bottom: 8px; }
   .dash-legend span { display: inline-flex; align-items: center; gap: 5px; }
   .dash-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  /* Luật 4: HAI bậc chiều cao, đặt lên KHUNG chứ không lên canvas */
   .chart-box { position: relative; width: 100%; }
+  .chart-box.chart-sm { height: var(--h-chart-sm); }
+  .chart-box.chart-lg { height: var(--h-chart-lg); }
   .dash-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   .dash-table th { text-align: right; color: var(--grey-3); font-weight: 600; padding: 6px 0; border-bottom: 1px solid var(--grey-2); }
   .dash-table th:first-child, .dash-table td:first-child { text-align: left; }
@@ -1215,15 +1281,13 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
      khóa 520px trong khi thẻ khách đã rộng 860px (lệch như Thôi thấy).
      Mỗi khách / nhiệm vụ vẫn MỘT DÒNG, chỉ kéo dài ngang cho dễ đọc. */
   @media (min-width: 900px) {
-    .cust-wrap, .ev-wrap, .vp-page-body { max-width: 860px; padding-left: 24px; padding-right: 24px; }
-    .task-card { max-width: 860px; margin: 0 auto 10px; }
-    .task-section-title { max-width: 860px; margin: 0 auto; padding-top: 16px; }
-    #list-vipham, #list-nextstep, #list-cskh { padding: 0 16px; }
-    /* v6.6 — SỬA LỖI TRÀN: #chart-daily là CANVAS nằm trong .chart-box cao
-       210px cố định. Ép min-height 260px lên canvas làm nó CAO HƠN khung chứa
-       → tràn ra ngoài, đè lên khối phễu/nguồn lead phía dưới (ảnh phản hồi).
-       Phải nâng chiều cao KHUNG CHỨA, canvas tự giãn theo. */
-    #chart-daily-box { height: 300px !important; }
+    /* ── v7.0: MÁY TÍNH — padding thẻ rộng hơn (luật 2), khoảng cách giữ nguyên
+       nấc, bề rộng nội dung 1360px cho dashboard / 860px cho danh sách. ── */
+    :root { --pad-card: 20px; }
+    .cust-wrap, .ev-wrap, .vp-page-body { max-width: 860px; padding-left: var(--sp-3); padding-right: var(--sp-3); }
+    .task-card { max-width: 860px; margin: 0 auto var(--sp-2); }
+    .task-section-title { max-width: 860px; margin: 0 auto; padding-top: var(--sp-2); }
+    #list-vipham, #list-nextstep, #list-cskh { padding: 0 var(--sp-2); }
     /* v6.3 (mục 5) — Dashboard rộng hơn + BIỂU ĐỒ hai cột. Chỉ áp cho biểu đồ
        và bảng: danh sách khách/nhiệm vụ vẫn MỘT DÒNG (bài học v5.1). Bốn chip
        KPI xếp một hàng ngang khi có chỗ. */
@@ -1235,14 +1299,18 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     .pair-tall #chart-funnel-box, .pair-tall #chart-src-box { min-height: 280px; }
     .pair-tall .chart-box { flex: 1; }
     .stat-chips { grid-template-columns: repeat(4, 1fr); }
-    /* v6.5 (phương án B) — CHỈ ghép phễu ‖ nguồn lead: hai biểu đồ chiều cao
-       tương đương, ép bằng nhau thì mép trên-dưới thẳng hàng. Bảng Sales và
-       hiệu quả chi phí TRẢ VỀ FULL WIDTH: chúng cao và co giãn theo lượng dữ
-       liệu, ghép cặp là sinh so le như ảnh phản hồi. */
-    .dash-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
+    /* Luật 5: chỉ ghép khối chiều cao TƯƠNG ĐƯƠNG, và luôn kéo bằng nhau.
+       Bảng (cao, co giãn theo dữ liệu) để full width — ghép cặp sinh so le. */
+    .dash-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3);
+      align-items: stretch; margin-bottom: var(--sp-3); }
     .dash-pair > .dash-card { margin-bottom: 0; display: flex; flex-direction: column; }
-    .dash-pair.pair-tall > .dash-card { min-height: 380px; }
+    .dash-pair > .dash-card .chart-box { flex: 1; }
     .dash-pair.pair-full { grid-template-columns: 1fr; }
+    /* Dashboard rộng hơn danh sách vì chứa biểu đồ 2 cột */
+    .dash-wrap { max-width: var(--maxw); padding-left: var(--sp-3); padding-right: var(--sp-3); }
+    /* Hàng KPI: 4 thẻ một hàng, CÙNG chiều cao (luật 5) */
+    .stat-chips { grid-template-columns: repeat(4, 1fr); }
+    .stat-chip { min-height: 132px; }
   }
 
   /* ═══ v3.1 PREMIUM LAYER ═══ */
@@ -1327,7 +1395,14 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
   /* v4.9.3: sparkline nền mờ trong KPI card — xu hướng 14 ngày, đặt dưới cùng,
      không tranh chấp với số liệu (theo cấu trúc các mẫu dashboard) */
   .stat-chip { position: relative; overflow: hidden; }
-  .sc-spark { display: block; margin-top: 6px; opacity: .55; }
+  .sc-spark { display: block; margin-top: var(--sp-1); opacity: .55; }
+  /* v7.0 — Dòng so sánh kỳ trước. Luật 6: màu theo TỐT/XẤU của chỉ số đó,
+     KHÔNG theo hướng mũi tên. Khách mới tăng = tốt (xanh); quá hạn tăng = xấu
+     (đỏ) dù cùng là mũi tên lên. */
+  .sc-delta { font-size: 11.5px; font-weight: 700; margin-top: 2px; min-height: 15px; }
+  .sc-delta.good { color: var(--green); }
+  .sc-delta.bad  { color: var(--red); }
+  .sc-delta.flat { color: var(--grey-3); font-weight: 600; }
   /* v4.8: danh sách khách theo ngày trong công cụ sửa ngày */
   .adm-date-row { display: flex; gap: 9px; align-items: flex-start; padding: 8px 4px;
     border-bottom: 0.5px solid var(--grey-2); }
@@ -1998,6 +2073,8 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
         <div class="sc-ico" style="background: var(--teal);"><svg class="i"><use href="#i-userplus"/></svg></div>
         <div class="sc-value" id="kpi-moi">–</div>
         <div class="sc-label">Khách mới</div>
+        <!-- v7.0: so sánh kỳ trước — màu theo TỐT/XẤU (luật 6), không theo tăng/giảm -->
+        <div class="sc-delta" id="delta-moi"></div>
         <!-- v4.9.3: sparkline nền mờ 14 ngày (theo mẫu dashboard) -->
         <svg class="sc-spark" id="spark-moi" width="100%" height="26" viewBox="0 0 120 26" preserveAspectRatio="none"></svg>
       </div>
@@ -2006,6 +2083,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
         <div class="sc-value" id="kpi-qc">–</div>
         <div class="sc-label">Click lại QC</div>
         <div class="sc-sub" id="kpi-qc-uniq">–</div>
+        <div class="sc-delta" id="delta-qc"></div>
         <svg class="sc-spark" id="spark-qc" width="100%" height="26" viewBox="0 0 120 26" preserveAspectRatio="none"></svg>
       </div>
       <div class="stat-chip danger" onclick="switchTab('tasks')" title="Bấm để mở tab Nhiệm vụ">
@@ -2034,7 +2112,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
         <span><i style="background:var(--chart-main)"></i>Khách mới</span>
         <span><i style="background:var(--chart-soft)"></i>Click lại quảng cáo</span>
       </div>
-      <div class="chart-box" id="chart-daily-box" style="height:210px;"><canvas id="chart-daily"></canvas></div>
+      <div class="chart-box chart-lg" id="chart-daily-box"><canvas id="chart-daily"></canvas></div>
     </div>
 
     <!-- v6.5: cặp DUY NHẤT được ghép — hai biểu đồ chiều cao tương đương -->
@@ -2042,7 +2120,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
     <div class="dash-card">
       <div class="dash-title">Phễu giai đoạn — toàn bộ khách hiện tại <span class="dh-fixed">· ảnh chụp hiện tại</span></div>
       <div class="dash-legend" id="funnel-legend"></div>
-      <div class="chart-box" id="chart-funnel-box" style="height:230px;"><canvas id="chart-funnel"></canvas></div>
+      <div class="chart-box chart-sm" id="chart-funnel-box" style="min-height:var(--h-chart-sm);"><canvas id="chart-funnel"></canvas></div>
     </div>
 
     <div class="dash-card">
@@ -2055,7 +2133,7 @@ v3.8.2 trở về trước — xem lịch sử chat/backup.
         <button type="button" class="ghost" onclick="resetSrcRange()">Tháng này</button>
       </div>
       <div class="dash-legend" id="src-legend"></div>
-      <div class="chart-box" id="chart-src-box" style="height:190px;"><canvas id="chart-src"></canvas></div>
+      <div class="chart-box chart-sm" id="chart-src-box"><canvas id="chart-src"></canvas></div>
     </div>
     </div><!-- /dash-pair -->
 
@@ -4275,6 +4353,21 @@ function renderDashboard(d) {
   animateNum('kpi-moi', t.khachMoi ?? 0);
   animateNum('kpi-qc', t.clickQC ?? 0);
   document.getElementById('kpi-qc-uniq').textContent = (t.uniqueQC ?? 0) + ' khách unique';
+  // v7.0 — Dòng so sánh kỳ trước cho từng thẻ KPI. LUẬT 6: màu theo TỐT/XẤU
+  // của chính chỉ số đó, không theo hướng mũi tên. Với khách mới và click QC
+  // thì tăng là tốt. Hai thẻ Quá hạn / Không hoàn thành là số TỒN tại thời
+  // điểm, không có mốc hôm qua để so — cố ý để trống thay vì bịa số.
+  const veDelta = (elId, val, tangLaTot) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const v = Number(val || 0);
+    if (v === 0) { el.textContent = '— bằng hôm qua'; el.className = 'sc-delta flat'; return; }
+    const tot = tangLaTot ? v > 0 : v < 0;
+    el.textContent = (v > 0 ? '▲ +' : '▼ ') + v + ' so hôm qua';
+    el.className = 'sc-delta ' + (tot ? 'good' : 'bad');
+  };
+  veDelta('delta-moi', t.deltaMoi, true);
+  veDelta('delta-qc',  t.deltaQC,  true);
   animateNum('kpi-overdue', d.totalOverdue ?? 0);
   animateNum('kpi-vipham', d.totalViPham ?? 0);
   const deltaEl = document.getElementById('kpi-delta');
